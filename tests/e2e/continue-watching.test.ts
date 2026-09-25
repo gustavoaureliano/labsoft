@@ -5,7 +5,7 @@ import { Browser, Builder, By, until } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 
 test("o aluno abre a videoaula e inicia a demonstração", async () => {
-  const options = new chrome.Options().addArguments("--headless=new", "--window-size=1440,900");
+  const options = new chrome.Options().addArguments("--window-size=1440,900");
   const chromeBinary = process.env.CHROME_BINARY ?? "/usr/bin/chromium";
   if (existsSync(chromeBinary)) options.setChromeBinaryPath(chromeBinary);
 

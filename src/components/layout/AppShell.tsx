@@ -11,10 +11,10 @@ const navigation = [
   { label: "Explorar", href: "/explorar-cursos", page: "explore" },
   { label: "Materiais", href: "/materiais-complementares", page: "materials" },
   { label: "Certificados", href: "#em-breve" },
-  { label: "Meu perfil", href: "/perfil" },
+  { label: "Meu perfil", href: "/perfil", page: "profile" },
 ];
 
-export function AppShell({ children, activePage = "home" }: { children: ReactNode; activePage?: "home" | "courses" | "explore" | "materials" }) {
+export function AppShell({ children, activePage = "home", showSearch = true }: { children: ReactNode; activePage?: "home" | "courses" | "profile"; showSearch?: boolean }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
@@ -47,11 +47,9 @@ export function AppShell({ children, activePage = "home" }: { children: ReactNod
             </label>
           )}
           <div className={styles.topbarActions}>
-            {showNotifications && (
               <button className={styles.iconButton} aria-label="Notificações" type="button">
                 Avisos<span className={styles.notificationDot} />
               </button>
-            )}
             <a className={styles.profileChip} href="/perfil" aria-label="Abrir perfil de Fulano">
               <Avatar />
               <span className={styles.profileCopy}><strong>Fulano</strong><small>Aluno</small></span>

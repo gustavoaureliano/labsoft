@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 
 export default function Perfil() {
   return (
-    <AppShell activeItem="Meu perfil" showSearch={false}>
+    <AppShell activePage="profile" showSearch={false}>
       <ProfilePage />
     </AppShell>
   );

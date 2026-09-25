@@ -1,8 +1,9 @@
+import Link from "next/link";
 import styles from "./Logo.module.css";
 
 export function Logo() {
   return (
-    <div className={styles.logo} aria-label="Logos Academy">
+    <Link className={styles.logo} href="/" aria-label="Ir para a página inicial">
       <span className={styles.mark} aria-hidden="true">
         L
       </span>
@@ -10,6 +11,6 @@ export function Logo() {
         <strong>Logos</strong>
         <small>Academy</small>
       </span>
-    </div>
+    </Link>
   );
 }
