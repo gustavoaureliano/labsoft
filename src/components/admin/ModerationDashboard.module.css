@@ -1,0 +1,64 @@
+.dashboard { display: grid; gap: 28px; }
+
+.heading { align-items: flex-end; display: flex; gap: 16px; justify-content: space-between; }
+.heading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+.heading p { color: var(--muted); font-size: 14px; margin: 0; }
+.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.demoBadge, .countBadge { background: var(--primary-light); border-radius: 4px; color: var(--primary); font-size: 11px; padding: 8px 10px; white-space: nowrap; }
+.successNotice { background: #edf8f2; border: 1px solid #cce8d8; border-radius: 6px; color: #2e6a49; font-size: 13px; padding: 13px 16px; }
+
+.metrics { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.metricCard, .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.metricCard { min-height: 144px; padding: 22px 24px; }
+.metricCard span { color: var(--muted); font-size: 13px; }
+.metricCard strong { color: var(--primary); display: block; font-size: 30px; line-height: 1; margin-top: 14px; }
+.metricCard p { color: var(--muted); font-size: 11px; margin: 12px 0 0; }
+
+.panel { padding: 26px 28px; }
+.panelHeader { align-items: flex-start; display: flex; gap: 20px; justify-content: space-between; }
+.panelHeader h2 { font-size: 20px; margin: 6px 0; }
+.panelHeader p { color: var(--muted); font-size: 12px; margin: 0; }
+
+.teacherList, .reviewList { list-style: none; margin: 24px 0 0; padding: 0; }
+.teacherItem { align-items: center; border-top: 1px solid var(--border); display: grid; gap: 14px; grid-template-columns: 42px minmax(180px, 1.1fr) minmax(180px, 1fr) auto; padding: 16px 0; }
+.teacherItem:first-child { border-top: 0; padding-top: 0; }
+.teacherItem:last-child { padding-bottom: 0; }
+.teacherAvatar { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; font-weight: 700; height: 38px; justify-content: center; width: 38px; }
+.teacherInfo, .teacherStatus { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.teacherInfo strong, .teacherStatus strong { font-size: 13px; }
+.teacherInfo small, .teacherStatus small { color: var(--muted); font-size: 11px; }
+.teacherStatus strong { color: var(--muted); font-weight: 400; }
+.approveButton { background: var(--primary); border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-size: 12px; font-weight: 700; padding: 9px 14px; }
+.approveButton:hover { filter: brightness(.94); }
+.approveButton:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.emptyState { color: var(--muted); font-size: 13px; margin: 24px 0 0; padding: 20px 0; text-align: center; }
+
+.reviewGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reviewItem { border-top: 1px solid var(--border); padding: 16px 0; }
+.reviewItem:first-child { border-top: 0; padding-top: 0; }
+.reviewItem:last-child { padding-bottom: 0; }
+.reviewMeta { align-items: baseline; display: flex; gap: 12px; justify-content: space-between; }
+.reviewMeta strong { font-size: 13px; }
+.reviewMeta small { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.reviewItem p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 7px 0 10px; }
+.reasonBadge { background: #f7eeee; border-radius: 4px; color: #955252; display: inline-block; font-size: 10px; padding: 6px 8px; }
+
+@media (max-width: 1000px) {
+  .teacherItem { grid-template-columns: 42px minmax(0, 1fr) auto; }
+  .teacherStatus { grid-column: 2; }
+  .approveButton { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+@media (max-width: 900px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reviewGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .heading, .panelHeader { align-items: flex-start; flex-direction: column; }
+  .metrics { grid-template-columns: 1fr; }
+  .panel { padding: 22px 16px; }
+  .teacherItem { align-items: flex-start; grid-template-columns: 38px minmax(0, 1fr); }
+  .teacherStatus, .approveButton { grid-column: 2; grid-row: auto; }
+  .approveButton { justify-self: start; }
+}
