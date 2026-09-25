@@ -1,0 +1,27 @@
+.page { display: grid; gap: 20px; }
+.heading h1 { color: var(--text); font-size: 25px; margin: 0 0 12px; }
+.heading p { color: var(--primary); font-size: 18px; font-weight: 700; margin: 0 0 5px; }
+.heading span { color: var(--muted); font-size: 12px; }
+.controls { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) 190px; }
+.searchField, .sortField { display: grid; gap: 6px; }
+.searchField span, .sortField span { color: var(--muted); font-size: 10px; font-weight: 700; }
+.searchField input, .sortField select { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); height: 42px; min-width: 0; padding: 0 12px; }
+.searchField input:focus, .sortField select:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
+.filters { display: flex; flex-wrap: wrap; gap: 7px; }
+.filters button { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--primary); cursor: pointer; font-size: 11px; font-weight: 700; padding: 9px 12px; }
+.filters button:hover, .filters .filterActive { background: #0099c6; border-color: #0099c6; color: #fff; }
+.filters button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.resultsHeading { align-items: baseline; display: flex; justify-content: space-between; margin-bottom: 11px; }
+.resultsHeading h2 { color: var(--primary); font-size: 16px; margin: 0; }
+.resultsHeading span { color: var(--muted); font-size: 10px; }
+.courseGrid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.emptyState { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--muted); margin: 0; padding: 24px; text-align: center; }
+@media (max-width: 900px) { .courseGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .heading h1 { font-size: 22px; }
+  .heading p { font-size: 16px; }
+  .controls { grid-template-columns: 1fr; }
+  .sortField { max-width: none; }
+  .courseGrid { grid-template-columns: 1fr; }
+  .resultsHeading { align-items: flex-start; flex-direction: column; gap: 5px; }
+}

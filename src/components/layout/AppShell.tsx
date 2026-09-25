@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { Container } from "./Container";
 import styles from "./AppShell.module.css";
@@ -6,26 +7,27 @@ import styles from "./AppShell.module.css";
 const navigation = [
   { label: "Início", href: "/", page: "home" },
   { label: "Meus cursos", href: "/meus-cursos", page: "courses" },
-  { label: "Explorar cursos", href: "#em-breve" },
+  { label: "Explorar", href: "/explorar-cursos", page: "explore" },
+  { label: "Materiais", href: "/materiais-complementares", page: "materials" },
   { label: "Certificados", href: "#em-breve" },
   { label: "Meu perfil", href: "#em-breve" },
 ];
 
-export function AppShell({ children, activePage = "home" }: { children: ReactNode; activePage?: "home" | "courses" }) {
+export function AppShell({ children, activePage = "home" }: { children: ReactNode; activePage?: "home" | "courses" | "explore" | "materials" }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
         <Logo />
         <nav className={styles.sidebarNav} aria-label="Navegação principal">
           {navigation.map((item) => (
-            <a
+            <Link
               className={`${styles.navItem} ${item.page ? "" : styles.futureNavItem} ${item.page === activePage ? styles.navItemActive : ""}`}
               href={item.href}
               aria-current={item.page === activePage ? "page" : undefined}
               key={item.label}
             >
               <span>{item.label}</span>
-            </a>
+            </Link>
           ))}
         </nav>
         <div className={styles.sidebarFooter}>
@@ -38,9 +40,10 @@ export function AppShell({ children, activePage = "home" }: { children: ReactNod
 
       <div className={styles.appContent}>
         <header className={styles.topbar}>
-          <label className={styles.search}>
-            <input aria-label="Buscar" placeholder="Buscar cursos, aulas e professores" />
-          </label>
+          <form action="/pesquisa" className={styles.search} role="search">
+            <input aria-label="Buscar" name="q" placeholder="Buscar cursos e materiais" type="search" />
+            <button type="submit">Buscar</button>
+          </form>
           <div className={styles.topbarActions}>
             <button className={styles.iconButton} aria-label="Notificações" type="button">
               Avisos<span className={styles.notificationDot} />

@@ -58,9 +58,11 @@
 }
 
 .search {
+  align-items: center;
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: 4px;
+  display: flex;
   max-width: 420px;
   width: 42vw;
 }
@@ -74,6 +76,20 @@
   padding: 0 12px;
   width: 100%;
 }
+
+.search button {
+  background: var(--primary);
+  border: 0;
+  border-radius: 3px;
+  color: var(--surface);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 4px;
+  padding: 8px 10px;
+}
+
+.search:focus-within { border-color: var(--primary); }
 
 .topbarActions,
 .profileChip {
@@ -140,6 +156,7 @@
   .sidebarNav { display: flex; gap: 4px; margin-left: auto; }
   .sidebarNav .navItem { font-size: 12px; min-height: 38px; padding: 11px 9px; white-space: nowrap; }
   .futureNavItem { display: none; }
+  .sidebarNav { max-width: calc(100vw - 120px); overflow-x: auto; }
 
   .appContent {
     margin-left: 0;
@@ -153,8 +170,11 @@
 }
 
 @media (max-width: 600px) {
-  .search,
   .profileCopy { display: none; }
 
-  .topbar { justify-content: flex-end; }
+  .topbar { gap: 12px; justify-content: space-between; padding: 0 14px; }
+  .search { max-width: none; width: 100%; }
+  .search input { min-width: 0; }
+  .search button { font-size: 11px; padding: 8px; }
+  .topbarActions { flex-shrink: 0; }
 }
