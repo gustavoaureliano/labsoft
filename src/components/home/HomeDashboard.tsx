@@ -1,5 +1,8 @@
 import { CourseCard } from "@/components/home/CourseCard";
-import { recommendedCourses } from "@/data/courses";
+import { PrimaryLink } from "@/components/ui/PrimaryLink";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { currentLesson, enrolledCourse, recommendedCourses } from "@/data/courses";
+import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
 export function HomeDashboard() {
@@ -16,21 +19,21 @@ export function HomeDashboard() {
       <section className={styles.continueSection} aria-labelledby="continue-title">
         <div className={styles.sectionHeading}>
           <div><span className={styles.eyebrow}>Continue de onde parou</span><h2 id="continue-title">Sua próxima aula está esperando</h2></div>
-          <a href="#meus-cursos">Ver meus cursos</a>
+          <Link href="/meus-cursos">Ver meus cursos</Link>
         </div>
 
         <article className={styles.featuredCourse}>
           <div className={styles.featuredVisual}>
-            <span>Aula de Física</span>
+            <span>Aula de {enrolledCourse.category}</span>
           </div>
           <div className={styles.featuredContent}>
-            <span className={styles.eyebrow}>Física · Aula 08</span>
-            <h2>Leis de Newton e suas aplicações</h2>
-            <p>Física para o ENEM: Mecânica</p>
-            <p className={styles.teacherLine}><span className={styles.miniAvatar}>MA</span>Prof. Marcelo Andrade</p>
-            <div className={styles.progressCopy}><span>Progresso do curso</span><strong>68%</strong></div>
-            <div className={styles.progressBar} aria-label="68% concluído"><span style={{ width: "68%" }} /></div>
-            <button className={styles.primaryButton} type="button">Continuar assistindo</button>
+            <span className={styles.eyebrow}>{enrolledCourse.category} · Aula {currentLesson.number}</span>
+            <h2>{currentLesson.title}</h2>
+            <p>{enrolledCourse.title}</p>
+            <p className={styles.teacherLine}><span className={styles.miniAvatar}>{enrolledCourse.teacherInitials}</span>{enrolledCourse.teacher}</p>
+            <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
+            <ProgressBar value={enrolledCourse.progress} />
+            <PrimaryLink className={styles.primaryButton} href="/videoaula">Continuar assistindo</PrimaryLink>
           </div>
         </article>
       </section>

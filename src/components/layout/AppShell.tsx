@@ -4,14 +4,14 @@ import { Container } from "./Container";
 import styles from "./AppShell.module.css";
 
 const navigation = [
-  { label: "Início", active: true },
-  { label: "Meus cursos" },
-  { label: "Explorar cursos" },
-  { label: "Certificados" },
-  { label: "Meu perfil" },
+  { label: "Início", href: "/", page: "home" },
+  { label: "Meus cursos", href: "/meus-cursos", page: "courses" },
+  { label: "Explorar cursos", href: "#em-breve" },
+  { label: "Certificados", href: "#em-breve" },
+  { label: "Meu perfil", href: "#em-breve" },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, activePage = "home" }: { children: ReactNode; activePage?: "home" | "courses" }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
@@ -19,8 +19,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className={styles.sidebarNav} aria-label="Navegação principal">
           {navigation.map((item) => (
             <a
-              className={`${styles.navItem} ${item.active ? styles.navItemActive : ""}`}
-              href={item.active ? "#inicio" : "#em-breve"}
+              className={`${styles.navItem} ${item.page ? "" : styles.futureNavItem} ${item.page === activePage ? styles.navItemActive : ""}`}
+              href={item.href}
+              aria-current={item.page === activePage ? "page" : undefined}
               key={item.label}
             >
               <span>{item.label}</span>
@@ -50,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main id="inicio">
+        <main>
           <Container>{children}</Container>
         </main>
       </div>

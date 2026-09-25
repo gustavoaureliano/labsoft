@@ -1,0 +1,2 @@
+.track { background: #e4e9eb; height: 5px; overflow: hidden; }
+.track span { background: var(--primary); display: block; height: 100%; }

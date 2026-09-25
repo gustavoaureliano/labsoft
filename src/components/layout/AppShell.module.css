@@ -135,8 +135,11 @@
     width: auto;
   }
 
-  .sidebarNav,
   .sidebarFooter { display: none; }
+
+  .sidebarNav { display: flex; gap: 4px; margin-left: auto; }
+  .sidebarNav .navItem { font-size: 12px; min-height: 38px; padding: 11px 9px; white-space: nowrap; }
+  .futureNavItem { display: none; }
 
   .appContent {
     margin-left: 0;

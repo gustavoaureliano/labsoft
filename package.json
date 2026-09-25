@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:e2e": "node --test tests/e2e/*.test.ts"
   },
   "dependencies": {
     "next": "latest",
@@ -17,8 +18,10 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/selenium-webdriver": "^4.35.7",
     "eslint": "latest",
     "eslint-config-next": "latest",
+    "selenium-webdriver": "^4.49.0",
     "typescript": "^5.9.3"
   }
 }

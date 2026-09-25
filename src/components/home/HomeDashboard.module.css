@@ -102,28 +102,8 @@
 .progressCopy span { color: var(--muted); }
 .progressCopy strong { color: var(--primary); }
 
-.progressBar {
-  background: #e4e9eb;
-  height: 5px;
-  overflow: hidden;
-}
-
-.progressBar span {
-  background: var(--primary);
-  display: block;
-  height: 100%;
-}
-
 .primaryButton {
-  align-self: flex-start;
-  background: var(--primary);
-  border: 0;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  font-size: 12px;
   margin-top: 20px;
-  padding: 11px 15px;
 }
 
 .courseGrid {
