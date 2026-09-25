@@ -34,6 +34,7 @@ export default function ExplorarCursos() {
           <label className={styles.searchField}>
             <span>Buscar cursos, temas ou professores</span>
             <input
+              name="course-query"
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -42,7 +43,7 @@ export default function ExplorarCursos() {
           </label>
           <label className={styles.sortField}>
             <span>Ordenar por</span>
-            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+            <select name="sort" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
               <option value="relevance">Mais relevantes</option>
               <option value="rating">Melhor avaliados</option>
               <option value="title">Ordem alfabética</option>
@@ -67,7 +68,7 @@ export default function ExplorarCursos() {
         <section aria-labelledby="courses-title">
           <div className={styles.resultsHeading}>
             <h2 id="courses-title">Cursos em destaque</h2>
-            <span aria-live="polite">{filteredCourses.length} cursos encontrados</span>
+            <span aria-live="polite">{filteredCourses.length} {filteredCourses.length === 1 ? "curso encontrado" : "cursos encontrados"}</span>
           </div>
           {filteredCourses.length ? (
             <div className={styles.courseGrid}>

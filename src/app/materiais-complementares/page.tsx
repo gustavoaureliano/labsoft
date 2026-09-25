@@ -32,19 +32,19 @@ export default function MateriaisComplementares() {
         <section className={styles.library} aria-label="Filtros de materiais">
           <label>
             <span>Curso</span>
-            <select value={selectedCourse} onChange={(event) => setSelectedCourse(event.target.value)}>
+            <select name="course-filter" value={selectedCourse} onChange={(event) => setSelectedCourse(event.target.value)}>
               <option value="Todos">Todos os cursos</option>
               {courseOptions.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
             </select>
           </label>
           <label>
             <span>Tipo de material</span>
-            <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
+            <select name="type-filter" value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
               <option value="Todos">Todos os tipos</option>
               {materialTypes.map((type) => <option key={type} value={type}>{type}</option>)}
             </select>
           </label>
-          <span className={styles.resultCount} aria-live="polite">{filteredMaterials.length} materiais</span>
+          <span className={styles.resultCount} aria-live="polite">{filteredMaterials.length} {filteredMaterials.length === 1 ? "material" : "materiais"}</span>
         </section>
 
         {filteredMaterials.length ? (
@@ -56,7 +56,7 @@ export default function MateriaisComplementares() {
                     <span>Material do curso</span>
                     <h2 id={`course-${materials[0].courseId}`}>{courseTitle}</h2>
                   </div>
-                  <Link href={`/pesquisa?q=${encodeURIComponent(courseTitle)}`}>Ver curso</Link>
+                  <Link href={`/pesquisa?q=${encodeURIComponent(courseTitle)}`}>Buscar curso</Link>
                 </div>
                 <ul className={styles.materialList}>
                   {materials.map((material) => (

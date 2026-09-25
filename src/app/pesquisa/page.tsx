@@ -30,7 +30,7 @@ export default async function Pesquisa({ searchParams }: SearchPageProps) {
               <section aria-labelledby="course-results-title">
                 <div className={styles.sectionHeading}>
                   <h2 id="course-results-title">Cursos</h2>
-                  <span>{courses.length} encontrados</span>
+                  <span>{courses.length} {courses.length === 1 ? "encontrado" : "encontrados"}</span>
                 </div>
                 <div className={styles.courseGrid}>
                   {courses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}
@@ -42,7 +42,7 @@ export default async function Pesquisa({ searchParams }: SearchPageProps) {
               <section aria-labelledby="material-results-title">
                 <div className={styles.sectionHeading}>
                   <h2 id="material-results-title">Materiais complementares</h2>
-                  <span>{materials.length} encontrados</span>
+                  <span>{materials.length} {materials.length === 1 ? "encontrado" : "encontrados"}</span>
                 </div>
                 <ul className={styles.materialList}>
                   {materials.map((material) => (

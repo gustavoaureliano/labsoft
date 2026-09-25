@@ -14,7 +14,7 @@ const navigation = [
   { label: "Meu perfil", href: "/perfil", page: "profile" },
 ];
 
-export function AppShell({ children, activePage = "home", showSearch = true }: { children: ReactNode; activePage?: "home" | "courses" | "profile"; showSearch?: boolean }) {
+export function AppShell({ children, activePage = "home", showSearch = true }: { children: ReactNode; activePage?: "home" | "courses" | "explore" | "materials" | "profile"; showSearch?: boolean }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
@@ -36,15 +36,16 @@ export function AppShell({ children, activePage = "home", showSearch = true }: {
             <span>Ajuda e suporte</span>
           </a>
           <p>Protótipo inicial</p>
-        </div>q
+        </div>
       </aside>
 
       <div className={styles.appContent}>
         <header className={styles.topbar}>
           {showSearch && (
-            <label className={styles.search}>
-              <input aria-label="Buscar" placeholder="Buscar cursos, aulas e professores" />
-            </label>
+            <form action="/pesquisa" className={styles.search} role="search">
+              <input aria-label="Buscar cursos e materiais" name="q" placeholder="Buscar cursos e materiais" type="search" />
+              <button type="submit">Buscar</button>
+            </form>
           )}
           <div className={styles.topbarActions}>
               <button className={styles.iconButton} aria-label="Notificações" type="button">

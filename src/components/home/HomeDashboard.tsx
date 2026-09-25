@@ -41,7 +41,7 @@ export function HomeDashboard() {
       <section id="meus-cursos" aria-labelledby="recommended-title">
         <div className={`${styles.sectionHeading} ${styles.sectionHeadingCompact}`}>
           <div><span className={styles.eyebrow}>Descubra algo novo</span><h2 id="recommended-title">Recomendados para você</h2></div>
-          <a href="#explorar">Explorar todos</a>
+          <Link href="/explorar-cursos">Explorar todos</Link>
         </div>
         <div className={styles.courseGrid}>{recommendedCourses.map((course) => <CourseCard course={course} key={course.title} />)}</div>
       </section>

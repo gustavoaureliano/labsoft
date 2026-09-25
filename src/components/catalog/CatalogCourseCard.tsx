@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { CatalogCourse } from "@/data/catalog";
 import styles from "./CatalogCourseCard.module.css";
 
@@ -17,7 +16,6 @@ export function CatalogCourseCard({ course }: { course: CatalogCourse }) {
         <p className={styles.details}>{course.lessonCount} aulas · {course.duration} · {course.exams.join(" e ")}</p>
         <div className={styles.cardFooter}>
           <span className={styles.rating} aria-label={`Avaliação ${course.rating} de 5`}>★ {course.rating.toFixed(1).replace(".", ",")}</span>
-          <Link className={styles.detailsLink} href="/videoaula">Ver detalhes</Link>
         </div>
       </div>
     </article>
