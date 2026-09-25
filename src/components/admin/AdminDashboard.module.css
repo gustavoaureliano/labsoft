@@ -1,0 +1,54 @@
+.dashboard { display: grid; gap: 28px; }
+
+.heading { align-items: flex-end; display: flex; gap: 16px; justify-content: space-between; }
+.heading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+.heading p { color: var(--muted); font-size: 14px; margin: 0; }
+.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.demoBadge { background: var(--primary-light); border-radius: 4px; color: var(--primary); font-size: 11px; padding: 8px 10px; white-space: nowrap; }
+
+.metrics { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.metricCard, .chartCard, .healthCard { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.metricCard { min-height: 154px; padding: 22px 24px; }
+.metricCard h2 { color: var(--muted); font-size: 13px; font-weight: 400; margin: 0 0 14px; }
+.metricCard > strong { color: var(--primary); display: block; font-size: 28px; line-height: 1.1; }
+.metricCard p { color: var(--muted); font-size: 11px; margin: 14px 0 0; }
+.metricCard p span { color: #37775a; font-weight: 700; }
+
+.chartCard { padding: 26px 28px 30px; }
+.chartHeader { align-items: flex-start; display: flex; gap: 20px; justify-content: space-between; }
+.chartHeader h2, .healthCard h2 { font-size: 20px; margin: 6px 0; }
+.chartHeader p, .healthCard p { color: var(--muted); font-size: 12px; margin: 0; }
+.periodControls { background: var(--background); border: 1px solid var(--border); border-radius: 4px; display: flex; flex: 0 0 auto; padding: 3px; }
+.periodControls button { background: transparent; border: 0; border-radius: 3px; color: var(--muted); cursor: pointer; font-size: 12px; padding: 8px 12px; }
+.periodControls button[aria-pressed="true"] { background: var(--surface); box-shadow: 0 1px 3px #20343c1a; color: var(--primary); font-weight: 700; }
+.periodControls button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.chartSummary { align-items: baseline; display: flex; gap: 8px; margin: 30px 0 18px; }
+.chartSummary strong { color: var(--text); font-size: 25px; }
+.chartSummary span { color: var(--muted); font-size: 12px; }
+.chartViewport { overflow-x: auto; padding-bottom: 4px; }
+.chartBars { display: grid; gap: 12px; height: 260px; list-style: none; margin: 0; padding: 0; }
+.chartColumn { align-items: center; display: flex; flex-direction: column; min-width: 0; }
+.barValue { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+.barTrack { align-items: flex-end; background: var(--background); display: flex; flex: 1; width: min(100%, 64px); }
+.barFill { background: var(--primary); border-radius: 3px 3px 0 0; display: block; width: 100%; }
+.barLabel { color: var(--muted); font-size: 10px; margin-top: 10px; text-align: center; }
+
+.healthCard { align-items: center; display: grid; gap: 28px; grid-template-columns: 1fr 1.2fr; padding: 26px 28px; }
+.healthStats { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.healthStats div { border-left: 1px solid var(--border); padding-left: 16px; }
+.healthStats dt { color: var(--muted); font-size: 10px; }
+.healthStats dd { color: var(--primary); font-size: 18px; font-weight: 700; margin: 7px 0 0; }
+
+@media (max-width: 900px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .healthCard { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .heading, .chartHeader { align-items: flex-start; flex-direction: column; }
+  .metrics { grid-template-columns: 1fr; }
+  .chartCard, .healthCard { padding: 22px 16px; }
+  .chartBars { height: 220px; }
+  .healthStats { grid-template-columns: 1fr; }
+  .healthStats div { border-left: 0; border-top: 1px solid var(--border); padding: 12px 0 0; }
+}
