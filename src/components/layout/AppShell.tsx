@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { Avatar } from "@/components/profile/Avatar";
 import { Container } from "./Container";
 import styles from "./AppShell.module.css";
 
@@ -10,7 +11,7 @@ const navigation = [
   { label: "Explorar", href: "/explorar-cursos", page: "explore" },
   { label: "Materiais", href: "/materiais-complementares", page: "materials" },
   { label: "Certificados", href: "#em-breve" },
-  { label: "Meu perfil", href: "#em-breve" },
+  { label: "Meu perfil", href: "/perfil" },
 ];
 
 export function AppShell({ children, activePage = "home" }: { children: ReactNode; activePage?: "home" | "courses" | "explore" | "materials" }) {
@@ -35,23 +36,26 @@ export function AppShell({ children, activePage = "home" }: { children: ReactNod
             <span>Ajuda e suporte</span>
           </a>
           <p>Protótipo inicial</p>
-        </div>
+        </div>q
       </aside>
 
       <div className={styles.appContent}>
         <header className={styles.topbar}>
-          <form action="/pesquisa" className={styles.search} role="search">
-            <input aria-label="Buscar" name="q" placeholder="Buscar cursos e materiais" type="search" />
-            <button type="submit">Buscar</button>
-          </form>
+          {showSearch && (
+            <label className={styles.search}>
+              <input aria-label="Buscar" placeholder="Buscar cursos, aulas e professores" />
+            </label>
+          )}
           <div className={styles.topbarActions}>
-            <button className={styles.iconButton} aria-label="Notificações" type="button">
-              Avisos<span className={styles.notificationDot} />
-            </button>
-            <div className={styles.profileChip}>
-              <span className={styles.avatar}>FU</span>
+            {showNotifications && (
+              <button className={styles.iconButton} aria-label="Notificações" type="button">
+                Avisos<span className={styles.notificationDot} />
+              </button>
+            )}
+            <a className={styles.profileChip} href="/perfil" aria-label="Abrir perfil de Fulano">
+              <Avatar />
               <span className={styles.profileCopy}><strong>Fulano</strong><small>Aluno</small></span>
-            </div>
+            </a>
           </div>
         </header>
         <main>

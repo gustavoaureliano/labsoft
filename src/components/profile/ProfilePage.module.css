@@ -1,0 +1,62 @@
+.profile { display: grid; gap: 36px; }
+.pageHeading p { color: var(--muted); margin: 0; }
+.pageHeading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.topGrid { display: grid; grid-template-columns: minmax(220px, .72fr) minmax(0, 1.8fr); gap: 16px; align-items: stretch; }
+.bottomGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.card h2 { color: var(--text); font-size: 18px; line-height: 1.35; margin: 5px 0 0; }
+.avatarCard { display: grid; grid-template-rows: 150px 1fr; }
+.avatarVisual { align-items: center; background: var(--primary-light); border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
+.avatarButton { background: transparent; border: 0; border-radius: 50%; cursor: pointer; line-height: 0; padding: 0; }
+.avatarInfo { align-content: start; display: grid; justify-items: start; padding: 20px; }
+.avatarInfo p { color: var(--muted); font-size: 12px; margin: 5px 0 14px; }
+.visuallyHidden { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+.personalCard, .paymentCard, .planCard { padding: 24px; }
+.sectionHeading { align-items: flex-end; display: flex; justify-content: space-between; }
+.sectionHeading h2 { font-size: 20px; margin-top: 5px; }
+.form { align-items: center; display: grid; gap: 14px 16px; grid-template-columns: 100px minmax(0, 1fr); margin-top: 22px; }
+.form label, .fieldLabel { color: var(--text); font-size: 12px; font-weight: 700; }
+.form input, .form textarea, .readonlyField { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 13px; min-width: 0; width: 100%; }
+.form input, .readonlyField { height: 40px; padding: 0 12px; }
+.form textarea { line-height: 1.5; min-height: 88px; padding: 10px 12px; resize: vertical; }
+.form input:focus, .form textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
+.descriptionLabel { align-self: start; padding-top: 10px; }
+.passwordRow { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; }
+.primaryButton, .secondaryButton { border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700; min-height: 40px; padding: 10px 15px; }
+.primaryButton { background: var(--primary); border: 1px solid var(--primary); color: #fff; }
+.primaryButton:hover { filter: brightness(.92); }
+.secondaryButton { background: var(--surface); border: 1px solid var(--border); color: var(--primary); }
+.secondaryButton:hover { background: var(--primary-light); border-color: var(--primary-light); }
+.formActions { display: flex; grid-column: 2; justify-content: flex-end; margin-top: 4px; }
+.paymentFields { align-items: center; display: grid; gap: 14px 16px; grid-template-columns: 100px minmax(0, 1fr); margin: 22px 0; }
+.readonlyField { align-items: center; display: flex; }
+.price { color: var(--primary); font-size: 15px; }
+.planCard h2 { font-size: 20px; }
+.planCard ul { display: grid; gap: 12px; list-style: none; margin: 20px 0; padding: 0; }
+.planCard li { align-items: center; color: var(--text); display: flex; font-size: 12px; gap: 9px; line-height: 1.4; }
+.check { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: inline-flex; flex: none; height: 20px; justify-content: center; width: 20px; }
+.check svg { height: 12px; stroke-width: 2.5; width: 12px; }
+.notice { background: var(--text); border-radius: 4px; bottom: 22px; box-shadow: 0 4px 12px #20343c26; color: #fff; font-size: 13px; max-width: 340px; padding: 12px 16px; position: fixed; right: 22px; z-index: 20; }
+@media (max-width: 900px) {
+  .topGrid { grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); }
+}
+@media (max-width: 700px) {
+  .topGrid, .bottomGrid { grid-template-columns: 1fr; }
+  .avatarCard { grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: 1fr; }
+  .avatarVisual { border-bottom: 0; border-right: 1px solid var(--border); min-height: 160px; }
+  .form, .paymentFields { grid-template-columns: 1fr; gap: 8px; }
+  .form label:not(:first-child) { margin-top: 6px; }
+  .descriptionLabel { padding-top: 0; }
+  .formActions { grid-column: 1; margin-top: 6px; }
+  .paymentFields { gap: 7px; }
+  .fieldLabel:not(:first-child) { margin-top: 5px; }
+}
+@media (max-width: 500px) {
+  .personalCard, .paymentCard, .planCard { padding: 20px 16px; }
+  .passwordRow { grid-template-columns: minmax(0, 1fr); }
+  .formActions .primaryButton, .paymentCard > .primaryButton { width: 100%; }
+  .avatarCard { grid-template-columns: 94px minmax(0, 1fr); }
+  .avatarVisual { min-height: 140px; }
+  .avatarInfo { padding: 16px 12px; }
+}

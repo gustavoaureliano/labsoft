@@ -97,7 +97,7 @@
   display: flex;
 }
 
-.topbarActions { gap: 18px; }
+.topbarActions { gap: 18px; margin-left: auto; }
 
 .iconButton {
   background: transparent;
@@ -120,19 +120,6 @@
 }
 
 .profileChip { gap: 9px; }
-
-.avatar {
-  align-items: center;
-  background: var(--primary);
-  border-radius: 50%;
-  color: #fff;
-  display: inline-flex;
-  font-size: 11px;
-  font-weight: 700;
-  height: 36px;
-  justify-content: center;
-  width: 36px;
-}
 
 .profileCopy {
   display: flex;
