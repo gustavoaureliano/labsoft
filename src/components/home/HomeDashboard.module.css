@@ -1,0 +1,151 @@
+.dashboard { display: grid; gap: 36px; }
+.welcomeRow p { color: var(--muted); margin: 0; }
+.welcomeDate { font-size: 11px; text-transform: uppercase; }
+.welcomeRow h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+
+.continueSection { display: grid; gap: 16px; }
+
+.sectionHeading {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sectionHeading h2 {
+  color: var(--text);
+  font-size: 20px;
+  margin: 5px 0 0;
+}
+
+.sectionHeading a {
+  color: var(--primary);
+  font-size: 13px;
+}
+
+.sectionHeadingCompact { margin-bottom: 16px; }
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.featuredCourse {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(340px, 1.2fr);
+  overflow: hidden;
+}
+
+.featuredVisual {
+  align-items: center;
+  background: var(--primary-light);
+  border-right: 1px solid var(--border);
+  color: var(--primary);
+  display: flex;
+  font-size: 15px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 250px;
+}
+
+.featuredContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 30px;
+}
+
+.featuredContent h2 {
+  color: var(--text);
+  font-size: 22px;
+  margin: 8px 0;
+}
+
+.featuredContent > p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.teacherLine {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-top: 16px !important;
+}
+
+.miniAvatar {
+  align-items: center;
+  background: var(--primary);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  font-size: 8px;
+  font-weight: 700;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+
+.progressCopy {
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+  margin: 18px 0 7px;
+}
+
+.progressCopy span { color: var(--muted); }
+.progressCopy strong { color: var(--primary); }
+
+.progressBar {
+  background: #e4e9eb;
+  height: 5px;
+  overflow: hidden;
+}
+
+.progressBar span {
+  background: var(--primary);
+  display: block;
+  height: 100%;
+}
+
+.primaryButton {
+  align-self: flex-start;
+  background: var(--primary);
+  border: 0;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 20px;
+  padding: 11px 15px;
+}
+
+.courseGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .featuredCourse { grid-template-columns: 1fr; }
+
+  .featuredVisual {
+    border-bottom: 1px solid var(--border);
+    border-right: 0;
+    min-height: 150px;
+  }
+
+  .courseGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .sectionHeading { align-items: flex-start; gap: 12px; }
+  .featuredContent { padding: 24px; }
+  .courseGrid { grid-template-columns: 1fr; }
+}
