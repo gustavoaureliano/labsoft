@@ -1,5 +1,6 @@
+import Image from "next/image";
 import styles from "./ProfileLogo.module.css";
 
 export function ProfileLogo() {
-  return <span className={styles.logo} aria-label="AprovaAí">Aprova<span>Aí</span></span>;
+  return <Image alt="AprovaAí" className={styles.logo} height={70} src="/aprova-ai-logo.svg" width={280} />;
 }

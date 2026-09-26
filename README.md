@@ -1,6 +1,6 @@
-# Logos Academy
+# AprovaAí
 
-Protótipo inicial da interface da Logos Academy.
+Protótipo inicial da interface da AprovaAí.
 
 ## Requisitos
 

@@ -1,46 +1,11 @@
 .logo {
   align-items: center;
   display: flex;
-  gap: 10px;
   margin: 0 10px 36px;
 }
 
-.mark {
-  align-items: center;
-  background: var(--primary-light);
-  border-radius: 4px;
-  color: var(--primary);
-  display: flex;
-  flex: 0 0 auto;
-  font-size: 18px;
-  font-weight: 700;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-
-.text {
-  display: flex;
-  flex-direction: column;
-}
-
-.text strong {
-  color: var(--primary);
-  font-size: 18px;
-}
-
-.text small {
-  color: var(--muted);
-  font-size: 9px;
-  letter-spacing: 1px;
-  margin-top: 2px;
-  text-transform: uppercase;
-}
+.image { height: auto; width: 161px; }
 
 @media (max-width: 900px) {
   .logo { margin: 0; }
-}
-
-@media (max-width: 600px) {
-  .text { display: none; }
 }

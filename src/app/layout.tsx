@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Logos Academy",
-  description: "Protótipo inicial da plataforma Logos Academy",
+  title: "AprovaAí",
+  description: "Protótipo inicial da plataforma AprovaAí",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

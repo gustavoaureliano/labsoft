@@ -63,7 +63,7 @@ export function AdminDashboard() {
       <div className={styles.dashboard}>
         <header className={styles.heading}>
           <div>
-            <span className={styles.eyebrow}>Logos Academy</span>
+            <span className={styles.eyebrow}>AprovaAí</span>
             <h1>Visão geral do negócio</h1>
             <p>Acompanhe os principais indicadores da plataforma.</p>
           </div>

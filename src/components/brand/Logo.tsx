@@ -1,16 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./Logo.module.css";
 
 export function Logo() {
   return (
-    <Link className={styles.logo} href="/" aria-label="Ir para a página inicial">
-      <span className={styles.mark} aria-hidden="true">
-        L
-      </span>
-      <span className={styles.text}>
-        <strong>Logos</strong>
-        <small>Academy</small>
-      </span>
+    <Link className={styles.logo} href="/" aria-label="Ir para a página inicial da AprovaAí">
+      <Image
+        alt="AprovaAí"
+        className={styles.image}
+        height={70}
+        priority
+        src="/aprova-ai-logo.svg"
+        width={280}
+      />
     </Link>
   );
 }
