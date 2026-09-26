@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { Select } from "selenium-webdriver/lib/select.js";
-import { baseUrl, withBrowser } from "./browser.ts";
+import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
 test("o aluno explora, filtra e encontra um curso", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
     await driver.findElement(By.linkText("Explorar todos")).click();
     await driver.wait(until.urlContains("/explorar-cursos"), 10000);
+    await pauseForReview();
 
     const results = await driver.wait(until.elementLocated(By.css('section[aria-labelledby="courses-title"]')), 10000);
     const count = await results.findElement(By.css('[aria-live="polite"]'));
@@ -16,6 +17,7 @@ test("o aluno explora, filtra e encontra um curso", async () => {
 
     await driver.findElement(By.xpath('//button[normalize-space()="Ciências da Natureza"]')).click();
     await driver.wait(until.elementTextIs(count, "3 cursos encontrados"), 5000);
+    await pauseForReview();
 
     await new Select(await driver.findElement(By.css('select[name="sort"]'))).selectByValue("title");
     const firstTitle = await results.findElement(By.css("article h3"));
@@ -27,5 +29,6 @@ test("o aluno explora, filtra e encontra um curso", async () => {
     const cards = await results.findElements(By.css("article"));
     assert.equal(cards.length, 1);
     assert.match(await cards[0].getText(), /Estatística Essencial/);
+    await pauseForReview();
   });
 });

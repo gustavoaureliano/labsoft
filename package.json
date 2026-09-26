@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit --incremental false",
-    "test:e2e": "node --test tests/e2e/*.test.ts"
+    "test:e2e": "node --test tests/e2e/*.test.ts",
+    "test:e2e:visual": "E2E_SLOW_MS=${E2E_SLOW_MS:-1500}; export E2E_SLOW_MS; for test in tests/e2e/*.test.ts; do node --test \"$test\" || exit 1; done"
   },
   "dependencies": {
     "next": "latest",

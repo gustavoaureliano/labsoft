@@ -6,6 +6,11 @@ const require = createRequire(import.meta.url);
 const chrome = require("selenium-webdriver/chrome") as typeof import("selenium-webdriver/chrome");
 
 export const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+const reviewDelay = Number(process.env.E2E_SLOW_MS ?? 0);
+
+export function pauseForReview() {
+  return reviewDelay > 0 ? new Promise((resolve) => setTimeout(resolve, reviewDelay)) : Promise.resolve();
+}
 
 export async function withBrowser(run: (driver: WebDriver) => Promise<void>) {
   const options = new chrome.Options();

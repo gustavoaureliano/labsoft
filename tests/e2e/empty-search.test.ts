@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { By, Key, until } from "selenium-webdriver";
-import { baseUrl, withBrowser } from "./browser.ts";
+import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
 test("o aluno se recupera de uma busca sem resultados", async () => {
   await withBrowser(async (driver) => {
@@ -9,9 +9,11 @@ test("o aluno se recupera de uma busca sem resultados", async () => {
     await globalSearch.sendKeys("sem-resultados", Key.ENTER);
     await driver.wait(until.urlContains("/pesquisa?q=sem-resultados"), 10000);
     await driver.wait(until.elementLocated(By.xpath('//h2[normalize-space()="Nenhum resultado encontrado"]')), 10000);
+    await pauseForReview();
 
     await driver.findElement(By.linkText("Explorar cursos")).click();
     await driver.wait(until.urlContains("/explorar-cursos"), 10000);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Explore cursos"]')), 5000);
+    await pauseForReview();
   });
 });

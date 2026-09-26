@@ -15,7 +15,30 @@ Protótipo inicial da interface da Logos Academy.
 - `npm run typecheck`: verifica os tipos TypeScript.
 - `npm run build`: gera a versão de produção.
 - `npm run test:e2e`: executa os testes Selenium em Chromium, com a aplicação já iniciada em `http://localhost:3000`.
+- `npm run test:e2e:visual`: executa os testes um de cada vez, com pausas para acompanhar o navegador.
 
-Para executar os testes, inicie a aplicação com `npm run dev` em um terminal e rode `npm run test:e2e` em outro. Use `BASE_URL` se a aplicação estiver em outra porta e `CHROME_BINARY` se o Chromium estiver em outro caminho.
+Para executar os testes, inicie a aplicação em um terminal:
 
-Os testes cobrem cinco jornadas: explorar cursos, filtrar e buscar materiais, recuperar-se de uma busca sem resultados, continuar uma aula e salvar o apelido no perfil. O botão da videoaula apenas alterna entre os ícones de reproduzir e pausar nesta demonstração; ainda não há um vídeo.
+```bash
+npm run dev
+```
+
+Em outro terminal, execute os testes:
+
+```bash
+npm run test:e2e
+```
+
+Para acompanhar o navegador, use `npm run test:e2e:visual`. Os testes serão executados um de cada vez, com pausas de 1,5 segundo. Use `E2E_SLOW_MS` para definir outro intervalo em milissegundos.
+
+Use `BASE_URL` se a aplicação estiver em outra porta. Use `CHROME_BINARY` se o Chromium estiver em outro caminho.
+
+Os testes cobrem estas jornadas:
+
+- Explorar e filtrar cursos.
+- Buscar materiais complementares.
+- Recuperar-se de uma busca sem resultados.
+- Continuar uma aula.
+- Salvar o apelido no perfil.
+- Alternar o período no painel administrativo.
+- Aprovar um professor na moderação.
