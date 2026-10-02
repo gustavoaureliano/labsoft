@@ -57,6 +57,8 @@
   padding: 0 36px;
 }
 
+.pageTitle { color: var(--primary); font-size: 14px; margin-right: auto; }
+
 .search {
   align-items: center;
   background: var(--background);
@@ -119,7 +121,56 @@
   width: 6px;
 }
 
-.profileChip { gap: 9px; }
+.accountMenu { position: relative; }
+
+.profileChip {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  list-style: none;
+}
+
+.profileChip::-webkit-details-marker { display: none; }
+
+.accountChevron {
+  border-bottom: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  color: var(--text);
+  height: 6px;
+  margin: -3px 4px 0 7px;
+  transform: rotate(45deg);
+  width: 6px;
+}
+
+.accountOptions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 8px 24px rgb(32 52 60 / 12%);
+  display: grid;
+  min-width: 250px;
+  padding: 5px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  z-index: 5;
+}
+
+.accountOptions a {
+  align-items: center;
+  border-radius: 4px;
+  display: flex;
+  gap: 9px;
+  padding: 9px;
+}
+
+.accountOptions a:hover,
+.accountOptions a[aria-current="true"] { background: var(--primary-light); }
+
+.accountOptions a > span:last-child { display: grid; gap: 3px; }
+.accountOptions strong { font-size: 12px; }
+.accountOptions small { color: var(--muted); font-size: 10px; }
 
 .profileCopy {
   display: flex;
