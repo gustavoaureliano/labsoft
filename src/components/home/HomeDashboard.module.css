@@ -51,7 +51,12 @@
   font-weight: 700;
   justify-content: center;
   min-height: 250px;
+  overflow: hidden;
+  position: relative;
 }
+
+.featuredVisual img { object-fit: cover; }
+.featuredVisual > span { background: rgb(255 255 255 / 88%); border-radius: 4px; padding: 7px 10px; position: relative; z-index: 1; }
 
 .featuredContent {
   display: flex;
@@ -89,8 +94,12 @@
   font-weight: 700;
   height: 26px;
   justify-content: center;
+  overflow: hidden;
+  position: relative;
   width: 26px;
 }
+
+.miniAvatar img { object-fit: cover; }
 
 .progressCopy {
   display: flex;

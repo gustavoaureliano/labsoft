@@ -23,7 +23,8 @@
 .teacherItem { align-items: center; border-top: 1px solid var(--border); display: grid; gap: 14px; grid-template-columns: 42px minmax(180px, 1.1fr) minmax(180px, 1fr) auto; padding: 16px 0; }
 .teacherItem:first-child { border-top: 0; padding-top: 0; }
 .teacherItem:last-child { padding-bottom: 0; }
-.teacherAvatar { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; font-weight: 700; height: 38px; justify-content: center; width: 38px; }
+.teacherAvatar { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; font-weight: 700; height: 38px; justify-content: center; overflow: hidden; position: relative; width: 38px; }
+.teacherAvatar img { object-fit: cover; }
 .teacherInfo, .teacherStatus { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .teacherInfo strong, .teacherStatus strong { font-size: 13px; }
 .teacherInfo small, .teacherStatus small { color: var(--muted); font-size: 11px; }
@@ -42,6 +43,10 @@
 .reviewMeta small { color: var(--muted); font-size: 10px; white-space: nowrap; }
 .reviewItem p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 7px 0 10px; }
 .reasonBadge { background: #f7eeee; border-radius: 4px; color: #955252; display: inline-block; font-size: 10px; padding: 6px 8px; }
+.reportedItem { display: grid; gap: 12px; grid-template-columns: 76px minmax(0, 1fr); }
+.reportImage { aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; position: relative; width: 76px; }
+.reportImage img { object-fit: cover; }
+.reportCopy { min-width: 0; }
 
 @media (max-width: 1000px) {
   .teacherItem { grid-template-columns: 42px minmax(0, 1fr) auto; }

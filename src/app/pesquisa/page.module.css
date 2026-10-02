@@ -8,7 +8,9 @@
 .courseGrid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .materialList { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .material { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; display: grid; gap: 14px; grid-template-columns: 96px minmax(0, 1fr) auto; padding: 14px; }
-.materialType { align-items: center; background: #e8f3f6; border-radius: 4px; color: var(--primary); display: flex; font-size: 10px; font-weight: 700; justify-content: center; min-height: 58px; padding: 8px; text-align: center; }
+.materialImage { aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; position: relative; width: 96px; }
+.materialImage img { object-fit: cover; }
+.materialType { color: var(--primary) !important; display: block; font-size: 9px !important; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
 .materialCopy { min-width: 0; }
 .materialCopy h3 { font-size: 13px; margin: 0 0 4px; }
 .materialCopy p { color: var(--muted); font-size: 11px; margin: 0 0 5px; }
@@ -28,6 +30,7 @@
   .courseGrid { grid-template-columns: 1fr; }
   .sectionHeading { align-items: flex-start; flex-direction: column; gap: 5px; }
   .material { align-items: start; grid-template-columns: 68px minmax(0, 1fr); }
+  .materialImage { width: 68px; }
   .material > a { grid-column: 2; justify-self: start; }
   .emptyState { padding: 22px 14px; }
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AppShell } from "@/components/layout/AppShell";
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { searchCatalogCourses, searchCatalogMaterials } from "@/data/catalog";
@@ -47,8 +48,9 @@ export default async function Pesquisa({ searchParams }: SearchPageProps) {
                 <ul className={styles.materialList}>
                   {materials.map((material) => (
                     <li className={styles.material} key={material.id}>
-                      <div className={styles.materialType}>{material.type}</div>
+                      <div className={styles.materialImage}><Image alt="" fill sizes="96px" src={material.image} /></div>
                       <div className={styles.materialCopy}>
+                        <span className={styles.materialType}>{material.type}</span>
                         <h3>{material.title}</h3>
                         <p>{material.description}</p>
                         <span>{material.courseTitle} · {material.format}</span>

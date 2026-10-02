@@ -3,16 +3,11 @@
 .small { width: 34px; height: 34px; }
 .large { width: 76px; height: 76px; }
 
-/* O personagem vem da captura de referência fornecida pelo usuário. */
 .referenceArt {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 76px;
-  height: 76px;
-  background-image: url('/figma-avatar-reference.png');
+  background-image: url('/images/avatars/aluno-default.png');
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 204px 218px;
-  background-position: -70px -65px;
+  background-size: cover;
+  inset: 0;
+  position: absolute;
 }
-.small .referenceArt { transform: scale(0.4473684211); transform-origin: top left; }

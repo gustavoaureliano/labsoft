@@ -15,8 +15,9 @@
 .groupHeading h2 { color: var(--primary); font-size: 16px; margin: 5px 0 0; }
 .groupHeading a { color: var(--primary); font-size: 11px; font-weight: 700; }
 .materialList { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
-.material { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; display: grid; gap: 13px; grid-template-columns: 44px minmax(0, 1fr) auto; padding: 12px; }
-.typeMark { align-items: center; background: #e8f3f6; border-radius: 4px; color: var(--primary); display: flex; font-size: 16px; font-weight: 700; height: 42px; justify-content: center; width: 42px; }
+.material { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; display: grid; gap: 13px; grid-template-columns: 96px minmax(0, 1fr) auto; padding: 12px; }
+.materialImage { aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; position: relative; width: 96px; }
+.materialImage img { object-fit: cover; }
 .materialCopy { min-width: 0; }
 .materialCopy > span { color: var(--primary); font-size: 9px; font-weight: 700; }
 .materialCopy h3 { font-size: 13px; margin: 3px 0; }
@@ -29,8 +30,8 @@
   .resultCount { padding: 0; }
 }
 @media (max-width: 500px) {
-  .material { align-items: start; grid-template-columns: 36px minmax(0, 1fr); }
-  .typeMark { height: 34px; width: 34px; }
+  .material { align-items: start; grid-template-columns: 72px minmax(0, 1fr); }
+  .materialImage { width: 72px; }
   .format { grid-column: 2; }
   .groupHeading { align-items: flex-start; flex-direction: column; gap: 8px; }
 }

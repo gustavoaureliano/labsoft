@@ -1,5 +1,6 @@
 export type CatalogCourse = {
   id: string;
+  image: string;
   subject: string;
   group: string;
   title: string;
@@ -13,6 +14,7 @@ export type CatalogCourse = {
 
 export type ComplementaryMaterial = {
   id: string;
+  image: string;
   courseId: string;
   courseTitle: string;
   type: string;
@@ -26,6 +28,7 @@ export const courseGroups = ["Matemática", "Linguagens", "Ciências da Natureza
 export const catalogCourses: CatalogCourse[] = [
   {
     id: "fisica-quantica",
+    image: "/images/courses/fisica-quantica.png",
     subject: "Física",
     group: "Ciências da Natureza",
     title: "Introdução à Física Quântica",
@@ -38,6 +41,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "biologia-celular",
+    image: "/images/courses/biologia-celular.png",
     subject: "Biologia",
     group: "Ciências da Natureza",
     title: "Biologia Celular para Vestibulares",
@@ -50,6 +54,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "estatistica-essencial",
+    image: "/images/courses/estatistica.png",
     subject: "Matemática",
     group: "Matemática",
     title: "Estatística Essencial",
@@ -62,6 +67,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "redacao-nota-mil",
+    image: "/images/courses/redacao-nota-mil.png",
     subject: "Redação",
     group: "Linguagens",
     title: "Redação nota mil: da tese à conclusão",
@@ -74,6 +80,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "quimica-organica",
+    image: "/images/courses/quimica-organica.png",
     subject: "Química",
     group: "Ciências da Natureza",
     title: "Química Orgânica sem mistério",
@@ -86,6 +93,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "historia-brasil",
+    image: "/images/courses/historia-brasil.png",
     subject: "História",
     group: "Ciências Humanas",
     title: "História do Brasil em perspectiva",
@@ -101,6 +109,7 @@ export const catalogCourses: CatalogCourse[] = [
 export const complementaryMaterials: ComplementaryMaterial[] = [
   {
     id: "mapa-quantica",
+    image: "/images/materials/dualidade-onda-particula.png",
     courseId: "fisica-quantica",
     courseTitle: "Introdução à Física Quântica",
     type: "Mapa mental",
@@ -110,6 +119,7 @@ export const complementaryMaterials: ComplementaryMaterial[] = [
   },
   {
     id: "exercicios-quantica",
+    image: "/images/materials/modelos-atomicos.png",
     courseId: "fisica-quantica",
     courseTitle: "Introdução à Física Quântica",
     type: "Exercícios",
@@ -119,6 +129,7 @@ export const complementaryMaterials: ComplementaryMaterial[] = [
   },
   {
     id: "resumo-celula",
+    image: "/images/materials/organelas.png",
     courseId: "biologia-celular",
     courseTitle: "Biologia Celular para Vestibulares",
     type: "Resumo",
@@ -128,6 +139,7 @@ export const complementaryMaterials: ComplementaryMaterial[] = [
   },
   {
     id: "simulado-celula",
+    image: "/images/materials/citologia.png",
     courseId: "biologia-celular",
     courseTitle: "Biologia Celular para Vestibulares",
     type: "Simulado",
@@ -137,6 +149,7 @@ export const complementaryMaterials: ComplementaryMaterial[] = [
   },
   {
     id: "formula-estatistica",
+    image: "/images/materials/formulas-estatistica.png",
     courseId: "estatistica-essencial",
     courseTitle: "Estatística Essencial",
     type: "Resumo",
@@ -146,6 +159,7 @@ export const complementaryMaterials: ComplementaryMaterial[] = [
   },
   {
     id: "proposta-redacao",
+    image: "/images/materials/propostas-redacao.png",
     courseId: "redacao-nota-mil",
     courseTitle: "Redação nota mil: da tese à conclusão",
     type: "Exercícios",

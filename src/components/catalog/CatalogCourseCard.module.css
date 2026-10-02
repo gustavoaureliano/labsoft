@@ -30,18 +30,12 @@
   width: 120px;
 }
 
+.cover img { object-fit: cover; }
+
 .cover[data-group="Ciências da Natureza"] { background-color: #d7f0eb; color: #087a81; }
 .cover[data-group="Matemática"] { background-color: #d9eafa; color: #1767a0; }
 .cover[data-group="Linguagens"] { background-color: #f8e3dd; color: #ab4939; }
 .cover[data-group="Ciências Humanas"] { background-color: #f6edcf; color: #8a6820; }
-
-.coverMark {
-  font-size: 58px;
-  font-weight: 800;
-  line-height: 1;
-  position: relative;
-  z-index: 1;
-}
 
 .coverSubject {
   align-self: flex-end;

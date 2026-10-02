@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AdminShell } from "./AdminShell";
 import styles from "./ModerationDashboard.module.css";
 
@@ -8,6 +9,7 @@ const initialTeachers = [
   {
     id: 1,
     initials: "AR",
+    image: "/images/avatars/ana-beatriz-ribeiro.png",
     name: "Ana Beatriz Ribeiro",
     area: "Filosofia e Sociologia",
     detail: "Documentação completa",
@@ -16,6 +18,7 @@ const initialTeachers = [
   {
     id: 2,
     initials: "RM",
+    image: "/images/avatars/rafael-moreira.png",
     name: "Rafael Moreira",
     area: "Física",
     detail: "Diploma e identidade verificados",
@@ -24,6 +27,7 @@ const initialTeachers = [
   {
     id: 3,
     initials: "CM",
+    image: "/images/avatars/carla-mendes.png",
     name: "Carla Mendes",
     area: "Língua Portuguesa e Redação",
     detail: "Aguardando análise cadastral",
@@ -55,18 +59,21 @@ const blockedComments = [
 const reportedContent = [
   {
     title: "Aula 04 · Ética e sociedade",
+    image: "/images/courses/introducao-filosofia.png",
     course: "Introdução à Filosofia",
     reason: "Informação possivelmente incorreta",
     reports: 4,
   },
   {
     title: "Material complementar · Campo elétrico",
+    image: "/images/courses/fisica-eletricidade.png",
     course: "Eletrodinâmica",
     reason: "Arquivo indisponível",
     reports: 3,
   },
   {
     title: "Aula 07 · Estrutura da redação",
+    image: "/images/courses/redacao-nota-mil.png",
     course: "Redação Nota 1000",
     reason: "Conteúdo desatualizado",
     reports: 2,
@@ -135,7 +142,9 @@ export function ModerationDashboard() {
             <ul className={styles.teacherList}>
               {teachers.map((teacher) => (
                 <li className={styles.teacherItem} key={teacher.id}>
-                  <span className={styles.teacherAvatar} aria-hidden="true">{teacher.initials}</span>
+                  <span className={styles.teacherAvatar}>
+                    <Image alt={`Foto de ${teacher.name}`} fill sizes="38px" src={teacher.image} />
+                  </span>
                   <span className={styles.teacherInfo}>
                     <strong>{teacher.name}</strong>
                     <small>{teacher.area}</small>
@@ -190,13 +199,18 @@ export function ModerationDashboard() {
             </div>
             <ul className={styles.reviewList}>
               {reportedContent.map((content) => (
-                <li className={styles.reviewItem} key={content.title}>
-                  <div className={styles.reviewMeta}>
-                    <strong>{content.title}</strong>
-                    <small>{content.reports} denúncias</small>
+                <li className={`${styles.reviewItem} ${styles.reportedItem}`} key={content.title}>
+                  <span className={styles.reportImage}>
+                    <Image alt="" fill sizes="76px" src={content.image} />
+                  </span>
+                  <div className={styles.reportCopy}>
+                    <div className={styles.reviewMeta}>
+                      <strong>{content.title}</strong>
+                      <small>{content.reports} denúncias</small>
+                    </div>
+                    <p>{content.course}</p>
+                    <span className={styles.reasonBadge}>{content.reason}</span>
                   </div>
-                  <p>{content.course}</p>
-                  <span className={styles.reasonBadge}>{content.reason}</span>
                 </li>
               ))}
             </ul>

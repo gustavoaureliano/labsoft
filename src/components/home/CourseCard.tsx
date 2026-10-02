@@ -1,10 +1,14 @@
+import Image from "next/image";
 import type { Course } from "@/data/courses";
 import styles from "./CourseCard.module.css";
 
 export function CourseCard({ course }: { course: Course }) {
   return (
     <article className={styles.card}>
-      <div className={styles.placeholder}>{course.category}</div>
+      <div className={styles.placeholder}>
+        <Image alt={`Capa do curso ${course.title}`} fill sizes="(max-width: 600px) 100vw, 33vw" src={course.image} />
+        <span>{course.category}</span>
+      </div>
       <div className={styles.body}>
         <span className={styles.category}>{course.category}</span>
         <h3>{course.title}</h3>

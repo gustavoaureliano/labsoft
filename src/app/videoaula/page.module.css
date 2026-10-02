@@ -5,10 +5,12 @@
 .eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .layout { align-items: start; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 300px; }
 .mainColumn { display: grid; gap: 20px; min-width: 0; }
-.player { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: var(--primary); display: flex; flex-direction: column; gap: 10px; justify-content: center; text-align: center; }
-.player strong { font-size: 16px; }
-.player span:last-child { color: var(--muted); font-size: 12px; }
-.playIcon { align-items: center; background: var(--primary); border: 0; border-radius: 50%; color: #fff; cursor: pointer; display: flex; font-size: 19px; height: 52px; justify-content: center; width: 52px; }
+.player { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: #fff; display: flex; flex-direction: column; gap: 10px; justify-content: center; overflow: hidden; position: relative; text-align: center; }
+.player::after { background: linear-gradient(rgb(5 35 48 / 12%), rgb(5 35 48 / 72%)); content: ""; inset: 0; position: absolute; }
+.player > img { object-fit: cover; }
+.player strong { font-size: 16px; position: relative; text-shadow: 0 1px 8px rgb(0 0 0 / 45%); z-index: 1; }
+.player span:last-child { color: #eef7f8; font-size: 12px; position: relative; z-index: 1; }
+.playIcon { align-items: center; background: var(--primary); border: 0; border-radius: 50%; color: #fff; cursor: pointer; display: flex; font-size: 19px; height: 52px; justify-content: center; position: relative; width: 52px; z-index: 1; }
 .playIcon:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .description, .lessonPanel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
 .description { padding: 24px; }

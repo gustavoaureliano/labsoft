@@ -1,5 +1,8 @@
 .topbarTitle { color: var(--primary); font-size: 14px; font-weight: 700; }
 
+.teacherAvatar { border-radius: 50%; flex: 0 0 auto; height: 36px; overflow: hidden; position: relative; width: 36px; }
+.teacherAvatar img { object-fit: cover; }
+
 @media (max-width: 900px) {
   .sidebar { align-items: center; flex-direction: row; }
   .navigation { margin-left: auto; }

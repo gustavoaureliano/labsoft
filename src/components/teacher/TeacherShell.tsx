@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { Logo } from "@/components/brand/Logo";
 import { Container } from "@/components/layout/Container";
 import shell from "@/components/layout/AppShell.module.css";
@@ -22,7 +23,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
         <header className={shell.topbar}>
           <span className={styles.topbarTitle}>Desempenho do professor</span>
           <div className={shell.profileChip}>
-            <span className={shell.avatar}>PR</span>
+            <span className={styles.teacherAvatar}><Image alt="" fill sizes="36px" src="/images/avatars/professor-default.png" /></span>
             <span className={shell.profileCopy}><strong>Professor</strong><small>Produtor</small></span>
           </div>
         </header>

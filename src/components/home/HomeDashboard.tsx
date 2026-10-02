@@ -2,6 +2,7 @@ import { CourseCard } from "@/components/home/CourseCard";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse, recommendedCourses } from "@/data/courses";
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
@@ -24,13 +25,14 @@ export function HomeDashboard() {
 
         <article className={styles.featuredCourse}>
           <div className={styles.featuredVisual}>
+            <Image alt={`Capa do curso ${enrolledCourse.title}`} fill priority sizes="(max-width: 900px) 100vw, 40vw" src={enrolledCourse.image} />
             <span>Aula de {enrolledCourse.category}</span>
           </div>
           <div className={styles.featuredContent}>
             <span className={styles.eyebrow}>{enrolledCourse.category} · Aula {currentLesson.number}</span>
             <h2>{currentLesson.title}</h2>
             <p>{enrolledCourse.title}</p>
-            <p className={styles.teacherLine}><span className={styles.miniAvatar}>{enrolledCourse.teacherInitials}</span>{enrolledCourse.teacher}</p>
+            <p className={styles.teacherLine}><span className={styles.miniAvatar}><Image alt="" fill sizes="26px" src="/images/avatars/professor-default.png" /></span>{enrolledCourse.teacher}</p>
             <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
             <ProgressBar value={enrolledCourse.progress} />
             <PrimaryLink className={styles.primaryButton} href="/videoaula">Continuar assistindo</PrimaryLink>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { catalogCourses, complementaryMaterials, materialTypes } from "@/data/catalog";
@@ -61,7 +62,9 @@ export default function MateriaisComplementares() {
                 <ul className={styles.materialList}>
                   {materials.map((material) => (
                     <li className={styles.material} key={material.id}>
-                      <div className={styles.typeMark} aria-hidden="true">{material.type.slice(0, 1)}</div>
+                      <div className={styles.materialImage}>
+                        <Image alt={`Prévia de ${material.title}`} fill sizes="96px" src={material.image} />
+                      </div>
                       <div className={styles.materialCopy}>
                         <span>{material.type}</span>
                         <h3>{material.title}</h3>

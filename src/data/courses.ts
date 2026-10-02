@@ -3,12 +3,13 @@ export type Course = {
   title: string;
   teacher: string;
   duration: string;
+  image: string;
 };
 
 export const recommendedCourses: Course[] = [
-  { category: "Matemática", title: "Funções e gráficos sem mistério", teacher: "Profa. Ana Martins", duration: "18 aulas" },
-  { category: "Química", title: "Química orgânica essencial", teacher: "Prof. Lucas Ribeiro", duration: "24 aulas" },
-  { category: "Física", title: "Eletricidade do zero", teacher: "Prof. Marcelo Andrade", duration: "15 aulas" },
+  { category: "Matemática", title: "Funções e gráficos sem mistério", teacher: "Profa. Ana Martins", duration: "18 aulas", image: "/images/courses/matematica-funcoes.png" },
+  { category: "Química", title: "Química orgânica essencial", teacher: "Prof. Lucas Ribeiro", duration: "24 aulas", image: "/images/courses/quimica-organica.png" },
+  { category: "Física", title: "Eletricidade do zero", teacher: "Prof. Marcelo Andrade", duration: "15 aulas", image: "/images/courses/fisica-eletricidade.png" },
 ];
 
 export const currentLesson = {
@@ -21,6 +22,7 @@ export const currentLesson = {
 export const enrolledCourse = {
   category: "Física",
   title: "Física para o ENEM: Mecânica",
+  image: "/images/courses/fisica-mecanica.png",
   teacher: "Prof. Marcelo Andrade",
   teacherInitials: "MA",
   totalLessons: 12,

@@ -7,7 +7,7 @@
 .demoBadge { background: var(--primary-light); border-radius: 4px; color: var(--primary); font-size: 11px; padding: 8px 10px; white-space: nowrap; }
 
 .metrics { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.metricCard, .chartCard, .healthCard { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.metricCard, .chartCard, .coursesCard, .healthCard { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
 .metricCard { min-height: 154px; padding: 22px 24px; }
 .metricCard h2 { color: var(--muted); font-size: 13px; font-weight: 400; margin: 0 0 14px; }
 .metricCard > strong { color: var(--primary); display: block; font-size: 28px; line-height: 1.1; }
@@ -33,6 +33,21 @@
 .barFill { background: var(--primary); border-radius: 3px 3px 0 0; display: block; width: 100%; }
 .barLabel { color: var(--muted); font-size: 10px; margin-top: 10px; text-align: center; }
 
+.coursesCard { padding: 26px 28px; }
+.coursesCard h2 { font-size: 20px; margin: 6px 0; }
+.coursesCard p { color: var(--muted); font-size: 12px; margin: 0; }
+.courseList { list-style: none; margin: 22px 0 0; padding: 0; }
+.courseList li { align-items: center; border-top: 1px solid var(--border); display: grid; gap: 14px; grid-template-columns: 24px 84px minmax(0, 1fr) auto; padding: 12px 0; }
+.courseList li:first-child { border-top: 0; padding-top: 0; }
+.courseList li:last-child { padding-bottom: 0; }
+.coursePosition { color: var(--muted); font-size: 12px; font-weight: 700; text-align: center; }
+.courseImage { aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden; position: relative; width: 84px; }
+.courseImage img { object-fit: cover; }
+.courseInfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.courseInfo strong { font-size: 13px; }
+.courseInfo small { color: var(--muted); font-size: 10px; }
+.courseAccesses { color: var(--primary); font-size: 12px; white-space: nowrap; }
+
 .healthCard { align-items: center; display: grid; gap: 28px; grid-template-columns: 1fr 1.2fr; padding: 26px 28px; }
 .healthStats { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
 .healthStats div { border-left: 1px solid var(--border); padding-left: 16px; }
@@ -47,8 +62,11 @@
 @media (max-width: 600px) {
   .heading, .chartHeader { align-items: flex-start; flex-direction: column; }
   .metrics { grid-template-columns: 1fr; }
-  .chartCard, .healthCard { padding: 22px 16px; }
+  .chartCard, .coursesCard, .healthCard { padding: 22px 16px; }
   .chartBars { height: 220px; }
   .healthStats { grid-template-columns: 1fr; }
   .healthStats div { border-left: 0; border-top: 1px solid var(--border); padding: 12px 0 0; }
+  .courseList li { grid-template-columns: 20px 72px minmax(0, 1fr); }
+  .courseImage { width: 72px; }
+  .courseAccesses { grid-column: 3; }
 }

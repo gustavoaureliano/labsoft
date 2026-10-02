@@ -1,13 +1,12 @@
+import Image from "next/image";
 import type { CatalogCourse } from "@/data/catalog";
 import styles from "./CatalogCourseCard.module.css";
 
 export function CatalogCourseCard({ course }: { course: CatalogCourse }) {
-  const coverMark = course.subject === "Física" ? "φ" : course.subject === "Biologia" ? "BIO" : course.subject === "Matemática" ? "∑" : course.subject === "Redação" ? "Aa" : course.subject === "Química" ? "H₂O" : "BR";
-
   return (
     <article className={styles.card}>
       <div className={styles.cover} data-group={course.group}>
-        <span className={styles.coverMark} aria-hidden="true">{coverMark}</span>
+        <Image alt={`Capa do curso ${course.title}`} fill sizes="(max-width: 700px) 100vw, 33vw" src={course.image} />
         <span className={styles.coverSubject}>{course.subject}</span>
       </div>
       <div className={styles.body}>

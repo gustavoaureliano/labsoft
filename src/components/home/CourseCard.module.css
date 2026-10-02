@@ -14,7 +14,12 @@
   font-size: 13px;
   height: 100px;
   justify-content: center;
+  overflow: hidden;
+  position: relative;
 }
+
+.placeholder img { object-fit: cover; }
+.placeholder span { background: rgb(255 255 255 / 88%); border-radius: 3px; padding: 5px 8px; position: relative; z-index: 1; }
 
 .body { padding: 16px; }
 

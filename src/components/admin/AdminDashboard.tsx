@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AdminShell } from "./AdminShell";
 import styles from "./AdminDashboard.module.css";
 
@@ -48,6 +49,12 @@ const metrics = [
     trend: "+8,7%",
     note: "crescimento no período",
   },
+];
+
+const mostAccessedCourses = [
+  { title: "Física para o ENEM: Mecânica", area: "Física", accesses: "8.420 acessos", image: "/images/courses/fisica-mecanica.png" },
+  { title: "Ética e Sociedade", area: "Ciências Humanas", accesses: "6.980 acessos", image: "/images/courses/etica-sociedade.png" },
+  { title: "Pensamento Contemporâneo", area: "Filosofia", accesses: "5.760 acessos", image: "/images/courses/pensamento-contemporaneo.png" },
 ];
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -122,6 +129,26 @@ export function AdminDashboard() {
               ))}
             </ol>
           </div>
+        </section>
+
+        <section className={styles.coursesCard} aria-labelledby="popular-courses-title">
+          <div className={styles.chartHeader}>
+            <div>
+              <span className={styles.eyebrow}>Interesse dos alunos</span>
+              <h2 id="popular-courses-title">Cursos mais acessados</h2>
+              <p>Conteúdos com maior volume de visitas neste mês.</p>
+            </div>
+          </div>
+          <ol className={styles.courseList}>
+            {mostAccessedCourses.map((course, index) => (
+              <li key={course.title}>
+                <span className={styles.coursePosition}>{index + 1}</span>
+                <span className={styles.courseImage}><Image alt="" fill sizes="84px" src={course.image} /></span>
+                <span className={styles.courseInfo}><strong>{course.title}</strong><small>{course.area}</small></span>
+                <strong className={styles.courseAccesses}>{course.accesses}</strong>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className={styles.healthCard} aria-labelledby="health-title">

@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse } from "@/data/courses";
+import Image from "next/image";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
@@ -17,7 +18,10 @@ export default function MeusCursos() {
         <section aria-labelledby="in-progress-title">
           <h2 id="in-progress-title">Em andamento</h2>
           <article className={styles.course}>
-            <div className={styles.courseVisual}>{enrolledCourse.category}</div>
+            <div className={styles.courseVisual}>
+              <Image alt={`Capa do curso ${enrolledCourse.title}`} fill priority sizes="(max-width: 750px) 100vw, 40vw" src={enrolledCourse.image} />
+              <span>{enrolledCourse.category}</span>
+            </div>
             <div className={styles.courseContent}>
               <span className={styles.eyebrow}>{enrolledCourse.category} · {enrolledCourse.totalLessons} aulas</span>
               <h3>{enrolledCourse.title}</h3>
