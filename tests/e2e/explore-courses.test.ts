@@ -7,11 +7,18 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 test("o aluno explora, filtra e encontra um curso", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
+    const homeCard = await driver.findElement(By.css('section#meus-cursos article'));
+    const homeCardClass = await homeCard.getAttribute("class");
+    const homeCardTitle = await homeCard.findElement(By.css("h3")).getText();
+    assert.equal(homeCardTitle, "Introdução à Física Quântica");
     await driver.findElement(By.linkText("Explorar todos")).click();
     await driver.wait(until.urlContains("/explorar-cursos"), 10000);
     await pauseForReview();
 
     const results = await driver.wait(until.elementLocated(By.css('section[aria-labelledby="courses-title"]')), 10000);
+    const exploreCardClass = await results.findElement(By.css("article")).getAttribute("class");
+    assert.equal(exploreCardClass, homeCardClass);
+    assert.equal(await results.findElement(By.css("article h3")).getText(), homeCardTitle);
     const count = await results.findElement(By.css('[aria-live="polite"]'));
     assert.equal(await count.getText(), "6 cursos encontrados");
 

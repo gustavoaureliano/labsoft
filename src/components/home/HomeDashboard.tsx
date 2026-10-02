@@ -1,7 +1,8 @@
-import { CourseCard } from "@/components/home/CourseCard";
+import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { currentLesson, enrolledCourse, recommendedCourses } from "@/data/courses";
+import { catalogCourses } from "@/data/catalog";
+import { currentLesson, enrolledCourse } from "@/data/courses";
 import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
@@ -43,7 +44,7 @@ export function HomeDashboard() {
           <div><span className={styles.eyebrow}>Descubra algo novo</span><h2 id="recommended-title">Recomendados para você</h2></div>
           <Link href="/explorar-cursos">Explorar todos</Link>
         </div>
-        <div className={styles.courseGrid}>{recommendedCourses.map((course) => <CourseCard course={course} key={course.title} />)}</div>
+        <div className={styles.courseGrid}>{catalogCourses.slice(0, 3).map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>
       </section>
     </div>
   );
