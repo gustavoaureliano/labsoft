@@ -42,11 +42,16 @@
 .reviewMeta small { color: var(--muted); font-size: 10px; white-space: nowrap; }
 .reviewItem p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 7px 0 10px; }
 .reasonBadge { background: #f7eeee; border-radius: 4px; color: #955252; display: inline-block; font-size: 10px; padding: 6px 8px; }
+.reviewActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.reviewActions button { background: var(--primary); border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-size: 11px; padding: 8px 10px; }
+.reviewActions button:last-child { background: #955252; }
+.teacherActions { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacherActions .approveButton:last-child { background: #955252; }
 
 @media (max-width: 1000px) {
   .teacherItem { grid-template-columns: 42px minmax(0, 1fr) auto; }
   .teacherStatus { grid-column: 2; }
-  .approveButton { grid-column: 3; grid-row: 1 / span 2; }
+  .teacherItem > .approveButton, .teacherActions { grid-column: 3; grid-row: 1 / span 2; }
 }
 
 @media (max-width: 900px) {
@@ -59,6 +64,6 @@
   .metrics { grid-template-columns: 1fr; }
   .panel { padding: 22px 16px; }
   .teacherItem { align-items: flex-start; grid-template-columns: 38px minmax(0, 1fr); }
-  .teacherStatus, .approveButton { grid-column: 2; grid-row: auto; }
-  .approveButton { justify-self: start; }
+  .teacherStatus, .teacherItem > .approveButton, .teacherActions { grid-column: 2; grid-row: auto; }
+  .teacherItem > .approveButton { justify-self: start; }
 }

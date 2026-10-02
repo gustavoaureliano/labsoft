@@ -21,7 +21,7 @@
 .tabPanel p, .panelHeading p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 .tabForm { display: grid; gap: 8px; margin-top: 18px; }
 .tabForm label { font-size: 13px; font-weight: 700; }
-.tabForm textarea { border: 1px solid var(--border); border-radius: 6px; color: var(--text); font: inherit; font-size: 13px; padding: 10px; resize: vertical; width: 100%; }
+.tabForm textarea, .tabForm input { border: 1px solid var(--border); border-radius: 6px; color: var(--text); font: inherit; font-size: 13px; padding: 10px; resize: vertical; width: 100%; }
 .tabForm button { background: var(--primary); border: 0; border-radius: 6px; color: #fff; cursor: pointer; font: inherit; font-size: 13px; justify-self: start; padding: 10px 15px; }
 .tabForm button:disabled { cursor: not-allowed; opacity: .5; }
 .comments { list-style: none; margin: 15px 0 0; padding: 0; }

@@ -1,10 +1,28 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse } from "@/data/courses";
+import { initialStudyDemo, lessonDemoId, studyDemoKey } from "@/data/studyDemo";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
+  const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
+  const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
+  const [playlistName, setPlaylistName] = useState("");
+
+  function createPlaylist(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = playlistName.trim();
+    if (!name || study.playlists.some((playlist) => playlist.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) return;
+    saveStudy({ ...study, playlists: [...study.playlists, { id: crypto.randomUUID(), name, lessonIds: [] }] });
+    setPlaylistName("");
+  }
+
   return (
     <AppShell activePage="courses">
       <div className={styles.page}>
@@ -28,6 +46,24 @@ export default function MeusCursos() {
               <PrimaryLink className={styles.primaryButton} href="/videoaula">Continuar curso</PrimaryLink>
             </div>
           </article>
+        </section>
+
+        <section className={styles.library} aria-labelledby="library-title">
+          <h2 id="library-title">Sua biblioteca de estudo</h2>
+          <div className={styles.tabs} aria-label="Organizar estudos">
+            <button type="button" aria-pressed={activeTab === "history"} onClick={() => setActiveTab("history")}>Histórico</button>
+            <button type="button" aria-pressed={activeTab === "favorites"} onClick={() => setActiveTab("favorites")}>Favoritos</button>
+            <button type="button" aria-pressed={activeTab === "playlists"} onClick={() => setActiveTab("playlists")}>Playlists</button>
+          </div>
+          <div className={styles.libraryContent}>
+            {activeTab === "history" && (study.viewedLessons.includes(lessonDemoId) ? <p>Assistido recentemente: <Link href="/videoaula">{currentLesson.title}</Link></p> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
+            {activeTab === "favorites" && (study.favoriteLessons.includes(lessonDemoId) ? <p><Link href="/videoaula">{currentLesson.title}</Link></p> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
+            {activeTab === "playlists" && <>
+              <form className={styles.playlistForm} onSubmit={createPlaylist}><label htmlFor="playlist-name">Nova playlist</label><input id="playlist-name" value={playlistName} onChange={(event) => setPlaylistName(event.target.value)} maxLength={60} placeholder="Ex.: Revisão de Física" /><button type="submit" disabled={!playlistName.trim()}>Criar playlist</button></form>
+              <ul className={styles.playlistList}>{study.playlists.map((playlist) => <li key={playlist.id}><strong>{playlist.name}</strong>{playlist.lessonIds.includes(lessonDemoId) ? <Link href="/videoaula">{currentLesson.title}</Link> : <span>Nenhuma aula adicionada</span>}</li>)}</ul>
+            </>}
+          </div>
+          <p className={styles.demoNote}>Histórico, favoritos e playlists ficam somente neste navegador.</p>
         </section>
       </div>
     </AppShell>

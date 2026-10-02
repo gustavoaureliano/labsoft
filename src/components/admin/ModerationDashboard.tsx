@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { teacherApplicationKey, type TeacherApplication } from "@/data/demoAccount";
+import { lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import { AdminShell } from "./AdminShell";
 import styles from "./ModerationDashboard.module.css";
 
@@ -75,6 +78,8 @@ const reportedContent = [
 
 export function ModerationDashboard() {
   const [teachers, setTeachers] = useState(initialTeachers);
+  const [application, saveApplication] = useDemoStorage<TeacherApplication | null>(teacherApplicationKey, null);
+  const [lessonReport, saveLessonReport] = useDemoStorage<LessonReport | null>(lessonReportKey, null);
   const [approvedTeacher, setApprovedTeacher] = useState<string | null>(null);
 
   function approveTeacher(id: number) {
@@ -84,6 +89,14 @@ export function ModerationDashboard() {
     setTeachers((current) => current.filter((item) => item.id !== id));
     setApprovedTeacher(teacher.name);
   }
+
+  function reviewApplication(status: "approved" | "rejected") {
+    if (!application) return;
+    saveApplication({ ...application, status });
+    setApprovedTeacher(status === "approved" ? application.name : null);
+  }
+
+  const pendingApplication = application?.status === "pending" ? application : null;
 
   return (
     <AdminShell activePage="moderation" topbarTitle="Segurança e qualidade da plataforma">
@@ -106,7 +119,7 @@ export function ModerationDashboard() {
         <section className={styles.metrics} aria-label="Resumo das filas de moderação">
           <article className={styles.metricCard}>
             <span>Professores pendentes</span>
-            <strong>{teachers.length}</strong>
+            <strong>{teachers.length + (pendingApplication ? 1 : 0)}</strong>
             <p>Cadastros aguardando aprovação</p>
           </article>
           <article className={styles.metricCard}>
@@ -116,7 +129,7 @@ export function ModerationDashboard() {
           </article>
           <article className={styles.metricCard}>
             <span>Conteúdos reportados</span>
-            <strong>{reportedContent.length}</strong>
+            <strong>{reportedContent.length + (lessonReport && !lessonReport.decision ? 1 : 0)}</strong>
             <p>Aguardando análise da equipe</p>
           </article>
         </section>
@@ -128,7 +141,7 @@ export function ModerationDashboard() {
               <h2 id="teachers-title">Professores para aprovar</h2>
               <p>Confira as informações cadastrais antes de liberar a publicação de cursos.</p>
             </div>
-            <span className={styles.countBadge}>{teachers.length} pendentes</span>
+            <span className={styles.countBadge}>{teachers.length + (pendingApplication ? 1 : 0)} pendentes</span>
           </div>
 
           {teachers.length ? (
@@ -153,6 +166,15 @@ export function ModerationDashboard() {
           ) : (
             <p className={styles.emptyState}>Todos os professores da fila foram analisados.</p>
           )}
+          {pendingApplication && <div className={styles.teacherItem}>
+            <span className={styles.teacherAvatar} aria-hidden="true">{pendingApplication.name.slice(0, 2).toUpperCase()}</span>
+            <span className={styles.teacherInfo}><strong>{pendingApplication.name}</strong><small>{pendingApplication.area}</small></span>
+            <span className={styles.teacherStatus}><strong>Solicitação de demonstração</strong><small>Enviada neste navegador</small></span>
+            <span className={styles.teacherActions}>
+              <button className={styles.approveButton} type="button" onClick={() => reviewApplication("approved")}>Aprovar</button>
+              <button className={styles.approveButton} type="button" onClick={() => reviewApplication("rejected")}>Recusar</button>
+            </span>
+          </div>}
         </section>
 
         <div className={styles.reviewGrid}>
@@ -186,9 +208,18 @@ export function ModerationDashboard() {
                 <h2 id="reports-title">Conteúdos reportados</h2>
                 <p>Materiais à espera de análise.</p>
               </div>
-              <span className={styles.countBadge}>{reportedContent.length}</span>
+              <span className={styles.countBadge}>{reportedContent.length + (lessonReport && !lessonReport.decision ? 1 : 0)}</span>
             </div>
             <ul className={styles.reviewList}>
+              {lessonReport && <li className={styles.reviewItem}>
+                <div className={styles.reviewMeta}><strong>Leis de Newton e suas aplicações</strong><small>Denúncia de demonstração</small></div>
+                <p>Física para o ENEM: Mecânica</p>
+                <span className={styles.reasonBadge}>{lessonReport.reason}</span>
+                {lessonReport.decision ? <p role="status">Decisão registrada neste navegador: conteúdo {lessonReport.decision}.</p> : <div className={styles.reviewActions}>
+                  <button type="button" onClick={() => saveLessonReport({ ...lessonReport, decision: "mantido" })}>Manter conteúdo</button>
+                  <button type="button" onClick={() => saveLessonReport({ ...lessonReport, decision: "ocultado" })}>Ocultar conteúdo</button>
+                </div>}
+              </li>}
               {reportedContent.map((content) => (
                 <li className={styles.reviewItem} key={content.title}>
                   <div className={styles.reviewMeta}>

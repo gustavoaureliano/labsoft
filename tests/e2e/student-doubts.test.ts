@@ -13,6 +13,7 @@ test("o aluno envia uma dúvida vinculada a um curso e aula", async () => {
     const courseSelect = await driver.findElement(By.css('select[name="course"]'));
     await new Select(courseSelect).selectByValue("biologia-celular");
     const lessonSelect = await driver.findElement(By.css('select[name="lesson"]'));
+    await driver.wait(async () => (await lessonSelect.getText()).includes("Aula 4 - Organelas Citoplasmáticas"), 5000);
     assert.match(await lessonSelect.getText(), /Aula 4 - Organelas Citoplasmáticas/);
     await new Select(lessonSelect).selectByValue("Aula 4 - Organelas Citoplasmáticas");
 

@@ -12,11 +12,11 @@ const navigation = [
   { label: "Dúvidas", href: "/duvidas", page: "doubts" },
   { label: "Explorar", href: "/explorar-cursos", page: "explore" },
   { label: "Materiais", href: "/materiais-complementares", page: "materials" },
-  { label: "Certificados", href: "#em-breve" },
+  { label: "Certificados", href: "/certificados", page: "certificates" },
   { label: "Meu perfil", href: "/perfil", page: "profile" },
 ];
 
-export function AppShell({ children, activePage = "home", showSearch = true, account = "student", pageTitle }: { children: ReactNode; activePage?: "home" | "courses" | "doubts" | "explore" | "materials" | "profile"; showSearch?: boolean; account?: "student" | "teacher"; pageTitle?: string }) {
+export function AppShell({ children, activePage = "home", showSearch = true, account = "student", pageTitle }: { children: ReactNode; activePage?: "home" | "courses" | "doubts" | "explore" | "materials" | "certificates" | "profile"; showSearch?: boolean; account?: "student" | "teacher"; pageTitle?: string }) {
   const accountName = account === "teacher" ? "Prof. Fulano" : initialProfile.nickname;
   const accountSubtitle = account === "teacher" ? "Professor de Física e Biologia" : "Estudante FUVEST";
 
@@ -54,9 +54,9 @@ export function AppShell({ children, activePage = "home", showSearch = true, acc
             </form>
           )}
           <div className={styles.topbarActions}>
-              <button className={styles.iconButton} aria-label="Notificações" type="button">
+              <Link className={styles.iconButton} aria-label="Notificações" href="/avisos">
                 Avisos<span className={styles.notificationDot} />
-              </button>
+              </Link>
             <details aria-label="Selecionar conta" className={styles.accountMenu}>
               <summary className={styles.profileChip} aria-label="Selecionar conta">
                 <Avatar />

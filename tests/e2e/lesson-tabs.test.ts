@@ -21,7 +21,7 @@ test("o aluno explora as abas da videoaula", async () => {
     await driver.findElement(By.css('[role="tab"][id="tab-2"]')).click();
     await driver.findElement(By.id("lesson-note")).sendKeys("Revisar força resultante.");
     await driver.findElement(By.xpath('//button[normalize-space()="Salvar anotação"]')).click();
-    assert.match(await panel.getText(), /Anotação salva nesta sessão/);
+    assert.match(await panel.getText(), /Anotação salva neste navegador/);
     await pauseForReview();
 
     await driver.findElement(By.css('[role="tab"][id="tab-3"]')).click();

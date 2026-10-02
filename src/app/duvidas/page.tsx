@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 type Question = {
@@ -56,13 +58,15 @@ type QuestionFilter = typeof tabs[number]["id"];
 
 export default function Duvidas() {
   const [questions, setQuestions] = useState(initialQuestions);
+  const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [query, setQuery] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [expandedDiscussion, setExpandedDiscussion] = useState<number | null>(null);
   const [counts, setCounts] = useState({ all: 15, pending: 4, answered: 11 });
 
-  const visibleQuestions = questions.filter((question) => {
+  const allQuestions = [...sharedQuestions.map((question) => ({ ...question, initial: question.student.slice(0, 1), createdAt: "agora" })), ...questions];
+  const visibleQuestions = allQuestions.filter((question) => {
     const matchesFilter = filter === "all"
       || (filter === "pending" && !question.answer)
       || (filter === "answered" && Boolean(question.answer));
@@ -76,8 +80,12 @@ export default function Duvidas() {
     const answer = String(formData.get("answer") ?? "").trim();
     if (!answer) return;
 
-    setQuestions((current) => current.map((question) => question.id === questionId ? { ...question, answer } : question));
-    setCounts((current) => ({ ...current, pending: Math.max(0, current.pending - 1), answered: current.answered + 1 }));
+    if (sharedQuestions.some((question) => question.id === questionId)) {
+      saveSharedQuestions(sharedQuestions.map((question) => question.id === questionId ? { ...question, answer } : question));
+    } else {
+      setQuestions((current) => current.map((question) => question.id === questionId ? { ...question, answer } : question));
+      setCounts((current) => ({ ...current, pending: Math.max(0, current.pending - 1), answered: current.answered + 1 }));
+    }
     setReplyingTo(null);
     setExpandedDiscussion(questionId);
   }
@@ -95,7 +103,7 @@ export default function Duvidas() {
                 onClick={() => setFilter(tab.id)}
                 type="button"
               >
-                {tab.label} ({counts[tab.id]})
+                {tab.label} ({counts[tab.id] + (tab.id === "all" ? sharedQuestions.length : sharedQuestions.filter((question) => Boolean(question.answer) === (tab.id === "answered")).length)})
               </button>
             ))}
           </div>

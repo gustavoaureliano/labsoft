@@ -1,0 +1,5 @@
+.actions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.actions button, .actions select { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--primary); cursor: pointer; font-size: 12px; padding: 9px 12px; }
+.actions label { color: var(--muted); font-size: 12px; }
+.actions select { margin-left: 8px; }
+.actions p { color: var(--primary); flex-basis: 100%; font-size: 12px; margin: 0; }

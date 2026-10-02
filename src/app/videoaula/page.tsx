@@ -4,6 +4,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse } from "@/data/courses";
 import { DemoPlayer } from "./DemoPlayer";
 import { LessonTabs } from "./LessonTabs";
+import { LessonLibraryActions } from "@/components/learning/LessonLibraryActions";
 import styles from "./page.module.css";
 
 export default function VideoAula() {
@@ -20,6 +21,7 @@ export default function VideoAula() {
         <div className={styles.layout}>
           <section aria-label="Videoaula" className={styles.mainColumn}>
             <DemoPlayer />
+            <LessonLibraryActions />
             <LessonTabs description={currentLesson.description} />
           </section>
 

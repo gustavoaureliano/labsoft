@@ -4,6 +4,8 @@ import { useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { catalogCourses } from "@/data/catalog";
 import { initialProfile } from "@/data/profile";
+import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 type Discussion = {
@@ -43,7 +45,8 @@ export default function StudentDoubts() {
   const [courseId, setCourseId] = useState(defaultCourse.id);
   const [lesson, setLesson] = useState(lessonsByCourse[defaultCourse.id][0]);
   const [questionText, setQuestionText] = useState("");
-  const [discussions, setDiscussions] = useState(initialDiscussions);
+  const discussions = initialDiscussions;
+  const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
   const [notice, setNotice] = useState("");
   const selectedCourse = catalogCourses.find((course) => course.id === courseId) ?? defaultCourse;
   const availableLessons = lessonsByCourse[courseId] ?? ["Aula 1 - Introdução ao curso", "Aula 2 - Conceitos fundamentais"];
@@ -58,13 +61,7 @@ export default function StudentDoubts() {
     const prompt = questionText.trim();
     if (!prompt) return;
 
-    setDiscussions((current) => [{
-      id: Date.now(),
-      course: selectedCourse.title,
-      lesson: lesson.split(" - ")[0],
-      createdAt: "Agora",
-      prompt,
-    }, ...current]);
+    saveSharedQuestions([{ id: Date.now(), student: initialProfile.nickname, course: selectedCourse.title, lesson: lesson.split(" - ")[0], prompt }, ...sharedQuestions]);
     setQuestionText("");
     setNotice("Sua dúvida foi enviada ao professor.");
   }
@@ -109,7 +106,7 @@ export default function StudentDoubts() {
         <section className={styles.discussions} aria-labelledby="discussions-title">
           <h2 id="discussions-title">Minhas Discussões Recentes</h2>
           <div className={styles.discussionList}>
-            {discussions.map((discussion) => (
+            {[...sharedQuestions.map((question) => ({ ...question, createdAt: "Agora" })), ...discussions].map((discussion) => (
               <article className={styles.discussion} key={discussion.id}>
                 <div className={styles.discussionMeta}>
                   <span className={`${styles.status} ${discussion.answer ? styles.answered : styles.pending}`}>
