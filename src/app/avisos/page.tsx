@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 const notices = [
   { id: "lesson", title: "Continue sua aula de Física", description: "Retome Leis de Newton e suas aplicações.", href: "/videoaula" },
-  { id: "question", title: "Sua dúvida pode ter uma resposta", description: "Acompanhe suas discussões com os professores.", href: "/duvidas/aluno" },
+  { id: "question", title: "Sua dúvida pode ter uma resposta", description: "Acompanhe suas discussões com os professores.", href: "/duvidas" },
   { id: "courses", title: "Revise seus cursos", description: "Veja o andamento dos seus estudos.", href: "/meus-cursos" },
 ];
 

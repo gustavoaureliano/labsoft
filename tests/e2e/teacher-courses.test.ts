@@ -15,5 +15,5 @@ test("o professor consulta e ordena cursos sem entrar no editor ainda não integ
     await driver.findElement(By.xpath('//button[normalize-space()="+ Novo curso"]')).click();
     assert.match(await driver.findElement(By.css('[role="status"]')).getText(), /Editor de Curso.*João/);
     await pauseForReview();
-  });
+  }, "teacher");
 });

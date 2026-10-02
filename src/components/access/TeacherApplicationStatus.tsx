@@ -17,7 +17,7 @@ export function TeacherApplicationStatus() {
           <>
             <p className={styles.description}>{application.name} · {application.area}</p>
             <p className={styles.notice} role="status">{status === "approved" ? "Cadastro aprovado nesta demonstração." : status === "rejected" ? "Cadastro recusado nesta demonstração." : "Cadastro enviado e aguardando análise nesta demonstração."}</p>
-            {status === "approved" ? <Link className={styles.primaryButton} href="/professor/cursos">Abrir área do professor</Link> : <Link href="/cadastro/professor">Enviar outra solicitação</Link>}
+            {status === "approved" ? <Link className={styles.primaryButton} href="/login">Entrar como professor</Link> : <Link href="/cadastro/professor">Enviar outra solicitação</Link>}
           </>
         ) : <><p className={styles.description}>Nenhuma solicitação foi enviada neste navegador.</p><Link href="/cadastro/professor">Solicitar cadastro</Link></>}
         <Link href="/">Voltar ao início</Link>

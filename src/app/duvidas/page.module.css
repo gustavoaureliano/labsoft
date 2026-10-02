@@ -1,54 +1,45 @@
-.page { display: grid; gap: 18px; padding-top: 2px; }
-.toolbar { align-items: center; display: flex; gap: 18px; justify-content: space-between; }
-.filters { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; }
-.filterButton { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 12px; font-weight: 700; min-height: 36px; padding: 0 16px; }
-.filterButton:hover { border-color: var(--primary); }
-.filterActive { background: var(--primary); border-color: var(--primary); color: var(--surface); }
-.search { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; flex: 0 1 300px; height: 38px; min-width: 190px; padding: 0 12px; }
-.search:focus-within { border-color: var(--primary); outline: 2px solid var(--primary-light); }
-.search > span { border: 1.5px solid var(--primary); border-radius: 50%; height: 10px; margin-right: 10px; position: relative; width: 10px; }
-.search > span::after { background: var(--primary); content: ""; height: 1px; position: absolute; right: -4px; top: 8px; transform: rotate(45deg); width: 5px; }
-.search input { background: transparent; border: 0; color: var(--text); font-size: 11px; min-width: 0; outline: 0; width: 100%; }
-.questionList { display: grid; gap: 10px; }
-.question { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); display: grid; gap: 14px; grid-template-columns: 42px minmax(0, 1fr) auto auto; padding: 15px 16px; }
-.studentInitial { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; height: 42px; justify-content: center; width: 42px; }
-.questionContent { min-width: 0; }
-.studentLine { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }
-.studentLine h2 { font-size: 13px; margin: 0; }
-.studentLine > span { color: var(--muted); font-size: 10px; }
-.prompt { color: var(--text); font-size: 11px; line-height: 1.45; margin: 5px 0 2px; }
-.lesson { color: var(--text); font-size: 10px; margin: 0; }
-.status { border-radius: 999px; font-size: 10px; padding: 6px 10px; white-space: nowrap; }
+.page { display: grid; gap: 24px; }
+.compose { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); padding: 18px; }
+.compose h1 { font-size: 16px; margin: 0 0 14px; }
+.compose form { display: grid; gap: 12px; }
+.selects { display: grid; gap: 10px; grid-template-columns: minmax(170px, 240px) minmax(180px, 260px); }
+.selects label { min-width: 0; }
+.selects select { appearance: none; background-color: var(--surface); background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%), linear-gradient(135deg, var(--primary) 50%, transparent 50%); background-position: calc(100% - 14px) 15px, calc(100% - 10px) 15px; background-repeat: no-repeat; background-size: 4px 4px, 4px 4px; border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 11px; height: 38px; overflow: hidden; padding: 0 28px 0 10px; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+.selects select:focus, .compose textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
+.compose textarea { border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: inherit; font-size: 12px; line-height: 1.5; min-height: 78px; padding: 12px; resize: vertical; width: 100%; }
+.compose textarea::placeholder { color: var(--muted); opacity: 1; }
+.composeFooter { align-items: center; display: flex; justify-content: space-between; }
+.composeFooter p { color: var(--text); font-size: 10px; margin: 0; }
+.primaryButton { background: var(--primary); border: 1px solid var(--primary); border-radius: 5px; color: var(--surface); cursor: pointer; font-size: 11px; min-height: 34px; padding: 0 16px; }
+.primaryButton:hover { background: #064b63; }
+.notice { color: #2d6540; font-size: 11px; margin: -3px 0 0; min-height: 0; }
+.notice:empty { display: none; }
+.discussions { display: grid; gap: 12px; }
+.discussions h2 { font-size: 15px; margin: 0; }
+.discussionList { display: grid; gap: 12px; }
+.discussion { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); display: grid; gap: 10px; padding: 14px; }
+.discussionMeta { align-items: center; color: var(--text); display: flex; font-size: 10px; gap: 9px; min-width: 0; }
+.discussionMeta > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.discussionMeta time { margin-left: auto; white-space: nowrap; }
+.status { border-radius: 999px; font-size: 9px; padding: 5px 9px; white-space: nowrap; }
 .pending { background: #fff0ce; color: #6d5117; }
 .answered { background: #e3f5e5; color: #2d6540; }
-.primaryButton, .secondaryButton, .cancelButton { align-items: center; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: inline-flex; font-size: 11px; justify-content: center; min-height: 34px; padding: 0 13px; white-space: nowrap; }
-.primaryButton { background: var(--primary); color: var(--surface); }
-.primaryButton:hover { background: #064b63; }
-.secondaryButton, .cancelButton { background: var(--surface); border-color: var(--border); color: var(--text); }
-.secondaryButton:hover, .cancelButton:hover { border-color: var(--primary); color: var(--primary); }
-.replyForm { display: grid; gap: 8px; margin-top: 14px; }
-.replyForm label { color: var(--muted); font-size: 11px; font-weight: 700; }
-.replyForm textarea { border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: inherit; font-size: 12px; padding: 9px; resize: vertical; }
-.replyForm textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
-.replyForm > div { display: flex; gap: 8px; justify-content: flex-end; }
-.answer { background: var(--background); border-left: 3px solid var(--primary); margin-top: 12px; padding: 10px 12px; }
-.answer strong { color: var(--primary); font-size: 11px; }
-.answer p { font-size: 11px; line-height: 1.5; margin: 5px 0 0; }
-.emptyState { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); margin: 0; padding: 28px; text-align: center; }
-@media (max-width: 760px) {
-  .toolbar { align-items: stretch; flex-direction: column; }
-  .search { flex-basis: auto; width: 100%; }
-  .question { grid-template-columns: 38px minmax(0, 1fr) auto; }
-  .studentInitial { height: 38px; width: 38px; }
-  .status { grid-column: 2; justify-self: start; }
-  .question > button { grid-column: 3; grid-row: 2; }
-}
-@media (max-width: 500px) {
-  .filters { gap: 6px; }
-  .filterButton { flex: 1; font-size: 11px; padding: 0 8px; }
-  .question { align-items: start; gap: 10px; grid-template-columns: 34px minmax(0, 1fr); padding: 12px; }
-  .studentInitial { height: 34px; width: 34px; }
-  .questionContent { grid-column: 2; }
-  .status { grid-column: 2; grid-row: 2; }
-  .question > button { grid-column: 2; grid-row: 3; justify-self: start; }
+.message, .answer { align-items: start; display: grid; gap: 9px; grid-template-columns: 24px minmax(0, 1fr); }
+.message { padding: 0 1px; }
+.studentMark, .teacherMark { align-items: center; border-radius: 50%; display: flex; font-size: 10px; height: 20px; justify-content: center; width: 20px; }
+.studentMark { background: var(--primary-light); color: var(--primary); }
+.teacherMark { background: #172f4d; color: white; }
+.message strong, .answer strong { display: block; font-size: 10px; font-weight: 400; margin: 0 0 3px; }
+.message p, .answer p { font-size: 11px; line-height: 1.45; margin: 0; }
+.answer { background: #f8fafb; border: 1px solid var(--border); border-radius: 5px; padding: 10px; }
+.visuallyHidden { clip: rect(0, 0, 0, 0); clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+@media (max-width: 650px) {
+  .compose { padding: 14px; }
+  .selects { grid-template-columns: 1fr; }
+  .composeFooter { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .composeFooter .primaryButton { align-self: flex-end; }
+  .discussion { padding: 12px; }
+  .discussionMeta { align-items: flex-start; flex-wrap: wrap; }
+  .discussionMeta time { margin-left: 0; }
+  .discussionMeta > span:nth-child(2) { white-space: normal; }
 }

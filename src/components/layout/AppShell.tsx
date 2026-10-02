@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
-import { Avatar } from "@/components/profile/Avatar";
-import { initialProfile } from "@/data/profile";
+import { DemoSessionMenu } from "@/components/access/DemoSessionMenu";
 import { Container } from "./Container";
 import styles from "./AppShell.module.css";
 
@@ -16,10 +15,7 @@ const navigation = [
   { label: "Meu perfil", href: "/perfil", page: "profile" },
 ];
 
-export function AppShell({ children, activePage = "home", showSearch = true, account = "student", pageTitle }: { children: ReactNode; activePage?: "home" | "courses" | "doubts" | "explore" | "materials" | "certificates" | "profile"; showSearch?: boolean; account?: "student" | "teacher"; pageTitle?: string }) {
-  const accountName = account === "teacher" ? "Prof. Fulano" : initialProfile.nickname;
-  const accountSubtitle = account === "teacher" ? "Professor de Física e Biologia" : "Estudante FUVEST";
-
+export function AppShell({ children, activePage = "home", showSearch = true, pageTitle }: { children: ReactNode; activePage?: "home" | "courses" | "doubts" | "explore" | "materials" | "certificates" | "profile"; showSearch?: boolean; pageTitle?: string }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
@@ -28,7 +24,7 @@ export function AppShell({ children, activePage = "home", showSearch = true, acc
           {navigation.map((item) => (
             <Link
               className={`${styles.navItem} ${item.page ? "" : styles.futureNavItem} ${item.page === activePage ? styles.navItemActive : ""}`}
-              href={item.page === "doubts" && account === "student" ? "/duvidas/aluno" : item.href}
+              href={item.href}
               aria-current={item.page === activePage ? "page" : undefined}
               key={item.label}
             >
@@ -57,26 +53,7 @@ export function AppShell({ children, activePage = "home", showSearch = true, acc
               <Link className={styles.iconButton} aria-label="Notificações" href="/avisos">
                 Avisos<span className={styles.notificationDot} />
               </Link>
-            <details aria-label="Selecionar conta" className={styles.accountMenu}>
-              <summary className={styles.profileChip} aria-label="Selecionar conta">
-                <Avatar />
-                <span className={styles.profileCopy}>
-                  <strong>{accountName}</strong>
-                  <small>{accountSubtitle}</small>
-                </span>
-                <span className={styles.accountChevron} aria-hidden="true" />
-              </summary>
-              <div className={styles.accountOptions}>
-                <Link href="/duvidas" aria-current={account === "teacher" ? "true" : undefined}>
-                  <Avatar />
-                  <span><strong>Prof. Fulano</strong><small>Professor de Física e Biologia</small></span>
-                </Link>
-                <Link href="/duvidas/aluno" aria-current={account === "student" ? "true" : undefined}>
-                  <Avatar />
-                  <span><strong>{initialProfile.nickname}</strong><small>Estudante FUVEST</small></span>
-                </Link>
-              </div>
-            </details>
+            <DemoSessionMenu role="student" />
           </div>
         </header>
         <main>

@@ -26,5 +26,5 @@ test("o professor acompanha relatórios financeiros e de engajamento", async () 
     assert.equal(courseRows.length, 3);
     assert.match(await courseRows[0].getText(), /Introdução à Filosofia 486 R\$ 4\.860 52,6%/);
     await pauseForReview();
-  });
+  }, "teacher");
 });

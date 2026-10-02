@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./Logo.module.css";
 
-export function Logo() {
+export function Logo({ href = "/" }: { href?: string }) {
   return (
-    <Link className={styles.logo} href="/" aria-label="Ir para a página inicial da AprovaAí">
+    <Link className={styles.logo} href={href} aria-label="Ir para a página inicial da AprovaAí">
       <Image
         alt="AprovaAí"
         className={styles.image}

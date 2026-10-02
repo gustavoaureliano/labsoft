@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { DemoSessionMenu } from "@/components/access/DemoSessionMenu";
 import { Container } from "@/components/layout/Container";
 import shell from "@/components/layout/AppShell.module.css";
 import styles from "./AdminShell.module.css";
@@ -19,7 +20,7 @@ export function AdminShell({
   return (
     <div className={shell.appShell}>
       <aside className={shell.sidebar}>
-        <Logo />
+        <Logo href="/admin" />
         <nav className={shell.sidebarNav} aria-label="Navegação administrativa">
           <Link
             className={`${shell.navItem} ${activePage === "overview" ? shell.navItemActive : ""}`}
@@ -44,13 +45,7 @@ export function AdminShell({
       <div className={shell.appContent}>
         <header className={shell.topbar}>
           <span className={styles.topbarTitle}>{topbarTitle}</span>
-          <div className={shell.profileChip}>
-            <span className={styles.adminAvatar}>AD</span>
-            <span className={shell.profileCopy}>
-              <strong>Administração</strong>
-              <small>Gestão</small>
-            </span>
-          </div>
+          <DemoSessionMenu role="admin" />
         </header>
         <main>
           <Container>{children}</Container>

@@ -29,5 +29,5 @@ test("a administração aprova um professor pendente na demonstração", async (
     await driver.wait(until.elementTextIs(queueCount, "2 pendentes"), 5000);
     assert.equal((await driver.findElements(By.xpath('//li[.//strong[normalize-space()="Ana Beatriz Ribeiro"]]'))).length, 0);
     await pauseForReview();
-  });
+  }, "admin");
 });

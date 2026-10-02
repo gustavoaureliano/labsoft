@@ -28,5 +28,5 @@ test("a administração alterna o período dos acessos", async () => {
     await driver.wait(async () => (await accessReport.getText()).includes("267.020"), 5000);
     assert.match(await accessReport.getText(), /267\.020\s+acessos no período/);
     await pauseForReview();
-  });
+  }, "admin");
 });

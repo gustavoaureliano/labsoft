@@ -30,6 +30,10 @@ Em outro terminal, execute os testes:
 npm run test:e2e
 ```
 
+Abra a aplicação pelo endereço `/login` e escolha **Aluno**, **Professor** ou **Administrador**. A Home do aluno fica em `/`, a área do professor em `/professor/cursos` e a administração em `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
+
+O papel escolhido fica em um cookie de demonstração, usado para mostrar o menu e a área correspondentes. Esse cookie pode ser alterado pelo navegador e **não é uma autenticação segura**. Os demais dados demonstrativos continuam no armazenamento local do navegador.
+
 Para acompanhar o navegador, use `npm run test:e2e:visual`. Os testes serão executados um de cada vez, com pausas de 1,5 segundo. Use `E2E_SLOW_MS` para definir outro intervalo em milissegundos.
 
 Use `BASE_URL` se a aplicação estiver em outra porta. Use `CHROME_BINARY` se o Chromium estiver em outro caminho.

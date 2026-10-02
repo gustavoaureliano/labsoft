@@ -13,7 +13,7 @@ export const initialProfile: Profile = {
 export const navigation = [
   { label: "Início", icon: "home", href: "/" },
   { label: "Meus Cursos", icon: "book", href: "/meus-cursos" },
-  { label: "Explorar", icon: "search", href: "/explorar" },
+  { label: "Explorar", icon: "search", href: "/explorar-cursos" },
   { label: "Certificados", icon: "award", href: "/certificados" },
   { label: "Perfil", icon: "user", href: "/perfil" },
 ] as const;

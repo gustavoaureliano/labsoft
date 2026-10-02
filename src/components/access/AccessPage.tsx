@@ -4,7 +4,9 @@ import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { demoAccountKey, teacherApplicationKey, type DemoAccount, type TeacherApplication } from "@/data/demoAccount";
+import { demoAccountKey, roleHome, teacherApplicationKey, type DemoAccount, type TeacherApplication } from "@/data/demoAccount";
+import { initialProfile } from "@/data/profile";
+import { setDemoRole } from "@/lib/demoSessionClient";
 import { writeDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./AccessPage.module.css";
 
@@ -39,9 +41,13 @@ export function AccessPage({ mode }: { mode: Mode }) {
       return;
     }
 
-    const account: DemoAccount = { name, email, role: mode === "register" ? "student" : role };
+    const accountRole = mode === "register" ? "student" : role;
+    const demoName = accountRole === "student" ? initialProfile.nickname : accountRole === "teacher" ? "Prof. Fulano" : "Administração";
+    const account: DemoAccount = { name: mode === "register" ? name : demoName, email, role: accountRole };
     writeDemoStorage(demoAccountKey, account);
-    router.push(account.role === "teacher" ? "/professor/cursos" : account.role === "admin" ? "/admin" : "/");
+    setDemoRole(account.role);
+    router.replace(roleHome[account.role]);
+    router.refresh();
   }
 
   return (

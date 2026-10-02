@@ -6,7 +6,7 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
 test("o aluno envia uma dúvida vinculada a um curso e aula", async () => {
   await withBrowser(async (driver) => {
-    await driver.get(`${baseUrl}/duvidas/aluno`);
+    await driver.get(`${baseUrl}/duvidas`);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Enviar nova dúvida ao professor"]')), 10000);
     await pauseForReview();
 

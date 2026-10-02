@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
-import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
+import { baseUrl, pauseForReview, setDemoRoleForTest, withBrowser } from "./browser.ts";
 
 test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", async () => {
   await withBrowser(async (driver) => {
@@ -14,12 +14,14 @@ test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", as
     assert.equal(await driver.findElement(By.css("#lesson-report")).isEnabled(), false);
     await pauseForReview();
 
+    await setDemoRoleForTest(driver, "admin");
     await driver.get(`${baseUrl}/admin/moderacao`);
     const report = await driver.wait(until.elementLocated(By.xpath('//li[contains(.,"Áudio indisponível")]')), 10000);
     const keep = await report.findElement(By.xpath('.//button[normalize-space()="Manter conteúdo"]'));
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", keep);
     await keep.click();
     assert.match(await report.getText(), /conteúdo mantido/);
+    await setDemoRoleForTest(driver, "student");
     await driver.get(`${baseUrl}/videoaula`);
     assert.match(await driver.findElement(By.css('[role="tabpanel"]')).getText(), /conteúdo mantido/);
   });
