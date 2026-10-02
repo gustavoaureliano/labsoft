@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse } from "@/data/courses";
 import { DemoPlayer } from "./DemoPlayer";
+import { LessonTabs } from "./LessonTabs";
 import styles from "./page.module.css";
 
 export default function VideoAula() {
@@ -19,10 +20,7 @@ export default function VideoAula() {
         <div className={styles.layout}>
           <section aria-label="Videoaula" className={styles.mainColumn}>
             <DemoPlayer />
-            <div className={styles.description}>
-              <h2>Sobre esta aula</h2>
-              <p>{currentLesson.description}</p>
-            </div>
+            <LessonTabs description={currentLesson.description} />
           </section>
 
           <aside className={styles.lessonPanel} aria-labelledby="lessons-title">
