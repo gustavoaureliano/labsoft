@@ -19,7 +19,7 @@ test("o aluno vê seu menu e não entra na área do professor", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
     const navigation = await driver.findElement(By.css('nav[aria-label="Navegação principal"]'));
-    assert.equal(await driver.findElement(By.css('aside a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/`);
+    assert.equal(await driver.findElement(By.css('header a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/`);
     assert.equal((await navigation.findElements(By.css('a[href="/professor/duvidas"]'))).length, 0);
     assert.equal((await navigation.findElements(By.css('a[href="/duvidas"]'))).length, 1);
     await driver.get(`${baseUrl}/professor/cursos`);
@@ -34,7 +34,7 @@ test("professor e admin recebem seus próprios menus e destinos", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
     await driver.wait(until.urlContains("/professor/cursos"), 10000);
-    assert.equal(await driver.findElement(By.css('aside a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/professor/cursos`);
+    assert.equal(await driver.findElement(By.css('header a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/professor/cursos`);
     assert.equal((await driver.findElements(By.css('nav[aria-label="Navegação do professor"] a[href="/professor/duvidas"]'))).length, 1);
     await driver.get(`${baseUrl}/duvidas`);
     await driver.wait(until.urlContains("/professor/cursos"), 10000);
@@ -45,7 +45,7 @@ test("professor e admin recebem seus próprios menus e destinos", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
     await driver.wait(until.urlIs(`${baseUrl}/admin`), 10000);
-    assert.equal(await driver.findElement(By.css('aside a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/admin`);
+    assert.equal(await driver.findElement(By.css('header a[aria-label="Ir para a página inicial da AprovaAí"]')).getAttribute("href"), `${baseUrl}/admin`);
     assert.equal((await driver.findElements(By.css('nav[aria-label="Navegação administrativa"] a[href="/admin/moderacao"]'))).length, 1);
     await driver.get(`${baseUrl}/meus-cursos`);
     await driver.wait(until.urlIs(`${baseUrl}/admin`), 10000);

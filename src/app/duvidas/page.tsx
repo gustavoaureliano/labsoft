@@ -67,7 +67,7 @@ export default function StudentDoubts() {
   }
 
   return (
-    <AppShell activePage="doubts" pageTitle="Dúvidas ao Professor" showSearch={false}>
+    <AppShell activePage="doubts">
       <div className={styles.page}>
         <section className={styles.compose} aria-labelledby="compose-title">
           <h1 id="compose-title">Enviar nova dúvida ao professor</h1>

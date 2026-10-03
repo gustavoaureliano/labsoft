@@ -1,6 +1,0 @@
-.topbarTitle { color: var(--primary); font-size: 14px; font-weight: 700; }
-
-@media (max-width: 900px) {
-  .sidebar { align-items: center; flex-direction: row; }
-  .navigation { margin-left: auto; }
-}

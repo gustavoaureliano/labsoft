@@ -1,65 +1,31 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { Logo } from "@/components/brand/Logo";
-import { DemoSessionMenu } from "@/components/access/DemoSessionMenu";
-import { Container } from "./Container";
-import styles from "./AppShell.module.css";
+import type { NavIconName } from "./NavIcon";
+import { WorkspaceShell } from "./WorkspaceShell";
 
-const navigation = [
-  { label: "Início", href: "/", page: "home" },
-  { label: "Meus cursos", href: "/meus-cursos", page: "courses" },
-  { label: "Dúvidas", href: "/duvidas", page: "doubts" },
-  { label: "Explorar", href: "/explorar-cursos", page: "explore" },
-  { label: "Materiais", href: "/materiais-complementares", page: "materials" },
-  { label: "Certificados", href: "/certificados", page: "certificates" },
-  { label: "Meu perfil", href: "/perfil", page: "profile" },
+type StudentPage = "home" | "courses" | "doubts" | "explore" | "materials" | "certificates" | "profile";
+
+const navigation: { label: string; href: string; page: StudentPage; icon: NavIconName }[] = [
+  { label: "Início", href: "/", page: "home", icon: "home" },
+  { label: "Meus cursos", href: "/meus-cursos", page: "courses", icon: "courses" },
+  { label: "Dúvidas", href: "/duvidas", page: "doubts", icon: "doubts" },
+  { label: "Explorar", href: "/explorar-cursos", page: "explore", icon: "explore" },
+  { label: "Materiais", href: "/materiais-complementares", page: "materials", icon: "materials" },
+  { label: "Certificados", href: "/certificados", page: "certificates", icon: "certificates" },
+  { label: "Meu perfil", href: "/perfil", page: "profile", icon: "profile" },
 ];
 
-export function AppShell({ children, activePage = "home", showSearch = true, pageTitle }: { children: ReactNode; activePage?: "home" | "courses" | "doubts" | "explore" | "materials" | "certificates" | "profile"; showSearch?: boolean; pageTitle?: string }) {
+export function AppShell({ children, activePage }: { children: ReactNode; activePage?: StudentPage }) {
   return (
-    <div className={styles.appShell}>
-      <aside className={styles.sidebar}>
-        <Logo />
-        <nav className={styles.sidebarNav} aria-label="Navegação principal">
-          {navigation.map((item) => (
-            <Link
-              className={`${styles.navItem} ${item.page ? "" : styles.futureNavItem} ${item.page === activePage ? styles.navItemActive : ""}`}
-              href={item.href}
-              aria-current={item.page === activePage ? "page" : undefined}
-              key={item.label}
-            >
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className={styles.sidebarFooter}>
-          <a className={styles.navItem} href="#ajuda">
-            <span>Ajuda e suporte</span>
-          </a>
-          <p>Protótipo inicial</p>
-        </div>
-      </aside>
-
-      <div className={styles.appContent}>
-        <header className={styles.topbar}>
-          {pageTitle && <strong className={styles.pageTitle}>{pageTitle}</strong>}
-          {showSearch && (
-            <form action="/pesquisa" className={styles.search} role="search">
-              <input aria-label="Buscar cursos e materiais" name="q" placeholder="Buscar cursos e materiais" type="search" />
-              <button type="submit">Buscar</button>
-            </form>
-          )}
-          <div className={styles.topbarActions}>
-              <Link className={styles.iconButton} aria-label="Notificações" href="/avisos">
-                Avisos<span className={styles.notificationDot} />
-              </Link>
-            <DemoSessionMenu role="student" />
-          </div>
-        </header>
-        <main>
-          <Container>{children}</Container>
-        </main>
-      </div>
-    </div>
+    <WorkspaceShell
+      contentWidth="wide"
+      footer="Protótipo inicial"
+      header={{ type: "search" }}
+      homeHref="/"
+      navigation={navigation.map((item) => ({ ...item, selected: item.page === activePage }))}
+      role="student"
+      showNotifications
+    >
+      {children}
+    </WorkspaceShell>
   );
 }

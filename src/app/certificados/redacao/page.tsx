@@ -4,7 +4,7 @@ import styles from "../page.module.css";
 
 export default function CertificadoRedacaoPage() {
   return (
-    <AppShell activePage="certificates" showSearch={false}>
+    <AppShell activePage="certificates">
       <div className={styles.detailPage}>
         <Link href="/certificados">← Voltar aos certificados</Link>
         <article className={styles.certificate}>

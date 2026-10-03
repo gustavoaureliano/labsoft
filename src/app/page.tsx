@@ -12,7 +12,7 @@ import styles from "./page.module.css";
 export default async function HomePage() {
   const role = parseDemoRole((await cookies()).get(demoRoleCookieName)?.value);
 
-  if (role === "student") return <AppShell><HomeDashboard /></AppShell>;
+  if (role === "student") return <AppShell activePage="home"><HomeDashboard /></AppShell>;
   if (role) redirect(roleHome[role]);
 
   return <LandingPage />;

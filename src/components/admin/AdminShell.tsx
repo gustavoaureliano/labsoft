@@ -1,10 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { Logo } from "@/components/brand/Logo";
-import { DemoSessionMenu } from "@/components/access/DemoSessionMenu";
-import { Container } from "@/components/layout/Container";
-import shell from "@/components/layout/AppShell.module.css";
-import styles from "./AdminShell.module.css";
+import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 
 type AdminPage = "overview" | "moderation";
 
@@ -18,39 +13,17 @@ export function AdminShell({
   topbarTitle: string;
 }) {
   return (
-    <div className={shell.appShell}>
-      <aside className={shell.sidebar}>
-        <Logo href="/admin" />
-        <nav className={shell.sidebarNav} aria-label="Navegação administrativa">
-          <Link
-            className={`${shell.navItem} ${activePage === "overview" ? shell.navItemActive : ""}`}
-            href="/admin"
-            aria-current={activePage === "overview" ? "page" : undefined}
-          >
-            Visão geral
-          </Link>
-          <Link
-            className={`${shell.navItem} ${activePage === "moderation" ? shell.navItemActive : ""}`}
-            href="/admin/moderacao"
-            aria-current={activePage === "moderation" ? "page" : undefined}
-          >
-            Moderação
-          </Link>
-        </nav>
-        <div className={shell.sidebarFooter}>
-          <p>Ambiente administrativo</p>
-        </div>
-      </aside>
-
-      <div className={shell.appContent}>
-        <header className={shell.topbar}>
-          <span className={styles.topbarTitle}>{topbarTitle}</span>
-          <DemoSessionMenu role="admin" />
-        </header>
-        <main>
-          <Container>{children}</Container>
-        </main>
-      </div>
-    </div>
+    <WorkspaceShell
+      footer="Ambiente administrativo"
+      homeHref="/admin"
+      navigation={[
+        { href: "/admin", icon: "home", label: "Visão geral", selected: activePage === "overview" },
+        { href: "/admin/moderacao", icon: "help", label: "Moderação", selected: activePage === "moderation" },
+      ]}
+      role="admin"
+      header={{ type: "title", title: topbarTitle }}
+    >
+      {children}
+    </WorkspaceShell>
   );
 }

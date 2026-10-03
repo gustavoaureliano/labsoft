@@ -11,6 +11,7 @@
   --card-hover-shadow: 0 6px 18px rgb(7 90 118 / 10%);
   --hover-duration: 160ms;
   --menu-hover-duration: 380ms;
+  --sidebar-toggle-duration: 100ms;
 }
 
 * { box-sizing: border-box; }
@@ -42,5 +43,5 @@ a, button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --hover-duration: 0ms; --menu-hover-duration: 0ms; }
+  :root { --hover-duration: 0ms; --menu-hover-duration: 0ms; --sidebar-toggle-duration: 0ms; }
 }
