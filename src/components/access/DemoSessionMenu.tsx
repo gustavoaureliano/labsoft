@@ -20,7 +20,7 @@ export function DemoSessionMenu({ role }: { role: DemoRole }) {
   function signOut() {
     clearDemoRole();
     try { window.localStorage.removeItem(demoAccountKey); } catch { /* The demo still exits without storage. */ }
-    router.replace("/login");
+    router.replace("/");
     router.refresh();
   }
 

@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { demoRoleCookieName, parseDemoRole, roleHome, type DemoRole } from "@/data/demoAccount";
 
-const publicPaths = new Set(["/login", "/cadastro", "/cadastro/professor", "/recuperar-acesso", "/professor/solicitacao"]);
-const studentPaths = new Set(["/", "/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa"]);
+const publicPaths = new Set(["/", "/login", "/cadastro", "/cadastro/professor", "/recuperar-acesso", "/professor/solicitacao"]);
+const studentPaths = new Set(["/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa"]);
 
 function requiredRole(pathname: string): DemoRole | null {
   if (studentPaths.has(pathname) || pathname === "/certificados" || pathname.startsWith("/certificados/")) return "student";

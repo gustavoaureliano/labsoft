@@ -14,7 +14,7 @@ Protótipo inicial da interface da AprovaAí.
 - `npm run lint`: verifica o código.
 - `npm run typecheck`: verifica os tipos TypeScript.
 - `npm run build`: gera a versão de produção.
-- `npm run test:e2e`: executa até quatro testes Selenium ao mesmo tempo no Chromium, com a aplicação já iniciada em `http://localhost:3000`.
+- `npm run test:e2e`: executa até 24 testes Selenium ao mesmo tempo no Chromium, com a aplicação já iniciada em `http://localhost:3000`.
 - `npm run test:e2e:sequential`: executa os testes um de cada vez, sem pausas.
 - `npm run test:e2e:visual`: executa os testes um de cada vez, com pausas para acompanhar o navegador.
 
@@ -30,7 +30,7 @@ Em outro terminal, execute os testes:
 npm run test:e2e
 ```
 
-Abra a aplicação pelo endereço `/login` e escolha **Aluno**, **Professor** ou **Administrador**. A Home do aluno fica em `/`, a área do professor em `/professor/cursos` e a administração em `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
+Abra `/` sem perfil demo para ver a landing, com cursos de exemplo e links para entrar ou criar conta. Depois de entrar como aluno, `/` mostra a Home de estudos. Professor e administrador são direcionados às suas áreas em `/professor/cursos` e `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
 
 O papel escolhido fica em um cookie de demonstração, usado para mostrar o menu e a área correspondentes. Esse cookie pode ser alterado pelo navegador e **não é uma autenticação segura**. Os demais dados demonstrativos continuam no armazenamento local do navegador.
 

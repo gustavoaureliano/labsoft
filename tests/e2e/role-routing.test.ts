@@ -3,9 +3,12 @@ import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
-test("sem perfil demo, páginas internas levam ao login", async () => {
+test("a landing é pública e páginas internas exigem um perfil demo", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
+    assert.match(await driver.findElement(By.css("h1")).getText(), /Estude com foco no vestibular/);
+    assert.equal((await driver.findElements(By.css('nav[aria-label="Acesso à conta"] a'))).length, 2);
+    await driver.get(`${baseUrl}/meus-cursos`);
     await driver.wait(until.urlContains("/login"), 10000);
     await driver.get(`${baseUrl}/admin`);
     await driver.wait(until.urlContains("/login"), 10000);
@@ -48,7 +51,8 @@ test("professor e admin recebem seus próprios menus e destinos", async () => {
     await driver.wait(until.urlIs(`${baseUrl}/admin`), 10000);
     await driver.findElement(By.css('details[aria-label="Conta de demonstração"] summary')).click();
     await driver.findElement(By.xpath('//button[normalize-space()="Sair"]')).click();
-    await driver.wait(until.urlContains("/login"), 10000);
+    await driver.wait(until.urlIs(`${baseUrl}/`), 10000);
+    await driver.wait(until.elementLocated(By.xpath('//h1[contains(normalize-space(),"Estude com foco no vestibular")]')), 10000);
     await driver.get(`${baseUrl}/admin`);
     await driver.wait(until.urlContains("/login"), 10000);
   }, "admin");
