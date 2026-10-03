@@ -9,6 +9,6 @@
 .chevron { color: var(--muted); font-size: 15px; margin-left: 4px; }
 .options { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px rgb(25 50 60 / 12%); display: grid; gap: 3px; min-width: 190px; padding: 8px; position: absolute; right: 0; top: calc(100% + 10px); z-index: 20; }
 .options p { color: var(--muted); font-size: 11px; margin: 0; padding: 7px 9px; }
-.options a, .options button { background: transparent; border: 0; border-radius: 4px; color: var(--text); cursor: pointer; font: inherit; font-size: 13px; padding: 11px 9px; text-align: left; }
-.options a:hover, .options button:hover { background: var(--primary-light); color: var(--primary); }
+.options a, .options button { background: transparent; border: 0; border-radius: 4px; box-shadow: inset 3px 0 0 transparent; color: var(--text); cursor: pointer; font: inherit; font-size: 13px; padding: 11px 9px; text-align: left; transition: background-color var(--menu-hover-duration) ease-in-out, box-shadow var(--menu-hover-duration) ease-in-out, color var(--menu-hover-duration) ease-in-out; }
+.options a:hover, .options button:hover { background: #d7eaf0; box-shadow: inset 3px 0 0 var(--primary); color: var(--primary); }
 @media (max-width: 600px) { .copy { display: none; } }

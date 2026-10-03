@@ -23,9 +23,9 @@
 .answered { background: #e3f5e5; color: #2d6540; }
 .primaryButton, .secondaryButton, .cancelButton { align-items: center; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; min-height: 42px; padding: 0 14px; white-space: nowrap; }
 .primaryButton { background: var(--primary); color: var(--surface); }
-.primaryButton:hover { background: #064b63; }
+.primaryButton:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .secondaryButton, .cancelButton { background: var(--surface); border-color: var(--border); color: var(--text); }
-.secondaryButton:hover, .cancelButton:hover { border-color: var(--primary); color: var(--primary); }
+.secondaryButton:hover, .cancelButton:hover { border-color: var(--primary); box-shadow: 0 3px 9px rgb(7 90 118 / 10%); color: var(--primary); }
 .replyForm { display: grid; gap: 8px; margin-top: 14px; }
 .replyForm label { color: var(--muted); font-size: 13px; font-weight: 700; }
 .replyForm textarea { border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: inherit; font-size: 14px; padding: 10px; resize: vertical; }

@@ -3,10 +3,11 @@
 .brand > a { margin: 0; }
 .accountLinks, .heroActions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .accountLinks a { color: var(--primary); font-size: 14px; font-weight: 700; }
+.accountLinks > a:not(.primaryLink):hover { color: #064b63; text-decoration: underline; text-underline-offset: 3px; }
 .primaryLink, .accountLinks .primaryLink { align-items: center; background: var(--primary); border: 1px solid var(--primary); border-radius: 5px; color: white; display: inline-flex; font-size: 14px; font-weight: 700; justify-content: center; min-height: 44px; padding: 11px 18px; }
-.primaryLink:hover { background: #064b63; }
+.primaryLink:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .secondaryLink { align-items: center; border: 1px solid var(--primary); border-radius: 5px; color: var(--primary); display: inline-flex; font-size: 14px; font-weight: 700; justify-content: center; min-height: 44px; padding: 11px 18px; }
-.secondaryLink:hover { background: var(--primary-light); }
+.secondaryLink:hover { background: var(--primary-light); box-shadow: 0 3px 9px rgb(7 90 118 / 10%); }
 .hero { align-items: center; display: grid; gap: 48px; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); margin: 0 auto; max-width: 1200px; min-height: 460px; padding: 64px 36px; }
 .eyebrow { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .hero h1 { color: var(--primary); font-size: clamp(32px, 4vw, 52px); line-height: 1.13; margin: 14px 0 18px; max-width: 690px; }

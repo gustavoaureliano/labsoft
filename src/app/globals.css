@@ -6,6 +6,11 @@
   --border: #dce5e8;
   --background: #f6f8f9;
   --surface: #ffffff;
+  --action-shadow: 0 4px 12px rgb(7 90 118 / 18%);
+  --card-hover-border: #b8d3dc;
+  --card-hover-shadow: 0 6px 18px rgb(7 90 118 / 10%);
+  --hover-duration: 160ms;
+  --menu-hover-duration: 380ms;
 }
 
 * { box-sizing: border-box; }
@@ -27,7 +32,15 @@ a {
   text-decoration: none;
 }
 
+a, button {
+  transition: background-color var(--hover-duration) ease, border-color var(--hover-duration) ease, color var(--hover-duration) ease, box-shadow var(--hover-duration) ease, filter var(--hover-duration) ease;
+}
+
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --hover-duration: 0ms; --menu-hover-duration: 0ms; }
 }

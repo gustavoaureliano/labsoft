@@ -25,9 +25,9 @@
 .passwordRow { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; }
 .primaryButton, .secondaryButton { border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 44px; padding: 10px 16px; }
 .primaryButton { background: var(--primary); border: 1px solid var(--primary); color: #fff; }
-.primaryButton:hover { filter: brightness(.92); }
+.primaryButton:hover { box-shadow: var(--action-shadow); filter: brightness(.92); }
 .secondaryButton { background: var(--surface); border: 1px solid var(--border); color: var(--primary); }
-.secondaryButton:hover { background: var(--primary-light); border-color: var(--primary-light); }
+.secondaryButton:hover { background: var(--primary-light); border-color: var(--primary-light); box-shadow: 0 3px 9px rgb(7 90 118 / 10%); }
 .formActions { display: flex; grid-column: 2; justify-content: flex-end; margin-top: 4px; }
 .paymentFields { align-items: center; display: grid; gap: 14px 16px; grid-template-columns: 100px minmax(0, 1fr); margin: 22px 0; }
 .readonlyField { align-items: center; display: flex; }

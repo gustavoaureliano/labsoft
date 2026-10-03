@@ -11,7 +11,7 @@
 .composeFooter { align-items: center; display: flex; justify-content: space-between; }
 .composeFooter p { color: var(--text); font-size: 12px; margin: 0; }
 .primaryButton { background: var(--primary); border: 1px solid var(--primary); border-radius: 5px; color: var(--surface); cursor: pointer; font-size: 14px; font-weight: 700; min-height: 44px; padding: 0 18px; }
-.primaryButton:hover { background: #064b63; }
+.primaryButton:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .notice { color: #2d6540; font-size: 11px; margin: -3px 0 0; min-height: 0; }
 .notice:empty { display: none; }
 .discussions { display: grid; gap: 12px; }

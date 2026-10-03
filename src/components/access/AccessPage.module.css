@@ -11,8 +11,10 @@
 .inputWithIcon { align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; display: flex; gap: 9px; padding-left: 12px; }
 .inputWithIcon input { border: 0; background: transparent; }
 .primaryButton { background: var(--primary); border: 0; border-radius: 6px; color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; min-height: 44px; }
+.primaryButton:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .card a.primaryButton { align-items: center; display: flex; justify-content: center; }
 .links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
 .links a { color: var(--primary); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.links a:hover { color: #064b63; text-decoration-thickness: 2px; }
 .notice { color: var(--primary); font-size: 12px; margin: 0; }
 .demoNote { border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.4; margin: 0; padding-top: 12px; text-align: center; }

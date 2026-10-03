@@ -4,7 +4,8 @@
 .heading p { font-size: 14px; }
 .eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .page h2 { font-size: 22px; margin: 0 0 16px; }
-.course { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: grid; grid-template-columns: minmax(220px, .8fr) minmax(320px, 1.2fr); overflow: hidden; }
+.course { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: grid; grid-template-columns: minmax(220px, .8fr) minmax(320px, 1.2fr); overflow: hidden; transition: border-color var(--hover-duration) ease, box-shadow var(--hover-duration) ease; }
+.course:focus-within, .course:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); }
 .courseVisual { align-items: center; background: var(--primary-light); border-right: 1px solid var(--border); color: var(--primary); display: flex; font-size: 18px; font-weight: 700; justify-content: center; min-height: 260px; }
 .courseContent { padding: 30px; }
 .courseContent h3 { font-size: 22px; margin: 8px 0; }
@@ -18,14 +19,17 @@
 .library h2 { margin-bottom: 0; }
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
 .tabs button { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); cursor: pointer; font-size: 13px; min-height: 40px; padding: 9px 13px; }
-.tabs button[aria-pressed="true"] { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: 700; }
+.tabs button:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+.tabs button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
 .libraryContent { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; min-height: 100px; padding: 20px; }
 .libraryContent p, .playlistList span { color: var(--muted); font-size: 13px; margin: 0; }
 .libraryContent a { color: var(--primary); font-weight: 700; }
+.libraryContent a:hover { color: #064b63; text-decoration: underline; text-underline-offset: 3px; }
 .playlistForm { align-items: end; display: flex; flex-wrap: wrap; gap: 8px; }
 .playlistForm label { color: var(--text); display: grid; font-size: 13px; font-weight: 700; gap: 6px; }
 .playlistForm input { border: 1px solid var(--border); border-radius: 5px; min-height: 37px; padding: 8px; }
 .playlistForm button { background: var(--primary); border: 0; border-radius: 5px; color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 44px; padding: 8px 14px; }
+.playlistForm button:not(:disabled):hover { background: #064b63; box-shadow: var(--action-shadow); }
 .playlistForm button:disabled { opacity: .5; }
 .playlistList { display: grid; gap: 10px; list-style: none; margin: 18px 0 0; padding: 0; }
 .playlistList li { border-top: 1px solid var(--border); display: grid; gap: 6px; padding-top: 10px; }

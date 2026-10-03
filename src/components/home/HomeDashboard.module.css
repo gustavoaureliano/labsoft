@@ -25,6 +25,7 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.sectionHeading a:hover { color: #064b63; text-decoration-thickness: 2px; }
 
 .sectionHeadingCompact { margin-bottom: 16px; }
 
@@ -43,7 +44,9 @@
   display: grid;
   grid-template-columns: minmax(260px, .8fr) minmax(340px, 1.2fr);
   overflow: hidden;
+  transition: border-color var(--hover-duration) ease, box-shadow var(--hover-duration) ease;
 }
+.featuredCourse:focus-within, .featuredCourse:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); }
 
 .featuredVisual {
   align-items: center;
