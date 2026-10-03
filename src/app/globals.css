@@ -2,7 +2,7 @@
   --primary: #075a76;
   --primary-light: #e8f3f6;
   --text: #20343c;
-  --muted: #6d7e84;
+  --muted: #5b6b72;
   --border: #dce5e8;
   --background: #f6f8f9;
   --surface: #ffffff;
@@ -25,4 +25,9 @@ textarea { font: inherit; }
 a {
   color: inherit;
   text-decoration: none;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
 }

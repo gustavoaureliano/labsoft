@@ -19,8 +19,8 @@
   border-radius: 4px;
   color: var(--muted);
   display: flex;
-  font-size: 14px;
-  min-height: 42px;
+  font-size: 15px;
+  min-height: 44px;
   padding: 12px;
 }
 
@@ -57,7 +57,7 @@
   padding: 0 36px;
 }
 
-.pageTitle { color: var(--primary); font-size: 14px; margin-right: auto; }
+.pageTitle { color: var(--primary); font-size: 15px; margin-right: auto; }
 
 .search {
   align-items: center;
@@ -85,7 +85,7 @@
   border-radius: 3px;
   color: var(--surface);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin-right: 4px;
   padding: 8px 10px;
@@ -100,7 +100,7 @@
   border: 0;
   color: var(--primary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   position: relative;
 }
@@ -126,7 +126,7 @@
   .sidebarFooter { display: none; }
 
   .sidebarNav { display: flex; gap: 4px; margin-left: auto; }
-  .sidebarNav .navItem { font-size: 12px; min-height: 38px; padding: 11px 9px; white-space: nowrap; }
+  .sidebarNav .navItem { font-size: 13px; min-height: 42px; padding: 11px 9px; white-space: nowrap; }
   .futureNavItem { display: none; }
   .sidebarNav { max-width: calc(100vw - 120px); overflow-x: auto; }
 

@@ -1,39 +1,39 @@
 .page { display: grid; gap: 18px; padding-top: 2px; }
 .toolbar { align-items: center; display: flex; gap: 18px; justify-content: space-between; }
 .filters { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; }
-.filterButton { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 12px; font-weight: 700; min-height: 36px; padding: 0 16px; }
+.filterButton { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 700; min-height: 42px; padding: 0 16px; }
 .filterButton:hover { border-color: var(--primary); }
 .filterActive { background: var(--primary); border-color: var(--primary); color: var(--surface); }
-.search { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; flex: 0 1 300px; height: 38px; min-width: 190px; padding: 0 12px; }
+.search { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; flex: 0 1 300px; height: 42px; min-width: 190px; padding: 0 12px; }
 .search:focus-within { border-color: var(--primary); outline: 2px solid var(--primary-light); }
 .search > span { border: 1.5px solid var(--primary); border-radius: 50%; height: 10px; margin-right: 10px; position: relative; width: 10px; }
 .search > span::after { background: var(--primary); content: ""; height: 1px; position: absolute; right: -4px; top: 8px; transform: rotate(45deg); width: 5px; }
-.search input { background: transparent; border: 0; color: var(--text); font-size: 11px; min-width: 0; outline: 0; width: 100%; }
+.search input { background: transparent; border: 0; color: var(--text); font-size: 13px; min-width: 0; outline: 0; width: 100%; }
 .questionList { display: grid; gap: 10px; }
 .question { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); display: grid; gap: 14px; grid-template-columns: 42px minmax(0, 1fr) auto auto; padding: 15px 16px; }
 .studentInitial { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; height: 42px; justify-content: center; width: 42px; }
 .questionContent { min-width: 0; }
 .studentLine { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }
-.studentLine h2 { font-size: 13px; margin: 0; }
-.studentLine > span { color: var(--muted); font-size: 10px; }
-.prompt { color: var(--text); font-size: 11px; line-height: 1.45; margin: 5px 0 2px; }
-.lesson { color: var(--text); font-size: 10px; margin: 0; }
-.status { border-radius: 999px; font-size: 10px; padding: 6px 10px; white-space: nowrap; }
+.studentLine h2 { font-size: 15px; margin: 0; }
+.studentLine > span { color: var(--muted); font-size: 12px; }
+.prompt { color: var(--text); font-size: 13px; line-height: 1.5; margin: 6px 0 3px; }
+.lesson { color: var(--text); font-size: 12px; margin: 0; }
+.status { border-radius: 999px; font-size: 11px; padding: 6px 10px; white-space: nowrap; }
 .pending { background: #fff0ce; color: #6d5117; }
 .answered { background: #e3f5e5; color: #2d6540; }
-.primaryButton, .secondaryButton, .cancelButton { align-items: center; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: inline-flex; font-size: 11px; justify-content: center; min-height: 34px; padding: 0 13px; white-space: nowrap; }
+.primaryButton, .secondaryButton, .cancelButton { align-items: center; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; min-height: 42px; padding: 0 14px; white-space: nowrap; }
 .primaryButton { background: var(--primary); color: var(--surface); }
 .primaryButton:hover { background: #064b63; }
 .secondaryButton, .cancelButton { background: var(--surface); border-color: var(--border); color: var(--text); }
 .secondaryButton:hover, .cancelButton:hover { border-color: var(--primary); color: var(--primary); }
 .replyForm { display: grid; gap: 8px; margin-top: 14px; }
-.replyForm label { color: var(--muted); font-size: 11px; font-weight: 700; }
-.replyForm textarea { border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: inherit; font-size: 12px; padding: 9px; resize: vertical; }
+.replyForm label { color: var(--muted); font-size: 13px; font-weight: 700; }
+.replyForm textarea { border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: inherit; font-size: 14px; padding: 10px; resize: vertical; }
 .replyForm textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
 .replyForm > div { display: flex; gap: 8px; justify-content: flex-end; }
 .answer { background: var(--background); border-left: 3px solid var(--primary); margin-top: 12px; padding: 10px 12px; }
-.answer strong { color: var(--primary); font-size: 11px; }
-.answer p { font-size: 11px; line-height: 1.5; margin: 5px 0 0; }
+.answer strong { color: var(--primary); font-size: 13px; }
+.answer p { font-size: 13px; line-height: 1.5; margin: 5px 0 0; }
 .emptyState { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); margin: 0; padding: 28px; text-align: center; }
 @media (max-width: 760px) {
   .toolbar { align-items: stretch; flex-direction: column; }
@@ -45,7 +45,7 @@
 }
 @media (max-width: 500px) {
   .filters { gap: 6px; }
-  .filterButton { flex: 1; font-size: 11px; padding: 0 8px; }
+  .filterButton { flex: 1; font-size: 12px; padding: 0 8px; }
   .question { align-items: start; gap: 10px; grid-template-columns: 34px minmax(0, 1fr); padding: 12px; }
   .studentInitial { height: 34px; width: 34px; }
   .questionContent { grid-column: 2; }

@@ -1,7 +1,8 @@
 .dashboard { display: grid; gap: 36px; }
 .welcomeRow p { color: var(--muted); margin: 0; }
-.welcomeDate { font-size: 11px; text-transform: uppercase; }
+.welcomeDate { font-size: 12px; text-transform: uppercase; }
 .welcomeRow h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+.welcomeRow > div > p:last-child { font-size: 15px; }
 
 .continueSection { display: grid; gap: 16px; }
 
@@ -13,20 +14,23 @@
 
 .sectionHeading h2 {
   color: var(--text);
-  font-size: 20px;
+  font-size: 22px;
   margin: 5px 0 0;
 }
 
 .sectionHeading a {
   color: var(--primary);
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sectionHeadingCompact { margin-bottom: 16px; }
 
 .eyebrow {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .5px;
   text-transform: uppercase;
@@ -47,7 +51,7 @@
   border-right: 1px solid var(--border);
   color: var(--primary);
   display: flex;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   justify-content: center;
   min-height: 250px;
@@ -62,13 +66,13 @@
 
 .featuredContent h2 {
   color: var(--text);
-  font-size: 22px;
+  font-size: 24px;
   margin: 8px 0;
 }
 
 .featuredContent > p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -94,7 +98,7 @@
 
 .progressCopy {
   display: flex;
-  font-size: 11px;
+  font-size: 12px;
   justify-content: space-between;
   margin: 18px 0 7px;
 }
@@ -103,7 +107,7 @@
 .progressCopy strong { color: var(--primary); }
 
 .primaryButton {
-  margin-top: 20px;
+  margin-top: 22px;
 }
 
 .courseGrid {
@@ -125,7 +129,7 @@
 }
 
 @media (max-width: 600px) {
-  .sectionHeading { align-items: flex-start; gap: 12px; }
+  .sectionHeading { align-items: flex-start; flex-direction: column; gap: 8px; }
   .featuredContent { padding: 24px; }
   .courseGrid { grid-template-columns: 1fr; }
 }

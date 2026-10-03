@@ -2,10 +2,10 @@
 .header { align-items: center; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; min-height: 84px; padding: 16px max(36px, calc((100vw - 1200px) / 2)); }
 .brand > a { margin: 0; }
 .accountLinks, .heroActions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
-.accountLinks a { color: var(--primary); font-size: 13px; font-weight: 700; }
-.primaryLink, .accountLinks .primaryLink { background: var(--primary); border: 1px solid var(--primary); border-radius: 5px; color: white; display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; padding: 12px 18px; }
+.accountLinks a { color: var(--primary); font-size: 14px; font-weight: 700; }
+.primaryLink, .accountLinks .primaryLink { align-items: center; background: var(--primary); border: 1px solid var(--primary); border-radius: 5px; color: white; display: inline-flex; font-size: 14px; font-weight: 700; justify-content: center; min-height: 44px; padding: 11px 18px; }
 .primaryLink:hover { background: #064b63; }
-.secondaryLink { border: 1px solid var(--primary); border-radius: 5px; color: var(--primary); display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; padding: 12px 18px; }
+.secondaryLink { align-items: center; border: 1px solid var(--primary); border-radius: 5px; color: var(--primary); display: inline-flex; font-size: 14px; font-weight: 700; justify-content: center; min-height: 44px; padding: 11px 18px; }
 .secondaryLink:hover { background: var(--primary-light); }
 .hero { align-items: center; display: grid; gap: 48px; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); margin: 0 auto; max-width: 1200px; min-height: 460px; padding: 64px 36px; }
 .eyebrow { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }

@@ -1,7 +1,7 @@
 .profile { display: grid; gap: 36px; }
 .pageHeading p { color: var(--muted); margin: 0; }
 .pageHeading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
-.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .topGrid { display: grid; grid-template-columns: minmax(220px, .72fr) minmax(0, 1.8fr); gap: 16px; align-items: stretch; }
 .bottomGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -10,20 +10,20 @@
 .avatarVisual { align-items: center; background: var(--primary-light); border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
 .avatarButton { background: transparent; border: 0; border-radius: 50%; cursor: pointer; line-height: 0; padding: 0; }
 .avatarInfo { align-content: start; display: grid; justify-items: start; padding: 20px; }
-.avatarInfo p { color: var(--muted); font-size: 12px; margin: 5px 0 14px; }
+.avatarInfo p { color: var(--muted); font-size: 13px; margin: 5px 0 14px; }
 .visuallyHidden { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
 .personalCard, .paymentCard, .planCard { padding: 24px; }
 .sectionHeading { align-items: flex-end; display: flex; justify-content: space-between; }
 .sectionHeading h2 { font-size: 20px; margin-top: 5px; }
 .form { align-items: center; display: grid; gap: 14px 16px; grid-template-columns: 100px minmax(0, 1fr); margin-top: 22px; }
-.form label, .fieldLabel { color: var(--text); font-size: 12px; font-weight: 700; }
-.form input, .form textarea, .readonlyField { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 13px; min-width: 0; width: 100%; }
-.form input, .readonlyField { height: 40px; padding: 0 12px; }
+.form label, .fieldLabel { color: var(--text); font-size: 13px; font-weight: 700; }
+.form input, .form textarea, .readonlyField { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 14px; min-width: 0; width: 100%; }
+.form input, .readonlyField { height: 44px; padding: 0 12px; }
 .form textarea { line-height: 1.5; min-height: 88px; padding: 10px 12px; resize: vertical; }
 .form input:focus, .form textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
 .descriptionLabel { align-self: start; padding-top: 10px; }
 .passwordRow { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; }
-.primaryButton, .secondaryButton { border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700; min-height: 40px; padding: 10px 15px; }
+.primaryButton, .secondaryButton { border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 44px; padding: 10px 16px; }
 .primaryButton { background: var(--primary); border: 1px solid var(--primary); color: #fff; }
 .primaryButton:hover { filter: brightness(.92); }
 .secondaryButton { background: var(--surface); border: 1px solid var(--border); color: var(--primary); }
@@ -34,7 +34,7 @@
 .price { color: var(--primary); font-size: 15px; }
 .planCard h2 { font-size: 20px; }
 .planCard ul { display: grid; gap: 12px; list-style: none; margin: 20px 0; padding: 0; }
-.planCard li { align-items: center; color: var(--text); display: flex; font-size: 12px; gap: 9px; line-height: 1.4; }
+.planCard li { align-items: center; color: var(--text); display: flex; font-size: 13px; gap: 9px; line-height: 1.4; }
 .check { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: inline-flex; flex: none; height: 20px; justify-content: center; width: 20px; }
 .check svg { height: 12px; stroke-width: 2.5; width: 12px; }
 .notice { background: var(--text); border-radius: 4px; bottom: 22px; box-shadow: 0 4px 12px #20343c26; color: #fff; font-size: 13px; max-width: 340px; padding: 12px 16px; position: fixed; right: 22px; z-index: 20; }

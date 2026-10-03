@@ -1,1 +1,3 @@
-.link { align-self: flex-start; background: var(--primary); border-radius: 4px; color: #fff; display: inline-block; font-size: 12px; padding: 11px 15px; }
+.link { align-items: center; align-self: flex-start; background: var(--primary); border-radius: 5px; color: #fff; display: inline-flex; font-size: 14px; font-weight: 700; justify-content: center; min-height: 44px; padding: 11px 18px; }
+.link:hover { background: #064b63; }
+.link:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }

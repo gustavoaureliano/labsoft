@@ -1,10 +1,10 @@
 .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .card, .certificate { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
 .card { padding: 24px; }
-.status { color: var(--primary); font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.card h2 { font-size: 18px; margin: 10px 0; }
-.card p, .demoNote { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.card a, .detailPage > a { color: var(--primary); font-size: 13px; font-weight: 700; }
+.status { color: var(--primary); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.card h2 { font-size: 20px; margin: 10px 0; }
+.card p, .demoNote { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.card a, .detailPage > a { color: var(--primary); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .demoNote { margin: 0; }
 .detailPage { display: grid; gap: 24px; }
 .certificate { min-height: 460px; padding: 72px 32px; text-align: center; }

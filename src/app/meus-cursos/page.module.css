@@ -2,14 +2,14 @@
 .heading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
 .heading p, .courseContent > p { color: var(--muted); margin: 0; }
 .heading p { font-size: 14px; }
-.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
-.page h2 { font-size: 20px; margin: 0 0 16px; }
+.eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.page h2 { font-size: 22px; margin: 0 0 16px; }
 .course { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: grid; grid-template-columns: minmax(220px, .8fr) minmax(320px, 1.2fr); overflow: hidden; }
 .courseVisual { align-items: center; background: var(--primary-light); border-right: 1px solid var(--border); color: var(--primary); display: flex; font-size: 18px; font-weight: 700; justify-content: center; min-height: 260px; }
 .courseContent { padding: 30px; }
 .courseContent h3 { font-size: 22px; margin: 8px 0; }
-.courseContent > p { font-size: 13px; }
-.progressCopy { display: flex; font-size: 11px; justify-content: space-between; margin: 24px 0 8px; }
+.courseContent > p { font-size: 14px; }
+.progressCopy { display: flex; font-size: 12px; justify-content: space-between; margin: 24px 0 8px; }
 .progressCopy span { color: var(--muted); }
 .progressCopy strong { color: var(--primary); }
 .courseContent .nextLesson { margin-top: 18px; }
@@ -17,15 +17,15 @@
 .library { display: grid; gap: 14px; }
 .library h2 { margin-bottom: 0; }
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.tabs button { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); cursor: pointer; font-size: 12px; padding: 9px 13px; }
+.tabs button { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); cursor: pointer; font-size: 13px; min-height: 40px; padding: 9px 13px; }
 .tabs button[aria-pressed="true"] { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: 700; }
 .libraryContent { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; min-height: 100px; padding: 20px; }
 .libraryContent p, .playlistList span { color: var(--muted); font-size: 13px; margin: 0; }
 .libraryContent a { color: var(--primary); font-weight: 700; }
 .playlistForm { align-items: end; display: flex; flex-wrap: wrap; gap: 8px; }
-.playlistForm label { color: var(--text); display: grid; font-size: 12px; font-weight: 700; gap: 6px; }
+.playlistForm label { color: var(--text); display: grid; font-size: 13px; font-weight: 700; gap: 6px; }
 .playlistForm input { border: 1px solid var(--border); border-radius: 5px; min-height: 37px; padding: 8px; }
-.playlistForm button { background: var(--primary); border: 0; border-radius: 5px; color: #fff; cursor: pointer; font-size: 12px; min-height: 37px; padding: 8px 12px; }
+.playlistForm button { background: var(--primary); border: 0; border-radius: 5px; color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 44px; padding: 8px 14px; }
 .playlistForm button:disabled { opacity: .5; }
 .playlistList { display: grid; gap: 10px; list-style: none; margin: 18px 0 0; padding: 0; }
 .playlistList li { border-top: 1px solid var(--border); display: grid; gap: 6px; padding-top: 10px; }

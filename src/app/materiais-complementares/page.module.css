@@ -1,27 +1,27 @@
 .page { display: grid; gap: 22px; }
-.heading > span { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.heading > span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .heading h1 { color: var(--text); font-size: 26px; margin: 7px 0; }
-.heading p { color: var(--muted); font-size: 13px; margin: 0; }
+.heading p { color: var(--muted); font-size: 14px; margin: 0; }
 .library { align-items: end; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; padding: 14px; }
 .library label { display: grid; gap: 6px; min-width: 0; }
-.library label span { color: var(--muted); font-size: 10px; font-weight: 700; }
-.library select { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); height: 38px; min-width: 0; padding: 0 10px; width: 100%; }
+.library label span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.library select { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); height: 42px; min-width: 0; padding: 0 10px; width: 100%; }
 .library select:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
-.resultCount { color: var(--muted); font-size: 11px; padding: 0 0 11px 6px; white-space: nowrap; }
+.resultCount { color: var(--muted); font-size: 12px; padding: 0 0 11px 6px; white-space: nowrap; }
 .groups { display: grid; gap: 26px; }
 .courseGroup { min-width: 0; }
 .groupHeading { align-items: end; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; }
 .groupHeading span { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.groupHeading h2 { color: var(--primary); font-size: 16px; margin: 5px 0 0; }
-.groupHeading a { color: var(--primary); font-size: 11px; font-weight: 700; }
+.groupHeading h2 { color: var(--primary); font-size: 19px; margin: 5px 0 0; }
+.groupHeading a { color: var(--primary); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .materialList { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .material { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; display: grid; gap: 13px; grid-template-columns: 44px minmax(0, 1fr) auto; padding: 12px; }
 .typeMark { align-items: center; background: #e8f3f6; border-radius: 4px; color: var(--primary); display: flex; font-size: 16px; font-weight: 700; height: 42px; justify-content: center; width: 42px; }
 .materialCopy { min-width: 0; }
-.materialCopy > span { color: var(--primary); font-size: 9px; font-weight: 700; }
-.materialCopy h3 { font-size: 13px; margin: 3px 0; }
-.materialCopy p { color: var(--muted); font-size: 11px; line-height: 1.4; margin: 0; }
-.format { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.materialCopy > span { color: var(--primary); font-size: 11px; font-weight: 700; }
+.materialCopy h3 { font-size: 15px; margin: 4px 0; }
+.materialCopy p { color: var(--muted); font-size: 13px; line-height: 1.4; margin: 0; }
+.format { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .emptyState { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--muted); margin: 0; padding: 24px; text-align: center; }
 @media (max-width: 700px) {
   .heading h1 { font-size: 22px; }

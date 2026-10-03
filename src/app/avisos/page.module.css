@@ -1,7 +1,7 @@
 .list { display: grid; gap: 12px; }
 .notice { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; gap: 20px; justify-content: space-between; padding: 20px; }
-.notice h2 { font-size: 16px; margin: 0 0 6px; }
-.notice p { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
-.notice span { color: var(--primary); font-size: 11px; font-weight: 700; }
-.notice a { background: var(--primary); border-radius: 5px; color: #fff; font-size: 12px; font-weight: 700; padding: 9px 14px; }
+.notice h2 { font-size: 18px; margin: 0 0 6px; }
+.notice p { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
+.notice span { color: var(--primary); font-size: 12px; font-weight: 700; }
+.notice a { align-items: center; background: var(--primary); border-radius: 5px; color: #fff; display: inline-flex; font-size: 13px; font-weight: 700; min-height: 42px; padding: 9px 16px; }
 .demoNote { color: var(--muted); font-size: 12px; margin: 0; }
