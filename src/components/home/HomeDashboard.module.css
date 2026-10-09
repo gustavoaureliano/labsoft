@@ -119,11 +119,21 @@
 
 .lessonRail { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; padding: 22px; }
 .lessonRail h3 { font-size: 20px; margin: 6px 0 16px; }
-.railLesson { border-top: 1px solid var(--border); display: grid; gap: 7px; padding: 14px 0; }
+.railLesson {
+  border-radius: 5px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 7px;
+  margin: 0 -10px;
+  padding: 14px 10px;
+  transition: background-color var(--menu-hover-duration) ease-in-out, color var(--menu-hover-duration) ease-in-out;
+}
+.railLesson:hover, .railLesson:focus-visible { background: var(--primary-light); color: var(--primary); }
+.railLesson:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .railLesson span { color: var(--muted); font-size: 12px; }
 .railLesson strong { font-size: 14px; line-height: 1.4; }
-.lessonRail a { color: var(--primary); font-size: 13px; font-weight: 700; margin-top: auto; padding-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
-.lessonRail a:hover { color: #064b63; }
+.allLessonsLink { color: var(--primary); font-size: 13px; font-weight: 700; margin-top: auto; padding-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.allLessonsLink:hover { color: #064b63; }
 
 .courseGrid {
   display: grid;

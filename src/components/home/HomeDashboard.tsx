@@ -48,9 +48,9 @@ export function HomeDashboard() {
           <aside className={styles.lessonRail} aria-label="Outras aulas do curso">
             <span className={styles.eyebrow}>Sua trilha</span>
             <h3>No seu curso</h3>
-            {previousLesson && <div className={styles.railLesson}><span>Última aula · concluída</span><strong>{previousLesson.title}</strong></div>}
-            {nextLesson && <div className={styles.railLesson}><span>Depois desta</span><strong>{nextLesson.title}</strong></div>}
-            <Link href={`/meus-cursos/${enrolledCourse.id}`}>Ver aulas do curso →</Link>
+            {previousLesson && <Link className={styles.railLesson} href={lessonHref(previousLesson.id)}><span>Última aula · concluída</span><strong>{previousLesson.title}</strong></Link>}
+            {nextLesson && <Link className={styles.railLesson} href={lessonHref(nextLesson.id)}><span>Depois desta</span><strong>{nextLesson.title}</strong></Link>}
+            <Link className={styles.allLessonsLink} href={`/meus-cursos/${enrolledCourse.id}`}>Ver aulas do curso →</Link>
           </aside>
         </div>
       </section>

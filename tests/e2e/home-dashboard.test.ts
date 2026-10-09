@@ -12,6 +12,11 @@ test("o aluno explora a home e encontra formas de estudar", async () => {
     assert.match(homeText, /Outras formas de estudar/);
     assert.equal(await driver.executeScript("return document.documentElement.scrollHeight > innerHeight"), true);
 
+    await driver.findElement(By.xpath('//aside[@aria-label="Outras aulas do curso"]//strong[normalize-space()="Exercícios de dinâmica"]/ancestor::a')).click();
+    await driver.wait(until.urlContains("aula=exercicios-dinamica"), 10000);
+    assert.equal(await driver.findElement(By.css("h1")).getText(), "Exercícios de dinâmica");
+
+    await driver.get(baseUrl);
     await driver.findElement(By.linkText("Ver aulas do curso →")).click();
     await driver.wait(until.urlContains("/meus-cursos/fisica-enem-mecanica"), 10000);
     assert.equal((await driver.findElements(By.css('section[aria-labelledby="course-content-title"] ol li'))).length, 12);
