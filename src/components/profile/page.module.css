@@ -23,7 +23,7 @@
 .form input:focus, .form textarea:focus { border-color: var(--primary); outline: 2px solid var(--primary-light); }
 .descriptionLabel { align-self: start; padding-top: 10px; }
 .passwordRow { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; }
-.primaryButton, .secondaryButton { border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 44px; padding: 10px 16px; }
+.primaryButton, .secondaryButton { align-items: center; border-radius: 4px; cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; min-height: 44px; padding: 10px 16px; }
 .primaryButton { background: var(--primary); border: 1px solid var(--primary); color: #fff; }
 .primaryButton:hover { box-shadow: var(--action-shadow); filter: brightness(.92); }
 .secondaryButton { background: var(--surface); border: 1px solid var(--border); color: var(--primary); }

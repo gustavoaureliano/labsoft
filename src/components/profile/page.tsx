@@ -1,9 +1,13 @@
 'use client';
 
 import { startTransition, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import Link from "next/link";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icons";
 import { initialProfile, type Profile } from "../../data/profile";
+import { formatPrice } from "../../data/catalog";
+import { accessDemoKey, initialAccessDemo } from "../../data/subscriptionDemo";
+import { useDemoStorage } from "../../lib/useDemoStorage";
 import styles from "./page.module.css";
 
 const storageKey = "aprovaai-profile-demo";
@@ -13,7 +17,9 @@ export function ProfilePage() {
   const [savedName, setSavedName] = useState(initialProfile.nickname);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const fileInput = useRef<HTMLInputElement>(null);
+  const currentPlan = access.subscription;
 
   useEffect(() => {
     try {
@@ -129,21 +135,21 @@ export function ProfilePage() {
           </div>
           <div className={styles.paymentFields}>
             <span className={styles.fieldLabel}>CPF</span><span className={styles.readonlyField}>429.***.***-**</span>
-            <span className={styles.fieldLabel}>Valor</span><strong className={styles.price}>R$ 29,90</strong>
+            <span className={styles.fieldLabel}>Valor</span><strong className={styles.price}>{currentPlan ? formatPrice(currentPlan.price) : "—"}</strong>
             <span className={styles.fieldLabel}>Cartão</span><span className={styles.readonlyField}>**************</span>
           </div>
-          <button type="button" className={styles.primaryButton} onClick={() => setNotice("A edição do pagamento precisa ser conectada a um provedor de pagamentos.")}>Alterar dados de pagamento</button>
+          <Link className={styles.primaryButton} href="/assinatura">Gerenciar pagamento</Link>
         </section>
 
         <section className={`${styles.card} ${styles.planCard}`} aria-labelledby="plan-title">
-          <span className={styles.eyebrow}>Plano atual</span>
-          <h2 id="plan-title">Curso Individual</h2>
+          <span className={styles.eyebrow}>{currentPlan?.status === "active" ? "Plano atual" : "Acesso demonstrativo"}</span>
+          <h2 id="plan-title">{currentPlan?.plan === "complete" ? "Assinatura completa" : currentPlan ? "Curso individual" : "Nenhum plano ativo"}</h2>
           <ul>
             <li><span className={styles.check}><Icon name="check" /></span>Acesso vitalício à matéria escolhida</li>
             <li><span className={styles.check}><Icon name="check" /></span>Videoaulas e material complementar</li>
             <li><span className={styles.check}><Icon name="check" /></span>Certificado de conclusão da matéria</li>
           </ul>
-          <button type="button" className={styles.secondaryButton} onClick={() => setNotice("A lista de planos precisa ser conectada ao catálogo.")}>Ver outros planos</button>
+          <Link className={styles.secondaryButton} href="/planos">Ver outros planos</Link>
         </section>
       </div>
       {notice && <div className={styles.notice} role="status">{notice}</div>}

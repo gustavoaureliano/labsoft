@@ -8,6 +8,7 @@
 }
 
 .card:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); }
+.link { display: block; height: 100%; }
 
 .cover {
   align-items: center;
@@ -61,5 +62,5 @@
 .body h3 { font-size: 17px; line-height: 1.35; margin: 0 0 9px; }
 .teacher { color: var(--muted); font-size: 13px; margin: 0; }
 .details { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 9px 0 0; }
-.cardFooter { align-items: center; display: flex; margin-top: 14px; }
+.cardFooter { align-items: center; display: flex; justify-content: space-between; margin-top: 14px; }
 .rating { color: #946300; font-size: 13px; font-weight: 700; }

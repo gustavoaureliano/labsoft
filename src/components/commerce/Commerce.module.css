@@ -1,0 +1,55 @@
+.page { display: grid; gap: 26px; }
+.back { color: var(--primary); font-size: 13px; font-weight: 700; justify-self: start; }
+.back:hover { text-decoration: underline; text-underline-offset: 3px; }
+.eyebrow { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.hero { align-items: stretch; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr) 310px; }
+.heroMain, .purchase, .section, .plan, .summary, .success { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.heroMain { padding: 30px; }
+.heroMain h1 { color: var(--primary); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; margin: 10px 0 13px; }
+.lead { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; max-width: 720px; }
+.meta { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+.meta span { background: var(--primary-light); border-radius: 20px; color: var(--primary); font-size: 12px; font-weight: 700; padding: 7px 10px; }
+.purchase { align-content: start; display: grid; gap: 12px; padding: 26px; }
+.purchase strong { color: var(--primary); font-size: 26px; }
+.purchase p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+.primary, .secondary, .danger, .button { align-items: center; border-radius: 5px; cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 700; justify-content: center; min-height: 44px; padding: 10px 16px; }
+.primary, .button { background: var(--primary); border: 1px solid var(--primary); color: white; }
+.primary:hover, .button:hover { background: #064b63; box-shadow: var(--action-shadow); }
+.secondary { background: white; border: 1px solid var(--primary); color: var(--primary); }
+.secondary:hover { background: var(--primary-light); }
+.danger { background: white; border: 1px solid #b54747; color: #9b3434; }
+.detailsGrid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr); }
+.section { padding: 26px; }
+.section h2, .heading h1 { color: var(--primary); margin: 0 0 16px; }
+.section p, .section li { color: var(--muted); font-size: 14px; line-height: 1.6; }
+.modules { display: grid; gap: 12px; }
+.module { border-top: 1px solid var(--border); padding-top: 16px; }
+.module:first-child { border-top: 0; padding-top: 0; }
+.module h3 { font-size: 16px; margin: 0 0 8px; }
+.module ul { margin: 0; padding-left: 20px; }
+.heading h1 { font-size: 32px; margin-top: 8px; }
+.heading p { color: var(--muted); margin: 0; }
+.plans { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.plan { display: grid; gap: 14px; padding: 26px; }
+.planFeatured { border-color: var(--primary); box-shadow: var(--card-hover-shadow); }
+.plan h2 { font-size: 21px; margin: 0; }
+.planPrice { color: var(--primary); font-size: 27px; font-weight: 800; }
+.planPrice small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.plan p { color: var(--muted); font-size: 13px; margin: 0; }
+.plan ul { color: var(--muted); display: grid; font-size: 13px; gap: 8px; margin: 0; padding-left: 20px; }
+.checkout { align-items: start; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr) 340px; }
+.form, .summary { display: grid; gap: 16px; padding: 26px; }
+.form { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.form h2, .summary h2 { font-size: 20px; margin: 0; }
+.form label { color: var(--text); display: grid; font-size: 13px; font-weight: 700; gap: 7px; }
+.form input, .form select { background: white; border: 1px solid var(--border); border-radius: 5px; min-height: 43px; padding: 9px 11px; }
+.note { background: var(--primary-light); border-radius: 5px; color: var(--primary); font-size: 12px; line-height: 1.5; margin: 0; padding: 12px; }
+.summary dl { display: grid; gap: 12px; margin: 0; }
+.summary dl div { border-bottom: 1px solid var(--border); display: flex; gap: 14px; justify-content: space-between; padding-bottom: 12px; }
+.summary dt { color: var(--muted); font-size: 12px; }
+.summary dd { font-size: 13px; font-weight: 700; margin: 0; text-align: right; }
+.success { display: grid; gap: 14px; justify-items: start; padding: 34px; }
+.success h1 { color: var(--primary); margin: 0; }
+.success p { color: var(--muted); margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 800px) { .hero, .detailsGrid, .checkout, .plans { grid-template-columns: 1fr; } }

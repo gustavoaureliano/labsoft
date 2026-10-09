@@ -9,6 +9,10 @@ export type CatalogCourse = {
   rating: number;
   exams: string[];
   summary: string;
+  audience: string;
+  access: "free" | "paid";
+  price: number;
+  syllabus: { title: string; lessons: string[] }[];
 };
 
 export type ComplementaryMaterial = {
@@ -35,6 +39,13 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.9,
     exams: ["ENEM", "FUVEST"],
     summary: "Conceitos fundamentais da física moderna, da dualidade onda-partícula aos modelos atômicos.",
+    audience: "Estudantes que querem revisar física moderna para o ENEM e vestibulares.",
+    access: "paid",
+    price: 29.9,
+    syllabus: [
+      { title: "Fundamentos", lessons: ["Contexto histórico", "Quantização da energia", "Dualidade onda-partícula"] },
+      { title: "Aplicações", lessons: ["Efeito fotoelétrico", "Modelos atômicos", "Exercícios de vestibular"] },
+    ],
   },
   {
     id: "biologia-celular",
@@ -47,6 +58,13 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.9,
     exams: ["ENEM", "UNICAMP"],
     summary: "Explore organelas, metabolismo e divisão celular com foco nas questões mais cobradas.",
+    audience: "Estudantes que desejam dominar citologia e os temas mais recorrentes nas provas.",
+    access: "paid",
+    price: 24.9,
+    syllabus: [
+      { title: "Estrutura celular", lessons: ["Tipos de célula", "Organelas", "Membrana plasmática"] },
+      { title: "Processos celulares", lessons: ["Metabolismo", "Mitose e meiose", "Questões comentadas"] },
+    ],
   },
   {
     id: "estatistica-essencial",
@@ -59,6 +77,13 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.8,
     exams: ["ENEM", "FUVEST"],
     summary: "Interprete gráficos, tabelas e medidas estatísticas com segurança para a prova.",
+    audience: "Estudantes que precisam interpretar dados e resolver questões de estatística básica.",
+    access: "free",
+    price: 0,
+    syllabus: [
+      { title: "Leitura de dados", lessons: ["Tabelas e gráficos", "Média, mediana e moda"] },
+      { title: "Prática", lessons: ["Dispersão", "Probabilidade básica", "Exercícios de prova"] },
+    ],
   },
   {
     id: "redacao-nota-mil",
@@ -71,6 +96,13 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.9,
     exams: ["ENEM"],
     summary: "Construa argumentos consistentes e pratique cada etapa do texto dissertativo.",
+    audience: "Estudantes que querem planejar e escrever redações dissertativas com mais segurança.",
+    access: "paid",
+    price: 34.9,
+    syllabus: [
+      { title: "Planejamento", lessons: ["Leitura do tema", "Tese e repertório", "Projeto de texto"] },
+      { title: "Escrita", lessons: ["Desenvolvimento", "Conclusão", "Revisão orientada"] },
+    ],
   },
   {
     id: "quimica-organica",
@@ -83,6 +115,13 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.7,
     exams: ["ENEM", "FUVEST"],
     summary: "Aprenda funções orgânicas, reações e aplicações presentes no cotidiano.",
+    audience: "Estudantes que buscam uma introdução objetiva à química orgânica para vestibulares.",
+    access: "paid",
+    price: 27.9,
+    syllabus: [
+      { title: "Funções orgânicas", lessons: ["Hidrocarbonetos", "Funções oxigenadas", "Funções nitrogenadas"] },
+      { title: "Reações", lessons: ["Principais mecanismos", "Polímeros", "Questões comentadas"] },
+    ],
   },
   {
     id: "historia-brasil",
@@ -95,8 +134,23 @@ export const catalogCourses: CatalogCourse[] = [
     rating: 4.8,
     exams: ["ENEM", "UNICAMP"],
     summary: "Relacione os principais períodos da história brasileira a seus contextos sociais.",
+    audience: "Estudantes que querem revisar História do Brasil conectando eventos e contextos.",
+    access: "free",
+    price: 0,
+    syllabus: [
+      { title: "Brasil colonial", lessons: ["Colonização", "Economia açucareira", "Mineração"] },
+      { title: "Brasil contemporâneo", lessons: ["Império", "República", "Questões interdisciplinares"] },
+    ],
   },
 ];
+
+export function findCatalogCourse(id: string) {
+  return catalogCourses.find((course) => course.id === id);
+}
+
+export function formatPrice(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
 
 export const complementaryMaterials: ComplementaryMaterial[] = [
   {

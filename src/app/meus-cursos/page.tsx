@@ -3,10 +3,13 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
+import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse, lessonHref, lessonsFromIds } from "@/data/courses";
+import { catalogCourses } from "@/data/catalog";
+import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
@@ -14,7 +17,9 @@ import styles from "./page.module.css";
 export default function MeusCursos() {
   const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
   const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
+  const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const [playlistName, setPlaylistName] = useState("");
+  const acquiredCourses = catalogCourses.filter((course) => access.courseIds.includes(course.id));
   const historyLessons = lessonsFromIds(study.viewedLessons);
   const favoriteLessons = lessonsFromIds(study.favoriteLessons);
 
@@ -50,6 +55,12 @@ export default function MeusCursos() {
             </div>
           </article>
         </section>
+
+        {(acquiredCourses.length > 0 || access.subscription?.plan === "complete") && <section aria-labelledby="new-access-title">
+          <h2 id="new-access-title">Acessos adicionados</h2>
+          {access.subscription?.plan === "complete" && access.subscription.status === "active" && <p className={styles.accessNotice}>Sua assinatura completa está ativa nesta demonstração.</p>}
+          {acquiredCourses.length > 0 && <div className={styles.acquiredGrid}>{acquiredCourses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>}
+        </section>}
 
         <section className={styles.library} aria-labelledby="library-title">
           <h2 id="library-title">Sua biblioteca de estudo</h2>
