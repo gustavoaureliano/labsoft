@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
 import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
-test("o professor consulta e ordena cursos sem entrar no editor ainda não integrado", async () => {
+test("o professor cria um curso com uma aula e o encontra na gestão", async () => {
+  const videoPath = "/tmp/aprova-demo-video.mp4";
+  const materialPath = "/tmp/aprova-demo-material.pdf";
+  await writeFile(videoPath, "arquivo de vídeo demonstrativo");
+  await writeFile(materialPath, "material demonstrativo");
   await withBrowser(async (driver) => {
     await driver.get(`${baseUrl}/professor/cursos`);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Gestão de cursos"]')), 10000);
@@ -12,8 +17,27 @@ test("o professor consulta e ordena cursos sem entrar no editor ainda não integ
     await driver.findElement(By.xpath('//button[normalize-space()="Aulas"]')).click();
     assert.match(await driver.findElement(By.css("main")).getText(), /Introdução e contexto histórico/);
     await driver.findElement(By.css("select")).sendKeys("Título");
-    await driver.findElement(By.xpath('//button[normalize-space()="+ Novo curso"]')).click();
-    assert.match(await driver.findElement(By.css('[role="status"]')).getText(), /Editor de Curso.*João/);
+    await driver.findElement(By.linkText("+ Novo curso")).click();
+    await driver.wait(until.urlContains("/professor/cursos/novo"), 10000);
+    await driver.findElement(By.css('input[name="title"]')).sendKeys("Revisão de Óptica");
+    await driver.findElement(By.css('input[name="subject"]')).sendKeys("Física");
+    await driver.findElement(By.css('textarea[name="summary"]')).sendKeys("Uma revisão objetiva de óptica para o vestibular.");
+    await driver.findElement(By.xpath('//button[normalize-space()="+ Adicionar aula"]')).click();
+    await driver.findElement(By.css('input[aria-label="Título da aula 1"]')).sendKeys("Fundamentos da luz");
+    await driver.findElement(By.css('input[aria-label="Duração da aula 1"]')).sendKeys("20 min");
+    await driver.findElement(By.css('input[aria-label="Selecionar vídeo da aula 1"]')).sendKeys(videoPath);
+    assert.match(await driver.findElement(By.css("main")).getText(), /aprova-demo-video\.mp4/);
+    await driver.findElement(By.css('input[aria-label="Enviar material"]')).sendKeys(materialPath);
+    assert.match(await driver.findElement(By.css("main")).getText(), /aprova-demo-material\.pdf/);
+    const previewButton = await driver.findElement(By.xpath('//button[normalize-space()="Visualizar prévia"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", previewButton);
+    await previewButton.click();
+    assert.match(await driver.findElement(By.css('section[aria-label="Prévia do curso"]')).getText(), /Revisão de Óptica/);
     await pauseForReview();
+    const publishButton = await driver.findElement(By.xpath('//button[normalize-space()="Publicar curso"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", publishButton);
+    await publishButton.click();
+    await driver.wait(until.urlContains("/professor/cursos?salvo=1"), 10000);
+    assert.match(await driver.findElement(By.css("main")).getText(), /Revisão de Óptica/);
   }, "teacher");
 });

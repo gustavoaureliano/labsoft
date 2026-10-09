@@ -1,0 +1,43 @@
+.editor { display: grid; gap: 22px; }
+.heading { align-items: end; display: flex; gap: 18px; justify-content: space-between; }
+.heading span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.heading h1 { color: var(--primary); font-size: 30px; margin: 7px 0; }
+.heading p, .sectionHeading p { color: var(--muted); font-size: 13px; margin: 0; }
+.heading a { color: var(--primary); font-size: 13px; font-weight: 700; }
+.card, .preview, .empty { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 24px; }
+.card h2, .preview h2 { font-size: 19px; margin: 0 0 18px; }
+.formGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.formGrid label, .contentRow label, .materialRow label, .videoField { color: var(--text); display: grid; font-size: 12px; font-weight: 700; gap: 6px; }
+.full { grid-column: 1 / -1; }
+.formGrid input, .formGrid select, .formGrid textarea, .contentRow input, .materialRow input, .materialRow select { background: white; border: 1px solid var(--border); border-radius: 5px; min-height: 42px; padding: 9px 11px; width: 100%; }
+.formGrid textarea { resize: vertical; }
+.formGrid input:disabled { background: var(--background); color: var(--muted); }
+.sectionHeading { align-items: center; display: flex; gap: 16px; justify-content: space-between; margin-bottom: 16px; }
+.sectionHeading h2 { margin-bottom: 5px; }
+.sectionHeading button, .primary, .secondary { border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 700; min-height: 42px; padding: 9px 14px; }
+.sectionHeading button, .primary { background: var(--primary); border: 1px solid var(--primary); color: white; }
+.sectionHeading button:hover, .primary:hover { background: #064b63; box-shadow: var(--action-shadow); }
+.rows { display: grid; gap: 12px; }
+.contentRow { align-items: end; border-top: 1px solid var(--border); display: grid; gap: 10px; grid-template-columns: 28px minmax(180px, 1fr) 95px minmax(240px, 1fr) auto; padding-top: 12px; }
+.position { align-self: center; color: var(--primary); font-weight: 800; }
+.rowActions { display: flex; gap: 5px; }
+.rowActions button, .materialRow > button { background: white; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; min-height: 39px; padding: 7px 9px; }
+.rowActions button:hover, .materialRow > button:hover { background: var(--primary-light); border-color: var(--primary); }
+.rowActions button:disabled { cursor: not-allowed; opacity: .4; }
+.materialRow { align-items: end; border-top: 1px solid var(--border); display: grid; gap: 10px; grid-template-columns: minmax(180px, 1fr) 120px minmax(170px, .7fr) auto; padding-top: 12px; }
+.materialFile { background: var(--background); border: 1px solid var(--border); border-radius: 5px; display: grid; min-height: 42px; padding: 7px 9px; }
+.materialFile span { font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.materialFile small { color: var(--muted); font-size: 10px; }
+.emptyRow { color: var(--muted); font-size: 13px; margin: 0; }
+.preview { background: var(--primary-light); }
+.preview > span { color: var(--primary); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.preview h2 { color: var(--primary); margin: 8px 0; }
+.preview p { color: var(--muted); line-height: 1.5; }
+.preview strong { color: var(--primary); font-size: 13px; }
+.notice { color: #9b3434; font-size: 13px; margin: 0; }
+.footerActions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.secondary { background: white; border: 1px solid var(--primary); color: var(--primary); }
+.secondary:hover { background: var(--primary-light); }
+.empty a { color: var(--primary); font-weight: 700; }
+@media (max-width: 900px) { .contentRow { grid-template-columns: 28px 1fr; } .contentRow label, .rowActions { grid-column: 2; } }
+@media (max-width: 650px) { .heading { align-items: start; flex-direction: column; } .formGrid, .materialRow { grid-template-columns: 1fr; } .full { grid-column: auto; } .footerActions > * { flex: 1 1 100%; } }
