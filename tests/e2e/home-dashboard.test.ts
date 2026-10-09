@@ -10,6 +10,8 @@ test("o aluno explora a home e encontra formas de estudar", async () => {
     assert.match(homeText, /Exercícios de dinâmica/);
     assert.match(homeText, /História do Brasil em perspectiva/);
     assert.match(homeText, /Outras formas de estudar/);
+    const recommendations = await driver.findElement(By.css('section[aria-labelledby="recommended-title"]'));
+    assert.doesNotMatch(await recommendations.getText(), /Física para o ENEM: Mecânica/);
     assert.equal(await driver.executeScript("return document.documentElement.scrollHeight > innerHeight"), true);
 
     await driver.findElement(By.xpath('//aside[@aria-label="Outras aulas do curso"]//strong[normalize-space()="Exercícios de dinâmica"]/ancestor::a')).click();

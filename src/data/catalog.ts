@@ -1,3 +1,5 @@
+import { demoCourses } from "./demoCourses";
+
 export type CatalogCourse = {
   id: string;
   image: string;
@@ -28,128 +30,25 @@ export type ComplementaryMaterial = {
 
 export const courseGroups = ["Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas"];
 
-export const catalogCourses: CatalogCourse[] = [
-  {
-    id: "fisica-quantica",
-    image: "/images/courses/fisica-quantica.webp",
-    subject: "Física",
-    group: "Ciências da Natureza",
-    title: "Introdução à Física Quântica",
-    teacher: "Prof. Fulano da Silva",
-    lessonCount: 42,
-    duration: "50h 24min",
-    rating: 4.9,
-    exams: ["ENEM", "FUVEST"],
-    summary: "Conceitos fundamentais da física moderna, da dualidade onda-partícula aos modelos atômicos.",
-    audience: "Estudantes que querem revisar física moderna para o ENEM e vestibulares.",
-    access: "paid",
-    price: 29.9,
-    syllabus: [
-      { title: "Fundamentos", lessons: ["Contexto histórico", "Quantização da energia", "Dualidade onda-partícula"] },
-      { title: "Aplicações", lessons: ["Efeito fotoelétrico", "Modelos atômicos", "Exercícios de vestibular"] },
-    ],
-  },
-  {
-    id: "biologia-celular",
-    image: "/images/courses/biologia-celular.webp",
-    subject: "Biologia",
-    group: "Ciências da Natureza",
-    title: "Biologia Celular para Vestibulares",
-    teacher: "Dra. Clara Mendonça",
-    lessonCount: 35,
-    duration: "33h",
-    rating: 4.9,
-    exams: ["ENEM", "UNICAMP"],
-    summary: "Explore organelas, metabolismo e divisão celular com foco nas questões mais cobradas.",
-    audience: "Estudantes que desejam dominar citologia e os temas mais recorrentes nas provas.",
-    access: "paid",
-    price: 24.9,
-    syllabus: [
-      { title: "Estrutura celular", lessons: ["Tipos de célula", "Organelas", "Membrana plasmática"] },
-      { title: "Processos celulares", lessons: ["Metabolismo", "Mitose e meiose", "Questões comentadas"] },
-    ],
-  },
-  {
-    id: "estatistica-essencial",
-    image: "/images/courses/estatistica.webp",
-    subject: "Matemática",
-    group: "Matemática",
-    title: "Estatística Essencial",
-    teacher: "Prof. Rafael Costa",
-    lessonCount: 28,
-    duration: "24h",
-    rating: 4.8,
-    exams: ["ENEM", "FUVEST"],
-    summary: "Interprete gráficos, tabelas e medidas estatísticas com segurança para a prova.",
-    audience: "Estudantes que precisam interpretar dados e resolver questões de estatística básica.",
-    access: "free",
-    price: 0,
-    syllabus: [
-      { title: "Leitura de dados", lessons: ["Tabelas e gráficos", "Média, mediana e moda"] },
-      { title: "Prática", lessons: ["Dispersão", "Probabilidade básica", "Exercícios de prova"] },
-    ],
-  },
-  {
-    id: "redacao-nota-mil",
-    image: "/images/courses/redacao-nota-mil.webp",
-    subject: "Redação",
-    group: "Linguagens",
-    title: "Redação nota mil: da tese à conclusão",
-    teacher: "Profa. Marina Lopes",
-    lessonCount: 20,
-    duration: "18h 40min",
-    rating: 4.9,
-    exams: ["ENEM"],
-    summary: "Construa argumentos consistentes e pratique cada etapa do texto dissertativo.",
-    audience: "Estudantes que querem planejar e escrever redações dissertativas com mais segurança.",
-    access: "paid",
-    price: 34.9,
-    syllabus: [
-      { title: "Planejamento", lessons: ["Leitura do tema", "Tese e repertório", "Projeto de texto"] },
-      { title: "Escrita", lessons: ["Desenvolvimento", "Conclusão", "Revisão orientada"] },
-    ],
-  },
-  {
-    id: "quimica-organica",
-    image: "/images/courses/quimica-organica.webp",
-    subject: "Química",
-    group: "Ciências da Natureza",
-    title: "Química Orgânica sem mistério",
-    teacher: "Prof. Lucas Ribeiro",
-    lessonCount: 31,
-    duration: "29h 10min",
-    rating: 4.7,
-    exams: ["ENEM", "FUVEST"],
-    summary: "Aprenda funções orgânicas, reações e aplicações presentes no cotidiano.",
-    audience: "Estudantes que buscam uma introdução objetiva à química orgânica para vestibulares.",
-    access: "paid",
-    price: 27.9,
-    syllabus: [
-      { title: "Funções orgânicas", lessons: ["Hidrocarbonetos", "Funções oxigenadas", "Funções nitrogenadas"] },
-      { title: "Reações", lessons: ["Principais mecanismos", "Polímeros", "Questões comentadas"] },
-    ],
-  },
-  {
-    id: "historia-brasil",
-    image: "/images/courses/historia-brasil.webp",
-    subject: "História",
-    group: "Ciências Humanas",
-    title: "História do Brasil em perspectiva",
-    teacher: "Prof. André Nascimento",
-    lessonCount: 26,
-    duration: "22h 30min",
-    rating: 4.8,
-    exams: ["ENEM", "UNICAMP"],
-    summary: "Relacione os principais períodos da história brasileira a seus contextos sociais.",
-    audience: "Estudantes que querem revisar História do Brasil conectando eventos e contextos.",
-    access: "free",
-    price: 0,
-    syllabus: [
-      { title: "Brasil colonial", lessons: ["Colonização", "Economia açucareira", "Mineração"] },
-      { title: "Brasil contemporâneo", lessons: ["Império", "República", "Questões interdisciplinares"] },
-    ],
-  },
-];
+export const catalogCourses: CatalogCourse[] = demoCourses
+  .filter((course) => course.status === "Publicado")
+  .map(({ id, image, subject, group, title, teacher, lessonCount, duration, rating, exams, summary, audience, access, price, syllabus }) => ({
+    id,
+    image,
+    subject,
+    group,
+    title,
+    teacher,
+    lessonCount,
+    duration,
+    rating,
+    exams,
+    summary,
+    audience,
+    access,
+    price,
+    syllabus,
+  }));
 
 export function findCatalogCourse(id: string) {
   return catalogCourses.find((course) => course.id === id);

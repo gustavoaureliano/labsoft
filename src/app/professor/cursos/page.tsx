@@ -21,7 +21,7 @@ export default function GestaoCursos() {
       <SimpleScreen eyebrow="Área do professor" title="Gestão de cursos" description="Acompanhe seus cursos publicados e rascunhos.">
         <div className={styles.summary} aria-label="Resumo dos cursos">
           <article><span>Total de alunos</span><strong>18.420 inscritos</strong></article>
-          <article><span>Tempo de vídeo publicado</span><strong>142 horas</strong></article>
+          <article><span>Tempo de vídeo publicado</span><strong>5h 51min</strong></article>
           <article><span>Dúvidas respondidas</span><strong>98,4% de taxa</strong></article>
         </div>
         <div className={styles.toolbar}>

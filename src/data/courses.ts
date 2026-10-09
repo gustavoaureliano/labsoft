@@ -5,34 +5,33 @@ export type EnrolledLesson = {
   duration: string;
   status: "Concluída" | "Aula atual" | "Próxima aula";
   description: string;
+  thumbnail?: string;
 };
 
-const lessons: EnrolledLesson[] = [
-  { id: "grandezas-vetores", number: "01", title: "Grandezas e vetores", duration: "18 min", status: "Concluída", description: "Revise grandezas escalares, vetoriais e suas representações." },
-  { id: "movimento-uniforme", number: "02", title: "Movimento uniforme", duration: "22 min", status: "Concluída", description: "Entenda velocidade constante e interprete gráficos de movimento." },
-  { id: "movimento-variado", number: "03", title: "Movimento uniformemente variado", duration: "26 min", status: "Concluída", description: "Relacione aceleração, velocidade e posição em movimentos variados." },
-  { id: "queda-livre", number: "04", title: "Queda livre", duration: "19 min", status: "Concluída", description: "Aplique as equações do movimento à queda dos corpos." },
-  { id: "lancamentos", number: "05", title: "Lançamentos vertical e oblíquo", duration: "28 min", status: "Concluída", description: "Analise lançamentos decompondo o movimento em seus eixos." },
-  { id: "movimento-aceleracao", number: "06", title: "Movimento e aceleração", duration: "21 min", status: "Concluída", description: "Consolide a relação entre movimento, velocidade e aceleração." },
-  { id: "introducao-forcas", number: "07", title: "Introdução às forças", duration: "20 min", status: "Concluída", description: "Reconheça as principais forças presentes em problemas de mecânica." },
-  { id: "leis-newton", number: "08", title: "Leis de Newton e suas aplicações", duration: "24 min", status: "Aula atual", description: "Entenda as três leis de Newton e veja como elas ajudam a explicar situações do dia a dia." },
-  { id: "exercicios-dinamica", number: "09", title: "Exercícios de dinâmica", duration: "30 min", status: "Próxima aula", description: "Resolva problemas de força resultante e movimento." },
-  { id: "trabalho-energia", number: "10", title: "Trabalho e energia", duration: "25 min", status: "Próxima aula", description: "Relacione trabalho mecânico, energia e potência." },
-  { id: "impulso-quantidade", number: "11", title: "Impulso e quantidade de movimento", duration: "23 min", status: "Próxima aula", description: "Estude colisões, impulso e conservação da quantidade de movimento." },
-  { id: "revisao-mecanica", number: "12", title: "Revisão de mecânica", duration: "32 min", status: "Próxima aula", description: "Revise os conceitos do curso com questões de vestibular." },
-];
+const course = findDemoCourse("fisica-enem-mecanica")!;
+const currentLessonId = "leis-newton";
+const currentLessonIndex = course.lessons.findIndex((lesson) => lesson.id === currentLessonId);
+const lessons: EnrolledLesson[] = course.lessons.map((lesson, index) => ({
+  id: lesson.id,
+  number: String(index + 1).padStart(2, "0"),
+  title: lesson.title,
+  duration: lesson.duration,
+  status: index < currentLessonIndex ? "Concluída" : index === currentLessonIndex ? "Aula atual" : "Próxima aula",
+  description: lesson.description,
+  thumbnail: lesson.thumbnail,
+}));
 
 export const enrolledCourse = {
-  id: "fisica-enem-mecanica",
-  image: "/images/courses/fisica-mecanica.webp",
-  category: "Física",
-  title: "Física para o ENEM: Mecânica",
-  teacher: "Prof. Marcelo Andrade",
-  teacherInitials: "MA",
-  summary: "Aprenda cinemática, dinâmica e energia com foco nas situações mais frequentes do ENEM.",
+  id: course.id,
+  image: course.image,
+  category: course.subject,
+  title: course.title,
+  teacher: course.teacher,
+  teacherInitials: "FS",
+  summary: course.summary,
   totalLessons: lessons.length,
   progress: 68,
-  currentLessonId: "leis-newton",
+  currentLessonId,
   lessons,
   modules: [
     { title: "Cinemática", lessonIds: lessons.slice(0, 6).map((lesson) => lesson.id) },
@@ -70,3 +69,4 @@ export function questionHref(lessonId?: string) {
   if (lessonId) params.set("aula", lessonId);
   return `/duvidas?${params.toString()}`;
 }
+import { findDemoCourse } from "./demoCourses";

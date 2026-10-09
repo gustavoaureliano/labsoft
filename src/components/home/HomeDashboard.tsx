@@ -62,7 +62,7 @@ export function HomeDashboard() {
           <div><span className={styles.eyebrow}>Descubra algo novo</span><h2 id="recommended-title">Recomendados para você</h2></div>
           <Link href="/explorar-cursos">Explorar todos</Link>
         </div>
-        <div className={styles.courseGrid}>{catalogCourses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>
+        <div className={styles.courseGrid}>{catalogCourses.filter((course) => course.id !== enrolledCourse.id).map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>
       </section>
 
       <section className={styles.studySection} aria-labelledby="study-title">

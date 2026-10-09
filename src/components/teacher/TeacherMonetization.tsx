@@ -1,3 +1,4 @@
+import { findDemoCourse } from "@/data/demoCourses";
 import { TeacherShell } from "./TeacherShell";
 import styles from "./TeacherMonetization.module.css";
 
@@ -11,9 +12,8 @@ const revenue = [
 ];
 
 const courses = [
-  { title: "Introdução à Filosofia", students: 486, revenue: "R$ 4.860", share: "52,6%" },
-  { title: "Ética e Sociedade", students: 271, revenue: "R$ 2.710", share: "29,3%" },
-  { title: "Pensamento Contemporâneo", students: 167, revenue: "R$ 1.670", share: "18,1%" },
+  { title: findDemoCourse("fisica-quantica")!.title, students: 924, revenue: "R$ 9.240", share: "100%" },
+  { title: findDemoCourse("fisica-enem-mecanica")!.title, students: 6000, revenue: "R$ 0", share: "0%" },
 ];
 
 const maximumRevenue = Math.max(...revenue.map((item) => item.value));

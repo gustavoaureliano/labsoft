@@ -23,8 +23,9 @@ test("o professor acompanha relatórios financeiros e de engajamento", async () 
     assert.match(await engagementReport.getText(), /Avaliação média\s+4,8\/5/);
 
     const courseRows = await driver.findElements(By.css("table tbody tr"));
-    assert.equal(courseRows.length, 3);
-    assert.match(await courseRows[0].getText(), /Introdução à Filosofia 486 R\$ 4\.860 52,6%/);
+    assert.equal(courseRows.length, 2);
+    assert.match(await courseRows[0].getText(), /Introdução à Física Quântica 924 R\$ 9\.240 100%/);
+    assert.match(await courseRows[1].getText(), /Física para o ENEM: Mecânica 6000 R\$ 0 0%/);
     await pauseForReview();
   }, "teacher");
 });

@@ -20,10 +20,12 @@ test("o aluno explora, filtra e encontra um curso", async () => {
     assert.equal(exploreCardClass, homeCardClass);
     assert.equal(await results.findElement(By.css("article h3")).getText(), homeCardTitle);
     const count = await results.findElement(By.css('[aria-live="polite"]'));
-    assert.equal(await count.getText(), "6 cursos encontrados");
+    assert.equal(await count.getText(), "7 cursos encontrados");
+    assert.match(await results.getText(), /Física para o ENEM: Mecânica/);
+    assert.doesNotMatch(await results.getText(), /Termodinâmica Avançada/);
 
     await driver.findElement(By.xpath('//button[normalize-space()="Ciências da Natureza"]')).click();
-    await driver.wait(until.elementTextIs(count, "3 cursos encontrados"), 5000);
+    await driver.wait(until.elementTextIs(count, "4 cursos encontrados"), 5000);
     await pauseForReview();
 
     await new Select(await driver.findElement(By.css('select[name="sort"]'))).selectByValue("title");
