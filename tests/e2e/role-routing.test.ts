@@ -10,6 +10,12 @@ test("a landing é pública e páginas internas exigem um perfil demo", async ()
     assert.equal((await driver.findElements(By.css('nav[aria-label="Acesso à conta"] a'))).length, 2);
     await driver.get(`${baseUrl}/meus-cursos`);
     await driver.wait(until.urlContains("/login"), 10000);
+    await driver.get(`${baseUrl}/meus-cursos/fisica-enem-mecanica`);
+    await driver.wait(until.urlContains("/login"), 10000);
+    await driver.get(`${baseUrl}/checkout?curso=fisica-quantica&tipo=curso`);
+    await driver.wait(until.urlContains("/login"), 10000);
+    await driver.get(`${baseUrl}/professor/cursos/novo`);
+    await driver.wait(until.urlContains("/login"), 10000);
     await driver.get(`${baseUrl}/admin`);
     await driver.wait(until.urlContains("/login"), 10000);
   }, null);
@@ -23,6 +29,8 @@ test("o aluno vê seu menu e não entra na área do professor", async () => {
     assert.equal((await navigation.findElements(By.css('a[href="/professor/duvidas"]'))).length, 0);
     assert.equal((await navigation.findElements(By.css('a[href="/duvidas"]'))).length, 1);
     await driver.get(`${baseUrl}/professor/cursos`);
+    await driver.wait(until.urlIs(`${baseUrl}/`), 10000);
+    await driver.get(`${baseUrl}/professor/cursos/novo`);
     await driver.wait(until.urlIs(`${baseUrl}/`), 10000);
     await driver.get(`${baseUrl}/duvidas/aluno`);
     await driver.wait(until.urlIs(`${baseUrl}/duvidas`), 10000);

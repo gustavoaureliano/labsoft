@@ -2,11 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { demoRoleCookieName, parseDemoRole, roleHome, type DemoRole } from "@/data/demoAccount";
 
 const publicPaths = new Set(["/", "/login", "/cadastro", "/cadastro/professor", "/recuperar-acesso", "/professor/solicitacao"]);
-const studentPaths = new Set(["/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa"]);
+const studentPaths = new Set(["/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa", "/checkout", "/assinatura"]);
 
 function requiredRole(pathname: string): DemoRole | null {
-  if (studentPaths.has(pathname) || pathname === "/certificados" || pathname.startsWith("/certificados/")) return "student";
-  if (pathname === "/professor/cursos" || pathname === "/professor/duvidas" || pathname === "/professor/monetizacao") return "teacher";
+  if (studentPaths.has(pathname) || pathname.startsWith("/meus-cursos/") || pathname === "/certificados" || pathname.startsWith("/certificados/")) return "student";
+  if (pathname === "/professor/cursos" || pathname.startsWith("/professor/cursos/") || pathname === "/professor/duvidas" || pathname === "/professor/monetizacao") return "teacher";
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return "admin";
   return null;
 }
