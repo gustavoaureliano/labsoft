@@ -1,5 +1,6 @@
 export type Course = {
   category: string;
+  id: string;
   title: string;
   teacher: string;
   duration: string;
@@ -18,6 +19,7 @@ export const currentLesson = {
   description: "Entenda as três leis de Newton e veja como elas ajudam a explicar situações do dia a dia.",
 };
 
+
 export const enrolledCourse = {
   category: "Física",
   title: "Física para o ENEM: Mecânica",
@@ -33,3 +35,7 @@ export const enrolledCourse = {
     { number: "09", title: "Exercícios de dinâmica", status: "Próxima aula" },
   ],
 };
+
+export const enrolledCourses: Course[] = [
+  enrolledCourse
+]
