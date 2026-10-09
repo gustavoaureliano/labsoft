@@ -43,12 +43,15 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
+  color: inherit;
   display: grid;
   grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr);
   overflow: hidden;
-  transition: border-color var(--hover-duration) ease, box-shadow var(--hover-duration) ease;
+  text-decoration: none;
+  transition: border-color var(--hover-duration) ease, box-shadow var(--hover-duration) ease, transform var(--hover-duration) ease;
 }
-.featuredCourse:focus-within, .featuredCourse:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); }
+.featuredCourse:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); transform: translateY(-2px); }
+.featuredCourse:focus-visible { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); outline: 3px solid var(--primary); outline-offset: 3px; }
 
 .featuredVisual {
   align-items: center;
@@ -117,9 +120,8 @@
 .progressCopy span { color: var(--muted); }
 .progressCopy strong { color: var(--primary); }
 
-.primaryButton {
-  margin-top: 22px;
-}
+.continueAction { color: var(--primary); font-size: 13px; font-weight: 700; margin-top: 22px; }
+.featuredCourse:hover .continueAction { color: #064b63; text-decoration: underline; text-underline-offset: 3px; }
 
 .lessonRail { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; padding: 22px; }
 .lessonRail h3 { font-size: 20px; margin: 6px 0 16px; }

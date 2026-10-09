@@ -1,5 +1,4 @@
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
-import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { catalogCourses } from "@/data/catalog";
 import { currentLesson, enrolledCourse, lessonHref } from "@/data/courses";
@@ -29,7 +28,7 @@ export function HomeDashboard() {
         </div>
 
         <div className={styles.learningGrid}>
-          <article className={styles.featuredCourse}>
+          <Link className={styles.featuredCourse} href={lessonHref(currentLesson.id)} aria-label={`Continuar aula ${currentLesson.title}`}>
             <div className={styles.featuredVisual} aria-hidden="true">
               <Image alt="" fill priority sizes="(max-width: 900px) 100vw, 40vw" src={currentLesson.thumbnail ?? enrolledCourse.image} />
               <span>{enrolledCourse.category}</span>
@@ -43,9 +42,9 @@ export function HomeDashboard() {
               <p className={styles.teacherLine}><span className={styles.miniAvatar}>{enrolledCourse.teacherInitials}</span>{enrolledCourse.teacher}</p>
               <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
               <ProgressBar value={enrolledCourse.progress} />
-              <PrimaryLink className={styles.primaryButton} href={lessonHref(currentLesson.id)}>Continuar assistindo</PrimaryLink>
+              <span className={styles.continueAction}>Continuar assistindo →</span>
             </div>
-          </article>
+          </Link>
 
           <aside className={styles.lessonRail} aria-label="Outras aulas do curso">
             <span className={styles.eyebrow}>Sua trilha</span>
