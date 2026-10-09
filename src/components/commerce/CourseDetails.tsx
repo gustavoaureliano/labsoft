@@ -1,12 +1,39 @@
+"use client";
+
 import Link from "next/link";
 import type { CatalogCourse } from "@/data/catalog";
 import { formatPrice } from "@/data/catalog";
 import { enrolledCourse } from "@/data/courses";
+import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./Commerce.module.css";
 
 export function CourseDetails({ course }: { course: CatalogCourse }) {
+  const [access, , ready] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const isEnrolled = course.id === enrolledCourse.id;
-  const actionHref = isEnrolled ? `/meus-cursos/${course.id}` : course.access === "free" ? `/checkout?curso=${course.id}&tipo=curso` : `/planos?curso=${course.id}`;
+  const hasDemoAccess = access.courseIds.includes(course.id) || (access.subscription?.status === "active" && access.subscription.plan === "complete");
+
+  let accessLabel = course.access === "free" ? "Acesso gratuito" : "Acesso ao curso";
+  let accessValue = course.access === "free" ? "Gratuito" : formatPrice(course.price);
+  let accessDescription = course.access === "free" ? "Adicione este curso à sua área de estudos." : "Compre somente este curso ou escolha a assinatura completa.";
+  let action: { href: string; label: string } | null = { href: course.access === "free" ? `/checkout?curso=${course.id}&tipo=curso` : `/planos?curso=${course.id}`, label: course.access === "free" ? "Adicionar aos meus cursos" : "Escolher acesso" };
+
+  if (isEnrolled) {
+    accessLabel = "Curso em andamento";
+    accessValue = `${enrolledCourse.progress}% concluído`;
+    accessDescription = "Continue de onde parou na sua área de estudos.";
+    action = { href: `/meus-cursos/${course.id}`, label: "Continuar curso" };
+  } else if (!ready) {
+    accessLabel = "Verificando acesso";
+    accessValue = "Aguarde";
+    accessDescription = "Consultando os acessos salvos neste navegador.";
+    action = null;
+  } else if (hasDemoAccess) {
+    accessLabel = "Curso adquirido";
+    accessValue = "Acesso confirmado";
+    accessDescription = "A compra demonstrativa já foi concluída neste navegador.";
+    action = { href: "/meus-cursos", label: "Voltar para Meus Cursos" };
+  }
 
   return (
     <div className={styles.page}>
@@ -19,10 +46,10 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
           <div className={styles.meta}><span>{course.lessonCount} aulas</span><span>{course.duration}</span><span>★ {course.rating.toFixed(1).replace(".", ",")}</span></div>
         </div>
         <aside className={styles.purchase} aria-label="Opções de acesso">
-          <span className={styles.eyebrow}>{isEnrolled ? "Curso em andamento" : course.access === "free" ? "Acesso gratuito" : "Acesso ao curso"}</span>
-          <strong>{isEnrolled ? `${enrolledCourse.progress}% concluído` : course.access === "free" ? "Gratuito" : formatPrice(course.price)}</strong>
-          <p>{isEnrolled ? "Continue de onde parou na sua área de estudos." : course.access === "free" ? "Adicione este curso à sua área de estudos." : "Compre somente este curso ou escolha a assinatura completa."}</p>
-          <Link className={styles.primary} href={actionHref}>{isEnrolled ? "Continuar curso" : course.access === "free" ? "Adicionar aos meus cursos" : "Escolher acesso"}</Link>
+          <span className={styles.eyebrow}>{accessLabel}</span>
+          <strong>{accessValue}</strong>
+          <p>{accessDescription}</p>
+          {action && <Link className={styles.primary} href={action.href}>{action.label}</Link>}
         </aside>
       </section>
 

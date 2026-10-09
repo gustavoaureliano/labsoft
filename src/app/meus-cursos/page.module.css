@@ -21,7 +21,6 @@
 .courseActions { align-items: center; display: flex; flex-wrap: wrap; gap: 14px; }
 .courseActions > a:last-child { color: var(--primary); font-size: 13px; font-weight: 700; margin-top: 18px; }
 .accessNotice { background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: var(--primary); font-size: 13px; margin: 0; padding: 16px; }
-.acquiredGrid { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .library { display: grid; gap: 14px; }
 .library h2 { margin-bottom: 0; }
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -48,7 +47,6 @@
 .playlistList b { color: var(--primary); font-size: 12px; }
 .demoNote { color: var(--muted); font-size: 11px; margin: 0; }
 @media (max-width: 750px) {
-  .acquiredGrid { grid-template-columns: 1fr; }
   .course { grid-template-columns: 1fr; }
   .courseVisual { border-bottom: 1px solid var(--border); border-right: 0; min-height: 150px; }
   .courseContent { padding: 24px; }

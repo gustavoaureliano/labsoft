@@ -29,6 +29,16 @@ test("o aluno vê uma compra individual sem controles de assinatura", async () =
     await driver.findElement(By.xpath('//button[normalize-space()="Confirmar acesso demonstrativo"]')).click();
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Pronto para começar"]')), 10000);
 
+    await driver.findElement(By.linkText("Ir para Meus Cursos")).click();
+    await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Meus cursos"]')), 10000);
+    assert.equal((await driver.findElements(By.css('a[aria-label="Ver detalhes de Introdução à Física Quântica"]'))).length, 0);
+
+    await driver.get(`${baseUrl}/cursos/fisica-quantica`);
+    const accessOptions = await driver.wait(until.elementLocated(By.css('aside[aria-label="Opções de acesso"]')), 10000);
+    await driver.wait(until.elementTextContains(accessOptions, "CURSO ADQUIRIDO"), 10000);
+    assert.match(await accessOptions.getText(), /Acesso confirmado/);
+    assert.equal((await accessOptions.findElements(By.linkText("Escolher acesso"))).length, 0);
+
     await driver.get(`${baseUrl}/assinatura`);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Acesso individual"]')), 10000);
     assert.match(await driver.findElement(By.css("main")).getText(), /Introdução à Física Quântica/);
