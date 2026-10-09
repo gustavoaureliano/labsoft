@@ -1,6 +1,7 @@
 .page { display: grid; gap: 24px; }
 .compose { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); padding: 18px; }
-.compose h1 { font-size: 20px; margin: 0 0 14px; }
+.compose h1 { font-size: 20px; margin: 0 0 7px; }
+.composeDescription { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 0 14px; }
 .compose form { display: grid; gap: 12px; }
 .selects { display: grid; gap: 10px; grid-template-columns: minmax(170px, 240px) minmax(180px, 260px); }
 .selects label { min-width: 0; }

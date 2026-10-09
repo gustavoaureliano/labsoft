@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { questionHref } from "@/data/courses";
 import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
@@ -65,14 +66,19 @@ export function LessonTabs({ description, lessonId, lessonTitle }: { description
         {activeTab === "Comentários" && (
           <div>
             <h2>Comentários</h2>
+            <p>Os comentários são públicos para os participantes do curso e servem para compartilhar observações sobre a aula.</p>
+            <div className={styles.questionCallout}>
+              <span>Precisa de uma resposta do professor?</span>
+              <Link href={questionHref(lessonId)}>Enviar dúvida ao professor</Link>
+            </div>
             {interactions.comments.length ? (
               <ul className={styles.comments}>
                 {interactions.comments.map((text, index) => <li key={`${index}-${text}`}><strong>Você</strong><p>{text}</p></li>)}
               </ul>
             ) : <p>Seja o primeiro a comentar esta aula.</p>}
             <form className={styles.tabForm} onSubmit={addComment}>
-              <label htmlFor="lesson-comment">Seu comentário</label>
-              <textarea id="lesson-comment" value={comment} onChange={(event) => setComment(event.target.value)} rows={3} placeholder="Escreva uma dúvida ou observação" />
+              <label htmlFor="lesson-comment">Seu comentário público</label>
+              <textarea id="lesson-comment" value={comment} onChange={(event) => setComment(event.target.value)} rows={3} placeholder="Compartilhe uma observação sobre esta aula" />
               <button type="submit" disabled={!comment.trim()}>Publicar comentário</button>
             </form>
           </div>

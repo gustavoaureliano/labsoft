@@ -5,7 +5,17 @@ import { baseUrl, pauseForReview, setDemoRoleForTest, withBrowser } from "./brow
 
 test("o aluno pergunta, o professor responde e o aluno vê a resposta", async () => {
   await withBrowser(async (driver) => {
-    await driver.get(`${baseUrl}/duvidas`);
+    await driver.get(`${baseUrl}/videoaula?curso=fisica-enem-mecanica&aula=leis-newton`);
+    await driver.executeScript("document.documentElement.style.scrollBehavior = 'auto'");
+    const commentsTab = await driver.findElement(By.css('[role="tab"][id="tab-1"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({ block: 'center' })", commentsTab);
+    await commentsTab.click();
+    const commentsPanel = await driver.findElement(By.css('[role="tabpanel"]'));
+    assert.match(await commentsPanel.getText(), /comentários são públicos/i);
+    await commentsPanel.findElement(By.linkText("Enviar dúvida ao professor")).click();
+    await driver.wait(until.urlContains("/duvidas?curso=fisica-enem-mecanica&aula=leis-newton"), 10000);
+    assert.equal(await driver.findElement(By.css('select[name="course"]')).getAttribute("value"), "fisica-enem-mecanica");
+    assert.equal(await driver.findElement(By.css('select[name="lesson"]')).getAttribute("value"), "leis-newton");
     await driver.findElement(By.css("#question-text")).sendKeys("Como aplico a segunda lei de Newton?");
     await driver.findElement(By.xpath('//button[normalize-space()="Enviar Pergunta"]')).click();
     await driver.wait(until.elementLocated(By.xpath('//article[contains(.,"Como aplico a segunda lei de Newton?")]')), 5000);

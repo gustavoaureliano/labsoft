@@ -63,3 +63,9 @@ export function lessonHref(lessonId: string, context: LessonCollectionContext = 
   if (context.origin === "playlist") params.set("lista", context.playlistId);
   return `/videoaula?${params.toString()}`;
 }
+
+export function questionHref(lessonId?: string) {
+  const params = new URLSearchParams({ curso: enrolledCourse.id });
+  if (lessonId) params.set("aula", lessonId);
+  return `/duvidas?${params.toString()}`;
+}

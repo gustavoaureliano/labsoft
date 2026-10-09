@@ -39,6 +39,10 @@
 .comments li { border-top: 1px solid var(--border); padding: 12px 0; }
 .comments strong { font-size: 13px; }
 .comments p { margin-top: 4px; }
+.questionCallout { align-items: center; background: var(--primary-light); border-radius: 6px; display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; margin: 14px 0; padding: 12px 14px; }
+.questionCallout span { color: var(--text); font-size: 13px; }
+.questionCallout a { color: var(--primary); font-size: 13px; font-weight: 700; }
+.questionCallout a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .rating { display: flex; gap: 5px; margin: 12px 0; }
 .rating button { background: none; border: 0; color: var(--primary); cursor: pointer; font-size: 30px; line-height: 1; padding: 2px; }
 .materialLink { color: var(--primary); display: inline-block; font-size: 13px; font-weight: 700; margin-top: 18px; }

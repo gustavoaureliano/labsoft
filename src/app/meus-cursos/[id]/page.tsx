@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { currentLesson, enrolledCourse, lessonHref } from "@/data/courses";
+import { currentLesson, enrolledCourse, lessonHref, questionHref } from "@/data/courses";
 import styles from "./page.module.css";
 
 export default async function StudentCoursePage({ params }: PageProps<"/meus-cursos/[id]">) {
@@ -15,7 +15,7 @@ export default async function StudentCoursePage({ params }: PageProps<"/meus-cur
         <Link className={styles.back} href="/meus-cursos">← Voltar para Meus Cursos</Link>
         <header className={styles.hero}>
           <div><span className={styles.eyebrow}>{enrolledCourse.category} · {enrolledCourse.totalLessons} aulas</span><h1>{enrolledCourse.title}</h1><p>{enrolledCourse.summary}</p><small>{enrolledCourse.teacher}</small></div>
-          <aside><div><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div><ProgressBar value={enrolledCourse.progress} /><Link href={lessonHref(currentLesson.id)}>Continuar na aula {currentLesson.number}</Link></aside>
+          <aside><div><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div><ProgressBar value={enrolledCourse.progress} /><Link href={lessonHref(currentLesson.id)}>Continuar na aula {currentLesson.number}</Link><Link className={styles.secondaryAction} href={questionHref()}>Tirar dúvida sobre este curso</Link></aside>
         </header>
         <section className={styles.content} aria-labelledby="course-content-title">
           <div className={styles.heading}><span className={styles.eyebrow}>Sua trilha</span><h2 id="course-content-title">Conteúdo do curso</h2><p>Escolha uma aula para assistir ou revisar.</p></div>

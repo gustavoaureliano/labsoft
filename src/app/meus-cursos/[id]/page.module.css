@@ -13,6 +13,8 @@
 .hero aside strong { color: var(--primary); }
 .hero aside a { background: var(--primary); border-radius: 5px; color: white; font-size: 13px; font-weight: 700; margin-top: 5px; padding: 12px; text-align: center; }
 .hero aside a:hover { background: #064b63; box-shadow: var(--action-shadow); }
+.hero aside a.secondaryAction { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 0; }
+.hero aside a.secondaryAction:hover { background: var(--primary-light); box-shadow: none; }
 .content { display: grid; gap: 24px; }
 .heading h2 { color: var(--primary); font-size: 24px; margin: 7px 0; }
 .heading p { color: var(--muted); font-size: 13px; margin: 0; }

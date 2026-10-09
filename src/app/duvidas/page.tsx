@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { use, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { catalogCourses } from "@/data/catalog";
+import { enrolledCourse } from "@/data/courses";
 import { initialProfile } from "@/data/profile";
 import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
@@ -17,51 +17,60 @@ type Discussion = {
   answer?: string;
 };
 
-const lessonsByCourse: Record<string, string[]> = {
-  "fisica-quantica": ["Aula 1 - Introdução à Física Quântica", "Aula 2 - Dualidade Onda-Partícula"],
-  "biologia-celular": ["Aula 4 - Organelas Citoplasmáticas", "Aula 6 - Citoesqueleto e Movimento"],
-};
-
 const initialDiscussions: Discussion[] = [
   {
     id: 1,
-    course: "Física Quântica",
-    lesson: "Aula 1",
+    course: enrolledCourse.title,
+    lesson: "Aula 08 — Leis de Newton e suas aplicações",
     createdAt: "Há 2 horas",
-    prompt: "Professor, não entendi muito bem como a constante de Planck é usada para calcular a energia dos fótons na fórmula E = hf. Poderia dar um exemplo prático aplicado?",
-    answer: "Olá, Bob! Excelente pergunta. Pense na constante h como o menor “pacote” possível de energia. No ENEM, eles costumam pedir para calcular isso usando a frequência da luz visível. Por exemplo, se uma luz vermelha tem frequência 4.3x10¹⁴ Hz, multiplicamos esse valor por 6.63x10⁻³⁴ J·s (que é o h°), dando aproximadamente 2.85x10⁻¹⁹ Joules por fóton. Ficou mais claro?",
+    prompt: "Como identifico a força resultante quando o exercício mostra várias forças em sentidos diferentes?",
+    answer: "Escolha um sentido positivo, some as forças nesse sentido e subtraia as forças no sentido contrário. O resultado com sinal indica o sentido da força resultante.",
   },
   {
     id: 2,
-    course: "Biologia Celular para Vestibulares",
-    lesson: "Aula 4",
+    course: enrolledCourse.title,
+    lesson: "Aula 10 — Trabalho e energia",
     createdAt: "Há 1 dia",
-    prompt: "Quais as principais diferenças que caem na FUVEST sobre o retículo endoplasmático liso e o rugoso? Sempre me confundo em relação à síntese de lipídios.",
+    prompt: "Quando o trabalho de uma força deve ser considerado negativo?",
   },
 ];
 
-export default function StudentDoubts() {
-  const defaultCourse = catalogCourses[0];
-  const [courseId, setCourseId] = useState(defaultCourse.id);
-  const [lesson, setLesson] = useState(lessonsByCourse[defaultCourse.id][0]);
+type StudentDoubtsProps = {
+  searchParams: Promise<{ curso?: string | string[]; aula?: string | string[] }>;
+};
+
+function firstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
+  const query = use(searchParams);
+  const requestedCourseId = firstParam(query.curso);
+  const requestedLessonId = firstParam(query.aula);
+  const initialLessonId = requestedCourseId === enrolledCourse.id && enrolledCourse.lessons.some((item) => item.id === requestedLessonId)
+    ? requestedLessonId
+    : "";
+  const [lessonId, setLessonId] = useState(initialLessonId);
   const [questionText, setQuestionText] = useState("");
   const discussions = initialDiscussions;
   const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
   const [notice, setNotice] = useState("");
-  const selectedCourse = catalogCourses.find((course) => course.id === courseId) ?? defaultCourse;
-  const availableLessons = lessonsByCourse[courseId] ?? ["Aula 1 - Introdução ao curso", "Aula 2 - Conceitos fundamentais"];
-
-  function selectCourse(nextCourseId: string) {
-    setCourseId(nextCourseId);
-    setLesson((lessonsByCourse[nextCourseId] ?? ["Aula 1 - Introdução ao curso"])[0]);
-  }
+  const selectedLesson = enrolledCourse.lessons.find((item) => item.id === lessonId);
 
   function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const prompt = questionText.trim();
     if (!prompt) return;
 
-    saveSharedQuestions([{ id: Date.now(), student: initialProfile.nickname, course: selectedCourse.title, lesson: lesson.split(" - ")[0], prompt }, ...sharedQuestions]);
+    saveSharedQuestions([{
+      id: Date.now(),
+      student: initialProfile.nickname,
+      courseId: enrolledCourse.id,
+      course: enrolledCourse.title,
+      lessonId: selectedLesson?.id,
+      lesson: selectedLesson ? `Aula ${selectedLesson.number} — ${selectedLesson.title}` : "Dúvida geral sobre o curso",
+      prompt,
+    }, ...sharedQuestions]);
     setQuestionText("");
     setNotice("Sua dúvida foi enviada ao professor.");
   }
@@ -71,18 +80,20 @@ export default function StudentDoubts() {
       <div className={styles.page}>
         <section className={styles.compose} aria-labelledby="compose-title">
           <h1 id="compose-title">Enviar nova dúvida ao professor</h1>
+          <p className={styles.composeDescription}>Esta conversa fica entre você e o professor. Selecione uma aula ou envie uma dúvida geral sobre o curso.</p>
           <form onSubmit={submitQuestion}>
             <div className={styles.selects}>
               <label>
                 <span className={styles.visuallyHidden}>Curso</span>
-                <select name="course" onChange={(event) => selectCourse(event.target.value)} value={courseId}>
-                  {catalogCourses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                <select name="course" defaultValue={enrolledCourse.id}>
+                  <option value={enrolledCourse.id}>{enrolledCourse.title}</option>
                 </select>
               </label>
               <label>
                 <span className={styles.visuallyHidden}>Aula</span>
-                <select name="lesson" onChange={(event) => setLesson(event.target.value)} value={lesson}>
-                  {availableLessons.map((lessonOption) => <option key={lessonOption} value={lessonOption}>{lessonOption}</option>)}
+                <select name="lesson" onChange={(event) => setLessonId(event.target.value)} value={lessonId}>
+                  <option value="">Dúvida geral sobre o curso</option>
+                  {enrolledCourse.lessons.map((lessonOption) => <option key={lessonOption.id} value={lessonOption.id}>Aula {lessonOption.number} — {lessonOption.title}</option>)}
                 </select>
               </label>
             </div>
@@ -104,7 +115,7 @@ export default function StudentDoubts() {
         </section>
 
         <section className={styles.discussions} aria-labelledby="discussions-title">
-          <h2 id="discussions-title">Minhas Discussões Recentes</h2>
+          <h2 id="discussions-title">Minhas dúvidas recentes</h2>
           <div className={styles.discussionList}>
             {[...sharedQuestions.map((question) => ({ ...question, createdAt: "Agora" })), ...discussions].map((discussion) => (
               <article className={styles.discussion} key={discussion.id}>
@@ -124,9 +135,9 @@ export default function StudentDoubts() {
                 </div>
                 {discussion.answer && (
                   <div className={styles.answer}>
-                    <span className={styles.teacherMark} aria-hidden="true">F</span>
+                    <span className={styles.teacherMark} aria-hidden="true">MA</span>
                     <div>
-                      <strong>Prof. Fulano da Silva:</strong>
+                      <strong>{enrolledCourse.teacher}:</strong>
                       <p>{discussion.answer}</p>
                     </div>
                   </div>
