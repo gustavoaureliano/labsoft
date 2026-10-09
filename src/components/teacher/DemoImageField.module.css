@@ -1,0 +1,15 @@
+.field { align-items: center; display: grid; gap: 8px 10px; grid-template-columns: 112px minmax(0, 1fr); min-width: 0; }
+.input { border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); height: 1px; margin: -1px; max-width: 1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+.preview { aspect-ratio: 16 / 9; background: var(--background); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; position: relative; width: 112px; }
+.preview img { object-fit: cover; }
+.details { min-width: 0; }
+.details strong, .details small { display: block; }
+.details strong { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.details small { color: var(--muted); font-size: 9px; line-height: 1.35; margin-top: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.actions button { background: white; border: 1px solid var(--primary); border-radius: 4px; color: var(--primary); cursor: pointer; font-size: 10px; font-weight: 700; min-height: 30px; padding: 5px 8px; }
+.actions button:hover { background: var(--primary-light); }
+.actions button:last-child:not(:first-child) { border-color: #b54747; color: #9b3434; }
+.notice { color: #9b3434; font-size: 10px; grid-column: 1 / -1; }
+
+@media (max-width: 500px) { .field { grid-template-columns: 1fr; } }

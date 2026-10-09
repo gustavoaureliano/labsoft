@@ -31,7 +31,7 @@ export function HomeDashboard() {
         <div className={styles.learningGrid}>
           <article className={styles.featuredCourse}>
             <div className={styles.featuredVisual} aria-hidden="true">
-              <Image alt="" fill priority sizes="(max-width: 900px) 100vw, 40vw" src={enrolledCourse.image} />
+              <Image alt="" fill priority sizes="(max-width: 900px) 100vw, 40vw" src={currentLesson.thumbnail ?? enrolledCourse.image} />
               <span>{enrolledCourse.category}</span>
               <strong>{currentLesson.number}</strong>
               <small>Aula atual</small>

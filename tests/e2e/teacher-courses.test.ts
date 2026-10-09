@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
@@ -7,6 +8,7 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 test("o professor cria um curso com uma aula e o encontra na gestão", async () => {
   const videoPath = "/tmp/aprova-demo-video.mp4";
   const materialPath = "/tmp/aprova-demo-material.pdf";
+  const thumbnailPath = resolve("public/images/video/leis-de-newton.webp");
   await writeFile(videoPath, "arquivo de vídeo demonstrativo");
   await writeFile(materialPath, "material demonstrativo");
   await withBrowser(async (driver) => {
@@ -14,6 +16,7 @@ test("o professor cria um curso com uma aula e o encontra na gestão", async () 
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Gestão de cursos"]')), 10000);
     const cards = await driver.findElements(By.css("article"));
     assert.ok(cards.length >= 3);
+    assert.match(await driver.findElement(By.css("main")).getText(), /Física para o ENEM: Mecânica[\s\S]*6\.000 alunos · 12 aulas/);
     await driver.findElement(By.xpath('//button[normalize-space()="Aulas"]')).click();
     assert.match(await driver.findElement(By.css("main")).getText(), /Introdução e contexto histórico/);
     await driver.findElement(By.css("select")).sendKeys("Título");
@@ -27,6 +30,10 @@ test("o professor cria um curso com uma aula e o encontra na gestão", async () 
     await driver.findElement(By.css('input[aria-label="Duração da aula 1"]')).sendKeys("20 min");
     await driver.findElement(By.css('input[aria-label="Selecionar vídeo da aula 1"]')).sendKeys(videoPath);
     assert.match(await driver.findElement(By.css("main")).getText(), /aprova-demo-video\.mp4/);
+    await driver.findElement(By.css('input[aria-label="Selecionar thumbnail da aula 1"]')).sendKeys(thumbnailPath);
+    assert.match(await driver.findElement(By.css("main")).getText(), /leis-de-newton\.webp/);
+    const thumbnailPreview = await driver.findElement(By.xpath('//input[@aria-label="Selecionar thumbnail da aula 1"]/following-sibling::div//img'));
+    assert.equal(await driver.executeScript("return arguments[0].naturalWidth > 0", thumbnailPreview), true);
     await driver.findElement(By.css('input[aria-label="Enviar material"]')).sendKeys(materialPath);
     assert.match(await driver.findElement(By.css("main")).getText(), /aprova-demo-material\.pdf/);
     const previewButton = await driver.findElement(By.xpath('//button[normalize-space()="Visualizar prévia"]'));

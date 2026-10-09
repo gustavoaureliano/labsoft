@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { blankTeacherCourse, initialTeacherCourses, teacherCoursesKey, type TeacherCourse } from "@/data/teacherCourses";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { DemoFileField } from "./DemoFileField";
+import { DemoImageField } from "./DemoImageField";
 import styles from "./CourseEditor.module.css";
 
 export function CourseEditor({ courseId }: { courseId?: string }) {
@@ -37,6 +38,10 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
 
   function setLessonVideo(index: number, file: { name: string; type: string; size: number } | null) {
     setCourse((current) => ({ ...current, lessons: current.lessons.map((lesson, position) => position === index ? { ...lesson, videoName: file?.name ?? "", videoType: file?.type, videoSize: file?.size } : lesson) }));
+  }
+
+  function setLessonThumbnail(index: number, file: { name: string; type: string; size: number } | null) {
+    setCourse((current) => ({ ...current, lessons: current.lessons.map((lesson, position) => position === index ? { ...lesson, thumbnail: undefined, thumbnailName: file?.name, thumbnailType: file?.type, thumbnailSize: file?.size } : lesson) }));
   }
 
   function addMaterial(file: { name: string; type: string; size: number }) {
@@ -81,7 +86,10 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
           <span className={styles.position}>{index + 1}</span>
           <label>Título<input aria-label={`Título da aula ${index + 1}`} value={lesson.title} onChange={(event) => updateLesson(index, "title", event.target.value)} /></label>
           <label>Duração<input aria-label={`Duração da aula ${index + 1}`} value={lesson.duration} onChange={(event) => updateLesson(index, "duration", event.target.value)} placeholder="20 min" /></label>
-          <div className={styles.videoField}><span>Vídeo</span><DemoFileField accept="video/*" inputLabel={`Selecionar vídeo da aula ${index + 1}`} current={lesson.videoName ? { name: lesson.videoName, type: lesson.videoType ?? "Vídeo", size: lesson.videoSize ?? 0 } : null} onSelect={(file) => setLessonVideo(index, file)} onRemove={() => setLessonVideo(index, null)} /></div>
+          <div className={styles.mediaFields}>
+            <div className={styles.videoField}><span>Vídeo</span><DemoFileField accept="video/*" inputLabel={`Selecionar vídeo da aula ${index + 1}`} current={lesson.videoName ? { name: lesson.videoName, type: lesson.videoType ?? "Vídeo", size: lesson.videoSize ?? 0 } : null} onSelect={(file) => setLessonVideo(index, file)} onRemove={() => setLessonVideo(index, null)} /></div>
+            <div className={styles.thumbnailField}><span>Thumbnail</span><DemoImageField fallback={lesson.thumbnail ?? course.image} inputLabel={`Selecionar thumbnail da aula ${index + 1}`} current={lesson.thumbnailName ? { name: lesson.thumbnailName, type: lesson.thumbnailType ?? "Imagem", size: lesson.thumbnailSize ?? 0 } : null} onSelect={(file) => setLessonThumbnail(index, file)} onRemove={() => setLessonThumbnail(index, null)} /></div>
+          </div>
           <div className={styles.rowActions}><button type="button" disabled={index === 0} aria-label={`Mover aula ${index + 1} para cima`} onClick={() => moveLesson(index, -1)}>↑</button><button type="button" disabled={index === course.lessons.length - 1} aria-label={`Mover aula ${index + 1} para baixo`} onClick={() => moveLesson(index, 1)}>↓</button><button type="button" onClick={() => setCourse((current) => ({ ...current, lessons: current.lessons.filter((_, position) => position !== index) }))}>Excluir</button></div>
         </div>) : <p className={styles.emptyRow}>Nenhuma aula adicionada.</p>}</div>
       </section>

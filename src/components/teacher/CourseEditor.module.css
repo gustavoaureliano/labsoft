@@ -7,7 +7,7 @@
 .card, .preview, .empty { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 24px; }
 .card h2, .preview h2 { font-size: 19px; margin: 0 0 18px; }
 .formGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.formGrid label, .contentRow label, .materialRow label, .videoField { color: var(--text); display: grid; font-size: 12px; font-weight: 700; gap: 6px; }
+.formGrid label, .contentRow label, .materialRow label, .videoField, .thumbnailField { color: var(--text); display: grid; font-size: 12px; font-weight: 700; gap: 6px; }
 .full { grid-column: 1 / -1; }
 .formGrid input, .formGrid select, .formGrid textarea, .contentRow input, .materialRow input, .materialRow select { background: white; border: 1px solid var(--border); border-radius: 5px; min-height: 42px; padding: 9px 11px; width: 100%; }
 .formGrid textarea { resize: vertical; }
@@ -18,8 +18,9 @@
 .sectionHeading button, .primary { background: var(--primary); border: 1px solid var(--primary); color: white; }
 .sectionHeading button:hover, .primary:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .rows { display: grid; gap: 12px; }
-.contentRow { align-items: end; border-top: 1px solid var(--border); display: grid; gap: 10px; grid-template-columns: 28px minmax(180px, 1fr) 95px minmax(240px, 1fr) auto; padding-top: 12px; }
-.position { align-self: center; color: var(--primary); font-weight: 800; }
+.contentRow { align-items: start; border-top: 1px solid var(--border); display: grid; gap: 10px; grid-template-columns: 28px minmax(180px, 1fr) 95px minmax(280px, 1.2fr) auto; padding-top: 12px; }
+.position { align-self: start; color: var(--primary); font-weight: 800; margin-top: 31px; }
+.mediaFields { display: grid; gap: 12px; }
 .rowActions { display: flex; gap: 5px; }
 .rowActions button, .materialRow > button { background: white; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; min-height: 39px; padding: 7px 9px; }
 .rowActions button:hover, .materialRow > button:hover { background: var(--primary-light); border-color: var(--primary); }
@@ -39,5 +40,5 @@
 .secondary { background: white; border: 1px solid var(--primary); color: var(--primary); }
 .secondary:hover { background: var(--primary-light); }
 .empty a { color: var(--primary); font-weight: 700; }
-@media (max-width: 900px) { .contentRow { grid-template-columns: 28px 1fr; } .contentRow label, .rowActions { grid-column: 2; } }
+@media (max-width: 900px) { .contentRow { grid-template-columns: 28px 1fr; } .contentRow label, .mediaFields, .rowActions { grid-column: 2; } }
 @media (max-width: 650px) { .heading { align-items: start; flex-direction: column; } .formGrid, .materialRow { grid-template-columns: 1fr; } .full { grid-column: auto; } .footerActions > * { flex: 1 1 100%; } }

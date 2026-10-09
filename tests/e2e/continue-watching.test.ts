@@ -6,9 +6,13 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 test("o aluno continua uma aula e alterna o controle de demonstração", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
+    const homeThumbnail = await driver.findElement(By.css('main img[src*="leis-de-newton"]'));
+    assert.equal(await driver.executeScript("return arguments[0].naturalWidth > 0", homeThumbnail), true);
     await driver.findElement(By.linkText("Continuar assistindo")).click();
     await driver.wait(until.urlContains("/videoaula"), 10000);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Leis de Newton e suas aplicações"]')), 10000);
+    const playerThumbnail = await driver.findElement(By.css('section[aria-label="Videoaula"] img[src*="leis-de-newton"]'));
+    assert.equal(await driver.executeScript("return arguments[0].naturalWidth > 0", playerThumbnail), true);
     await pauseForReview();
 
     const playButton = await driver.wait(until.elementLocated(By.css('button[aria-label="Reproduzir demonstração"]')), 10000);

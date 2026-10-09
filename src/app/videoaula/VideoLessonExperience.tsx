@@ -82,7 +82,7 @@ export function VideoLessonExperience({ lessonId, origin, playlistId }: VideoLes
 
       <div className={styles.layout}>
         <section aria-label="Videoaula" className={styles.mainColumn}>
-          <DemoPlayer lessonId={lesson.id} />
+          <DemoPlayer lessonId={lesson.id} thumbnail={lesson.thumbnail ?? enrolledCourse.image} />
           <nav className={styles.lessonNavigation} aria-label="Navegar entre aulas"><span>{previousLesson ? <Link href={collectionHref(previousLesson.id)}>← Aula anterior</Link> : "Início da lista"}</span><span>{nextLesson ? <Link href={collectionHref(nextLesson.id)}>Próxima aula →</Link> : "Fim da lista"}</span></nav>
           <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready} />
           <LessonTabs key={lesson.id} description={lesson.description} lessonId={lesson.id} lessonTitle={lesson.title} />

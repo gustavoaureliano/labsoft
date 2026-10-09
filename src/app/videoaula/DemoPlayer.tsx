@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import styles from "./page.module.css";
 
-export function DemoPlayer({ lessonId }: { lessonId: string }) {
+export function DemoPlayer({ lessonId, thumbnail }: { lessonId: string; thumbnail: string }) {
   const [player, setPlayer] = useState({ lessonId, playing: false });
   const playing = player.lessonId === lessonId ? player.playing : false;
 
@@ -13,6 +14,7 @@ export function DemoPlayer({ lessonId }: { lessonId: string }) {
 
   return (
     <div className={styles.player}>
+      <Image alt="" fill priority sizes="(max-width: 1050px) 100vw, 70vw" src={thumbnail} />
       <button
         aria-label={playing ? "Pausar demonstração" : "Reproduzir demonstração"}
         aria-pressed={playing}

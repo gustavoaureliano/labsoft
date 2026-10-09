@@ -11,10 +11,12 @@
 .lessonNavigation { display: flex; gap: 12px; justify-content: space-between; }
 .lessonNavigation a { color: var(--primary); font-size: 13px; font-weight: 700; }
 .lessonNavigation a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.player { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: var(--primary); display: flex; flex-direction: column; gap: 10px; justify-content: center; text-align: center; }
-.player strong { font-size: 16px; }
-.player span:last-child { color: var(--muted); font-size: 12px; }
-.playIcon { align-items: center; background: var(--primary); border: 0; border-radius: 50%; color: #fff; cursor: pointer; display: flex; font-size: 22px; height: 60px; justify-content: center; width: 60px; }
+.player { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: #fff; display: flex; flex-direction: column; gap: 10px; justify-content: center; overflow: hidden; position: relative; text-align: center; }
+.player::after { background: linear-gradient(rgb(5 35 48 / 12%), rgb(5 35 48 / 72%)); content: ""; inset: 0; position: absolute; }
+.player > img { object-fit: cover; }
+.player strong { font-size: 16px; position: relative; text-shadow: 0 1px 8px rgb(0 0 0 / 45%); z-index: 1; }
+.player span:last-child { color: #eef7f8; font-size: 12px; position: relative; z-index: 1; }
+.playIcon { align-items: center; background: var(--primary); border: 0; border-radius: 50%; color: #fff; cursor: pointer; display: flex; font-size: 22px; height: 60px; justify-content: center; position: relative; width: 60px; z-index: 1; }
 .playIcon span { color: inherit; }
 .playIcon:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .playIcon:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
