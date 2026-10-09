@@ -30,7 +30,7 @@ export const initialTeacherCourses: TeacherCourse[] = [
     price: "29,90",
     status: "Publicado",
     students: "12.420 alunos",
-    image: "/teacher-quantum.png",
+    image: "/images/courses/fisica-quantica.webp",
     lessons: [
       { id: "q1", title: "Introdução e contexto histórico", duration: "18 min", videoName: "introducao.mp4" },
       { id: "q2", title: "Radiação de corpo negro", duration: "24 min", videoName: "radiacao.mp4" },
@@ -62,7 +62,7 @@ export const initialTeacherCourses: TeacherCourse[] = [
     price: "0,00",
     status: "Publicado",
     students: "6.000 alunos",
-    image: "/teacher-kinematics.png",
+    image: "/images/courses/fisica-mecanica.webp",
     lessons: [
       { id: "c1", title: "Movimento uniforme", duration: "20 min", videoName: "movimento.mp4" },
       { id: "c2", title: "Leis de Newton", duration: "25 min", videoName: "newton.mp4" },
@@ -82,7 +82,7 @@ export function blankTeacherCourse(): TeacherCourse {
     price: "0,00",
     status: "Rascunho",
     students: "Nenhum aluno",
-    image: "/teacher-quantum.png",
+    image: "/images/courses/fisica-quantica.webp",
     lessons: [],
     materials: [],
   };

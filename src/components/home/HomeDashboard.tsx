@@ -3,6 +3,7 @@ import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { catalogCourses } from "@/data/catalog";
 import { currentLesson, enrolledCourse, lessonHref } from "@/data/courses";
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
@@ -30,6 +31,7 @@ export function HomeDashboard() {
         <div className={styles.learningGrid}>
           <article className={styles.featuredCourse}>
             <div className={styles.featuredVisual} aria-hidden="true">
+              <Image alt="" fill priority sizes="(max-width: 900px) 100vw, 40vw" src={enrolledCourse.image} />
               <span>{enrolledCourse.category}</span>
               <strong>{currentLesson.number}</strong>
               <small>Aula atual</small>

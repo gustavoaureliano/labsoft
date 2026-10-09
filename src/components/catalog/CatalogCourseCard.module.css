@@ -39,13 +39,7 @@
 .cover[data-group="Linguagens"] { background-color: #f8e3dd; color: #ab4939; }
 .cover[data-group="Ciências Humanas"] { background-color: #f6edcf; color: #8a6820; }
 
-.coverMark {
-  font-size: 58px;
-  font-weight: 800;
-  line-height: 1;
-  position: relative;
-  z-index: 1;
-}
+.cover img { object-fit: cover; }
 
 .coverSubject {
   align-self: flex-end;

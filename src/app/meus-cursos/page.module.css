@@ -6,7 +6,9 @@
 .page h2 { font-size: 22px; margin: 0 0 16px; }
 .course { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: grid; grid-template-columns: minmax(220px, .8fr) minmax(320px, 1.2fr); overflow: hidden; transition: border-color var(--hover-duration) ease, box-shadow var(--hover-duration) ease; }
 .course:focus-within, .course:hover { border-color: var(--card-hover-border); box-shadow: var(--card-hover-shadow); }
-.courseVisual { align-items: center; background: var(--primary-light); border-right: 1px solid var(--border); color: var(--primary); display: flex; font-size: 18px; font-weight: 700; justify-content: center; min-height: 260px; }
+.courseVisual { align-items: center; background: var(--primary-light); border-right: 1px solid var(--border); color: var(--primary); display: flex; font-size: 18px; font-weight: 700; justify-content: center; min-height: 260px; overflow: hidden; position: relative; }
+.courseVisual img { object-fit: cover; }
+.courseVisual span { background: rgb(255 255 255 / 88%); border-radius: 4px; padding: 7px 10px; position: relative; z-index: 1; }
 .courseContent { padding: 30px; }
 .courseContent h3 { font-size: 22px; margin: 8px 0; }
 .courseContent > p { font-size: 14px; }

@@ -1,5 +1,6 @@
 export type CatalogCourse = {
   id: string;
+  image: string;
   subject: string;
   group: string;
   title: string;
@@ -30,6 +31,7 @@ export const courseGroups = ["Matemática", "Linguagens", "Ciências da Natureza
 export const catalogCourses: CatalogCourse[] = [
   {
     id: "fisica-quantica",
+    image: "/images/courses/fisica-quantica.webp",
     subject: "Física",
     group: "Ciências da Natureza",
     title: "Introdução à Física Quântica",
@@ -49,6 +51,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "biologia-celular",
+    image: "/images/courses/biologia-celular.webp",
     subject: "Biologia",
     group: "Ciências da Natureza",
     title: "Biologia Celular para Vestibulares",
@@ -68,6 +71,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "estatistica-essencial",
+    image: "/images/courses/estatistica.webp",
     subject: "Matemática",
     group: "Matemática",
     title: "Estatística Essencial",
@@ -87,6 +91,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "redacao-nota-mil",
+    image: "/images/courses/redacao-nota-mil.webp",
     subject: "Redação",
     group: "Linguagens",
     title: "Redação nota mil: da tese à conclusão",
@@ -106,6 +111,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "quimica-organica",
+    image: "/images/courses/quimica-organica.webp",
     subject: "Química",
     group: "Ciências da Natureza",
     title: "Química Orgânica sem mistério",
@@ -125,6 +131,7 @@ export const catalogCourses: CatalogCourse[] = [
   },
   {
     id: "historia-brasil",
+    image: "/images/courses/historia-brasil.webp",
     subject: "História",
     group: "Ciências Humanas",
     title: "História do Brasil em perspectiva",

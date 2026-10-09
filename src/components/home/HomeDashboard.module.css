@@ -60,9 +60,13 @@
   gap: 5px;
   justify-content: center;
   min-height: 310px;
+  overflow: hidden;
+  position: relative;
 }
-.featuredVisual span, .featuredVisual small { font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
-.featuredVisual strong { font-size: 76px; line-height: 1; }
+.featuredVisual::after { background: linear-gradient(rgb(5 35 48 / 8%), rgb(5 35 48 / 58%)); content: ""; inset: 0; position: absolute; }
+.featuredVisual img { object-fit: cover; }
+.featuredVisual span, .featuredVisual small { background: rgb(255 255 255 / 88%); border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: .5px; padding: 5px 8px; position: relative; text-transform: uppercase; z-index: 1; }
+.featuredVisual strong { color: #fff; font-size: 76px; line-height: 1; position: relative; text-shadow: 0 2px 12px rgb(0 0 0 / 45%); z-index: 1; }
 
 .featuredContent {
   display: flex;

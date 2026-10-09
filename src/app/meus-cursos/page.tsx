@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
@@ -43,7 +44,7 @@ export default function MeusCursos() {
         <section aria-labelledby="in-progress-title">
           <h2 id="in-progress-title">Em andamento</h2>
           <article className={styles.course}>
-            <div className={styles.courseVisual}>{enrolledCourse.category}</div>
+            <div className={styles.courseVisual}><Image alt={`Capa do curso ${enrolledCourse.title}`} fill priority sizes="(max-width: 750px) 100vw, 40vw" src={enrolledCourse.image} /><span>{enrolledCourse.category}</span></div>
             <div className={styles.courseContent}>
               <span className={styles.eyebrow}>{enrolledCourse.category} · {enrolledCourse.totalLessons} aulas</span>
               <h3><Link href={`/meus-cursos/${enrolledCourse.id}`}>{enrolledCourse.title}</Link></h3>

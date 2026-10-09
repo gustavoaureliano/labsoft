@@ -24,6 +24,7 @@ const lessons: EnrolledLesson[] = [
 
 export const enrolledCourse = {
   id: "fisica-enem-mecanica",
+  image: "/images/courses/fisica-mecanica.webp",
   category: "Física",
   title: "Física para o ENEM: Mecânica",
   teacher: "Prof. Marcelo Andrade",
