@@ -1,0 +1,13 @@
+.page { display: grid; gap: 24px; }
+.back { color: var(--primary); font-size: 13px; font-weight: 700; justify-self: start; }
+.back:hover { text-decoration: underline; text-underline-offset: 3px; }
+.heading, .content, .empty { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 28px; }
+.heading span { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.heading h1, .empty h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
+.heading p, .empty p, .status { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+.content { display: grid; gap: 16px; }
+.content h2 { font-size: 22px; margin: 0; }
+.note { color: var(--muted); font-size: 11px; margin: 0; }
+.empty { display: grid; gap: 12px; }
+.empty a { color: var(--primary); font-size: 13px; font-weight: 700; justify-self: start; }
+@media (max-width: 600px) { .heading, .content, .empty { padding: 22px; } .heading h1, .empty h1 { font-size: 26px; } }

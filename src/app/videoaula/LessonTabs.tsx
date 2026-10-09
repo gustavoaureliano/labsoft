@@ -2,18 +2,18 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { initialLessonInteractions, lessonInteractionsKey, lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
+import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 const tabs = ["Visão Geral", "Comentários", "Anotações", "Avaliações", "Materiais"] as const;
 type Tab = (typeof tabs)[number];
 
-export function LessonTabs({ description }: { description: string }) {
+export function LessonTabs({ description, lessonId, lessonTitle }: { description: string; lessonId: string; lessonTitle: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Visão Geral");
   const [comment, setComment] = useState("");
-  const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsKey, initialLessonInteractions);
-  const [report, saveReport] = useDemoStorage<LessonReport | null>(lessonReportKey, null);
+  const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsStorageKey(lessonId), initialLessonInteractions);
+  const [report, saveReport] = useDemoStorage<LessonReport | null>(lessonReportStorageKey(lessonId), null);
   const [note, setNote] = useState<string | null>(null);
 
   function addComment(event: FormEvent<HTMLFormElement>) {
@@ -27,7 +27,7 @@ export function LessonTabs({ description }: { description: string }) {
   function reportLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const reason = String(new FormData(event.currentTarget).get("reason") ?? "").trim();
-    if (reason && !report) saveReport({ reason });
+    if (reason && !report) saveReport({ reason, lessonId, lessonTitle });
   }
 
   return (

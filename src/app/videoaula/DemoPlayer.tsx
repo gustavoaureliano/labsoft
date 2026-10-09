@@ -3,8 +3,13 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-export function DemoPlayer() {
-  const [playing, setPlaying] = useState(false);
+export function DemoPlayer({ lessonId }: { lessonId: string }) {
+  const [player, setPlayer] = useState({ lessonId, playing: false });
+  const playing = player.lessonId === lessonId ? player.playing : false;
+
+  function togglePlaying() {
+    setPlayer((current) => ({ lessonId, playing: current.lessonId === lessonId ? !current.playing : true }));
+  }
 
   return (
     <div className={styles.player}>
@@ -12,7 +17,7 @@ export function DemoPlayer() {
         aria-label={playing ? "Pausar demonstração" : "Reproduzir demonstração"}
         aria-pressed={playing}
         className={styles.playIcon}
-        onClick={() => setPlaying((value) => !value)}
+        onClick={togglePlaying}
         type="button"
       >
         <span aria-hidden="true">{playing ? "❚❚" : "▶"}</span>

@@ -1,10 +1,16 @@
 .page { display: grid; gap: 22px; }
 .backLink { color: var(--primary); font-size: 14px; justify-self: start; text-decoration: underline; text-underline-offset: 3px; }
+.breadcrumbs { align-items: center; display: flex; flex-wrap: wrap; font-size: 13px; gap: 14px; justify-content: space-between; }
+.breadcrumbs > a:last-child, .courseLink { color: var(--primary); font-weight: 700; }
+.courseLink:hover { text-decoration: underline; text-underline-offset: 2px; }
 .heading h1 { color: var(--primary); font-size: 30px; margin: 8px 0; }
 .heading p { color: var(--muted); font-size: 14px; margin: 0; }
 .eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .layout { align-items: start; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 300px; }
 .mainColumn { display: grid; gap: 20px; min-width: 0; }
+.lessonNavigation { display: flex; gap: 12px; justify-content: space-between; }
+.lessonNavigation a { color: var(--primary); font-size: 13px; font-weight: 700; }
+.lessonNavigation a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .player { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; color: var(--primary); display: flex; flex-direction: column; gap: 10px; justify-content: center; text-align: center; }
 .player strong { font-size: 16px; }
 .player span:last-child { color: var(--muted); font-size: 12px; }
@@ -13,6 +19,7 @@
 .playIcon:hover { background: #064b63; box-shadow: var(--action-shadow); }
 .playIcon:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .lessonDetails, .lessonPanel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.lessonPanel { max-height: calc(100vh - 110px); overflow: auto; position: sticky; top: 20px; }
 .lessonDetails { min-width: 0; }
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 20px 0; }
 .tabs button { background: #fff; border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font: inherit; font-size: 14px; min-height: 42px; padding: 9px 13px; }
@@ -38,6 +45,8 @@
 .panelHeading { padding: 22px 20px; }
 .panelHeading h2 { margin-top: 6px; }
 .progressBar { margin-top: 12px; }
+.allLessonsLink { border-top: 1px solid var(--border); color: var(--primary); display: block; font-size: 13px; font-weight: 700; padding: 16px 20px; text-align: center; }
+.allLessonsLink:hover { background: var(--primary-light); }
 .lessonList { list-style: none; margin: 0; padding: 0; }
 .lessonList li { align-items: center; border-top: 1px solid var(--border); display: flex; gap: 12px; padding: 15px 20px; }
 .lessonList .currentLesson { background: var(--primary-light); }
@@ -45,5 +54,5 @@
 .lessonList strong, .lessonList small { display: block; }
 .lessonList strong { font-size: 14px; line-height: 1.35; }
 .lessonList small { color: var(--muted); font-size: 12px; margin-top: 4px; }
-@media (max-width: 1050px) { .layout { grid-template-columns: 1fr; } }
+@media (max-width: 1050px) { .layout { grid-template-columns: 1fr; } .lessonPanel { max-height: none; position: static; } }
 @media (max-width: 600px) { .heading h1 { font-size: 25px; } .tabPanel { padding: 20px; } }

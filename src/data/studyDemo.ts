@@ -1,5 +1,4 @@
 export const studyDemoKey = "aprovaai-demo-study";
-export const lessonDemoId = "mecanica-newton-08";
 
 export type StudyDemo = {
   viewedLessons: string[];

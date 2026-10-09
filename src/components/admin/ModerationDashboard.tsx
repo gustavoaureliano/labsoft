@@ -212,7 +212,7 @@ export function ModerationDashboard() {
             </div>
             <ul className={styles.reviewList}>
               {lessonReport && <li className={styles.reviewItem}>
-                <div className={styles.reviewMeta}><strong>Leis de Newton e suas aplicações</strong><small>Denúncia de demonstração</small></div>
+                <div className={styles.reviewMeta}><strong>{lessonReport.lessonTitle ?? "Leis de Newton e suas aplicações"}</strong><small>Denúncia de demonstração</small></div>
                 <p>Física para o ENEM: Mecânica</p>
                 <span className={styles.reasonBadge}>{lessonReport.reason}</span>
                 {lessonReport.decision ? <p role="status">Decisão registrada neste navegador: conteúdo {lessonReport.decision}.</p> : <div className={styles.reviewActions}>

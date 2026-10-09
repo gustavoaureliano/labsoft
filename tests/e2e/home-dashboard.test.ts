@@ -13,6 +13,7 @@ test("o aluno explora a home e encontra formas de estudar", async () => {
     assert.equal(await driver.executeScript("return document.documentElement.scrollHeight > innerHeight"), true);
 
     await driver.findElement(By.linkText("Ver aulas do curso →")).click();
-    await driver.wait(until.urlContains("/videoaula"), 10000);
+    await driver.wait(until.urlContains("/meus-cursos/fisica-enem-mecanica"), 10000);
+    assert.equal((await driver.findElements(By.css('section[aria-labelledby="course-content-title"] ol li'))).length, 12);
   });
 });

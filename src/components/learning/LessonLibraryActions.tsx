@@ -1,28 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { initialStudyDemo, lessonDemoId, studyDemoKey } from "@/data/studyDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useEffect, useRef, useState } from "react";
+import type { StudyDemo } from "@/data/studyDemo";
 import styles from "./LessonLibraryActions.module.css";
 
-export function LessonLibraryActions() {
-  const [study, saveStudy, ready] = useDemoStorage(studyDemoKey, initialStudyDemo);
+type LessonLibraryActionsProps = {
+  lessonId: string;
+  study: StudyDemo;
+  saveStudy: (study: StudyDemo) => boolean;
+  ready: boolean;
+};
+
+export function LessonLibraryActions({ lessonId, study, saveStudy, ready }: LessonLibraryActionsProps) {
   const [notice, setNotice] = useState("");
-  const favorite = study.favoriteLessons.includes(lessonDemoId);
+  const recordedLesson = useRef<string | null>(null);
+  const favorite = study.favoriteLessons.includes(lessonId);
 
   useEffect(() => {
-    if (!ready || study.viewedLessons.includes(lessonDemoId)) return;
-    saveStudy({ ...study, viewedLessons: [...study.viewedLessons, lessonDemoId] });
-  }, [ready, study, saveStudy]);
+    if (!ready || recordedLesson.current === lessonId) return;
+    recordedLesson.current = lessonId;
+    saveStudy({ ...study, viewedLessons: [lessonId, ...study.viewedLessons.filter((id) => id !== lessonId)] });
+  }, [ready, study, saveStudy, lessonId]);
 
   function toggleFavorite() {
-    saveStudy({ ...study, favoriteLessons: favorite ? study.favoriteLessons.filter((id) => id !== lessonDemoId) : [...study.favoriteLessons, lessonDemoId] });
+    saveStudy({ ...study, favoriteLessons: favorite ? study.favoriteLessons.filter((id) => id !== lessonId) : [...study.favoriteLessons, lessonId] });
     setNotice(favorite ? "Aula removida dos favoritos." : "Aula adicionada aos favoritos deste navegador.");
   }
 
   function addToPlaylist(playlistId: string) {
     if (!playlistId) return;
-    saveStudy({ ...study, playlists: study.playlists.map((playlist) => playlist.id === playlistId && !playlist.lessonIds.includes(lessonDemoId) ? { ...playlist, lessonIds: [...playlist.lessonIds, lessonDemoId] } : playlist) });
+    saveStudy({ ...study, playlists: study.playlists.map((playlist) => playlist.id === playlistId && !playlist.lessonIds.includes(lessonId) ? { ...playlist, lessonIds: [...playlist.lessonIds, lessonId] } : playlist) });
     setNotice("Aula adicionada à playlist neste navegador.");
   }
 

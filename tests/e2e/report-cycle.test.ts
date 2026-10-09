@@ -23,6 +23,8 @@ test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", as
     assert.match(await report.getText(), /conteúdo mantido/);
     await setDemoRoleForTest(driver, "student");
     await driver.get(`${baseUrl}/videoaula`);
-    assert.match(await driver.findElement(By.css('[role="tabpanel"]')).getText(), /conteúdo mantido/);
+    const lessonPanel = await driver.findElement(By.css('[role="tabpanel"]'));
+    await driver.wait(until.elementTextContains(lessonPanel, "conteúdo mantido"), 5000);
+    assert.match(await lessonPanel.getText(), /conteúdo mantido/);
   });
 });

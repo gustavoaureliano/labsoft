@@ -2,7 +2,7 @@ import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { catalogCourses } from "@/data/catalog";
-import { currentLesson, enrolledCourse } from "@/data/courses";
+import { currentLesson, enrolledCourse, lessonHref } from "@/data/courses";
 import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
@@ -41,7 +41,7 @@ export function HomeDashboard() {
               <p className={styles.teacherLine}><span className={styles.miniAvatar}>{enrolledCourse.teacherInitials}</span>{enrolledCourse.teacher}</p>
               <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
               <ProgressBar value={enrolledCourse.progress} />
-              <PrimaryLink className={styles.primaryButton} href="/videoaula">Continuar assistindo</PrimaryLink>
+              <PrimaryLink className={styles.primaryButton} href={lessonHref(currentLesson.id)}>Continuar assistindo</PrimaryLink>
             </div>
           </article>
 
@@ -50,7 +50,7 @@ export function HomeDashboard() {
             <h3>No seu curso</h3>
             {previousLesson && <div className={styles.railLesson}><span>Última aula · concluída</span><strong>{previousLesson.title}</strong></div>}
             {nextLesson && <div className={styles.railLesson}><span>Depois desta</span><strong>{nextLesson.title}</strong></div>}
-            <Link href="/videoaula">Ver aulas do curso →</Link>
+            <Link href={`/meus-cursos/${enrolledCourse.id}`}>Ver aulas do curso →</Link>
           </aside>
         </div>
       </section>
