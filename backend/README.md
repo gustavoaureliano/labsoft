@@ -69,3 +69,30 @@ uv run --env-file .env alembic upgrade head
 ```
 
 Novos modelos precisam ser importados em `migrations/env.py` para que o Alembic reconheça suas tabelas. As migrações ficam versionadas em `migrations/versions/`.
+
+## Upload de vídeo
+
+Após aplicar as migrações e iniciar a API, abra http://127.0.0.1:8000/docs e use `POST /api/media`. Selecione um arquivo no campo `file` e execute a requisição.
+
+Também é possível enviar pelo terminal:
+
+```bash
+curl -F 'file=@/caminho/aula.mp4;type=video/mp4' http://127.0.0.1:8000/api/media
+```
+
+- Aceita extensões `.mp4` e `.webm` com os tipos declarados `video/mp4` e `video/webm`, respectivamente. Ainda não inspeciona o conteúdo ou os codecs.
+- O limite padrão é 100 MiB. Configure `MAX_UPLOAD_BYTES` para alterá-lo.
+- Os arquivos são gravados em blocos, com nomes UUID, em `backend/storage/videos/`. `STORAGE_DIR` pode indicar outro diretório absoluto ou relativo a `backend/`.
+- A resposta `201` contém o identificador e os metadados públicos da mídia. O estado `available` indica que o arquivo foi armazenado, não que seus codecs foram verificados.
+- Arquivo vazio ou formato inválido retorna `400`. Tamanho excedido retorna `413`.
+- A validação de tamanho acontece ao copiar o arquivo recebido. O parser multipart pode armazenar temporariamente a requisição antes disso; esse limite não é uma limitação do tráfego de entrada.
+
+Este endpoint é de desenvolvimento, ainda sem autorização, associação com aula ou reprodução. Arquivos armazenados não são versionados no Git.
+
+## Testes do backend
+
+```bash
+uv run python -m pytest
+```
+
+Os testes de upload usam SQLite e arquivos temporários, sem alterar o PostgreSQL ou os vídeos locais.
