@@ -2,12 +2,22 @@
 
 Protótipo inicial da interface da AprovaAí.
 
+## Estrutura do repositório
+
+- `frontend/`: aplicação Next.js, arquivos públicos e testes Selenium.
+
 ## Requisitos
 
 - Node.js 24
 - npm
 
 ## Comandos
+
+Execute os comandos abaixo dentro de `frontend/`:
+
+```bash
+cd frontend
+```
 
 - `npm install`: instala as dependências.
 - `npm run dev`: inicia o ambiente de desenvolvimento.
@@ -18,13 +28,13 @@ Protótipo inicial da interface da AprovaAí.
 - `npm run test:e2e:sequential`: executa os testes um de cada vez, sem pausas.
 - `npm run test:e2e:visual`: executa os testes um de cada vez, com pausas para acompanhar o navegador.
 
-Para executar os testes, inicie a aplicação em um terminal:
+Para executar os testes, inicie a aplicação em um terminal, dentro de `frontend/`:
 
 ```bash
 npm run dev
 ```
 
-Em outro terminal, execute os testes:
+Em outro terminal, também dentro de `frontend/`, execute os testes:
 
 ```bash
 npm run test:e2e
