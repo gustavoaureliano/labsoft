@@ -3,6 +3,8 @@ from alembic import context
 from app.database import Base, engine
 from app.media.models import Media
 
+from app.courses.models import Course
+
 target_metadata = Base.metadata
 
 
