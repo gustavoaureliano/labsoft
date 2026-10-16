@@ -16,8 +16,8 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from fastapi.security import (
-    HTTPAuthorizationCredentials,
-    HTTPBearer,
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
 )
 
 from sqlalchemy.exc import IntegrityError
@@ -87,7 +87,8 @@ class AuthDependencies:
         get_db: Callable,
     ):
         self.get_db = get_db
-        self.bearer = HTTPBearer(
+        self.bearer = OAuth2PasswordBearer(
+            tokenUrl="/api/v1/auth/token",
             auto_error=False
         )
         self.sessions = SessionService()
@@ -99,12 +100,10 @@ class AuthDependencies:
 
         def resolve(
             db: Session = Depends(get_db),
-            credentials: (
-                HTTPAuthorizationCredentials | None
-            ) = Depends(bearer),
+            token: str | None = Depends(bearer),
         ) -> User:
 
-            if credentials is None:
+            if token is None:
                 raise HTTPException(
                     status_code=401,
                     detail="Autenticação obrigatória.",
@@ -113,7 +112,7 @@ class AuthDependencies:
             with translate_service_error():
                 return self.sessions.authenticate(
                     db,
-                    credentials.credentials,
+                    token,
                 )
 
             raise AssertionError("unreachable")
@@ -167,7 +166,7 @@ def create_router(
 
     router = APIRouter(
         prefix="/api/v1",
-        tags=["Identity / F02-F06"],
+        tags=["Identity"],
     )
 
     # F02 - CADASTRO
@@ -241,6 +240,38 @@ def create_router(
             user=UserOut.model_validate(user),
         )
 
+    @router.post(
+        "/auth/token",
+        response_model=TokenOut,
+        include_in_schema=False,
+    )
+    def swagger_token(
+        form: OAuth2PasswordRequestForm = Depends(),
+        db: Session = Depends(get_db),
+    ):
+        with translate_service_error():
+            user = identity.authenticate(
+                db,
+                form.username,
+                form.password,
+            )
+
+        token = sessions.create(
+            db,
+            user,
+            settings,
+        )
+
+        db.commit()
+
+        return TokenOut(
+            access_token=token,
+            expires_in_seconds=(
+                settings.session_hours * 3600
+            ),
+            user=UserOut.model_validate(user),
+        )
+
     # F03 - LOGOUT
 
     @router.post(
@@ -248,12 +279,10 @@ def create_router(
         response_model=StatusOut,
     )
     def logout(
-        credentials: (
-            HTTPAuthorizationCredentials | None
-        ) = Depends(auth.bearer),
+        token: str | None = Depends(auth.bearer),
         db: Session = Depends(get_db),
     ):
-        if credentials is None:
+        if token is None:
             raise HTTPException(
                 status_code=401,
                 detail="Autenticação obrigatória.",
@@ -262,7 +291,7 @@ def create_router(
         with translate_service_error():
             sessions.revoke(
                 db,
-                credentials.credentials,
+                token,
             )
 
         db.commit()
@@ -545,5 +574,16 @@ def create_router(
             db,
             user,
         )
+
+    # F06 - TESTE DE AUTORIZACAO POR PERFIL
+
+    @router.get("/auth/test/teacher")
+    def teacher_only(
+        user: User = Depends(auth.roles("teacher")),
+    ):
+        return {
+            "teacher_id": user.id,
+            "message": "Acesso autorizado",
+        }
 
     return router

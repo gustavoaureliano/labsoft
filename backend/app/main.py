@@ -3,7 +3,7 @@ from app.identity_access import (
     Settings,
     create_router,
 )
-from app.database import get_db
+from app.database import get_session as get_db
 app = FastAPI(title="AprovaAí API")
 
 

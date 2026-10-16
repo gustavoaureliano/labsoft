@@ -31,7 +31,12 @@ uv run --env-file .env uvicorn app.main:app --reload
 ```
 
 - API: http://127.0.0.1:8000
+- Documentação Swagger: http://127.0.0.1:8000/docs
 - Verificação de funcionamento: http://127.0.0.1:8000/api/health
+
+No Swagger, clique em **Authorize** e informe o e-mail no campo `username` e a
+senha da conta. A API obtém o token automaticamente. O endpoint JSON
+`POST /api/v1/auth/login` continua disponível para os clientes da aplicação.
 
 ## Verificar o banco
 
