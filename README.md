@@ -5,6 +5,7 @@ Protótipo inicial da interface da AprovaAí.
 ## Estrutura do repositório
 
 - `frontend/`: aplicação Next.js, arquivos públicos e testes Selenium.
+- `backend/`: API em Python com FastAPI. Veja as [instruções de execução](backend/README.md).
 
 ## Requisitos
 
