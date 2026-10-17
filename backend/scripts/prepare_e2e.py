@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
+from PIL import Image
 
 from app.learning.models import Lesson
 from app.media.models import Media
@@ -25,6 +26,10 @@ if __name__ == "__main__":
     path = root / "videos/e2e-fixture.mp4"
     if not path.exists():
         generate_video(path)
+    image_path = root / "thumbnails/e2e-fixture.png"
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    if not image_path.exists():
+        Image.new("RGB", (320, 180), "#075a76").save(image_path)
     subprocess.run([".venv/bin/alembic", "upgrade", "head"], env={**os.environ, "DATABASE_URL": url.render_as_string(hide_password=False)}, check=True)
     engine = create_engine(url)
     with Session(engine) as session:
