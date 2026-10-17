@@ -23,6 +23,7 @@ export async function setDemoRoleForTest(driver: WebDriver, role: DemoRole | nul
 export async function withBrowser(run: (driver: WebDriver) => Promise<void>, role: DemoRole | null = "student") {
   const options = new chrome.Options();
   options.addArguments("--window-size=1440,900");
+  if (process.env.E2E_HEADLESS !== "false") options.addArguments("--headless=new");
 
   const chromeBinary = process.env.CHROME_BINARY ?? "/usr/bin/chromium";
   if (existsSync(chromeBinary)) options.setChromeBinaryPath(chromeBinary);
