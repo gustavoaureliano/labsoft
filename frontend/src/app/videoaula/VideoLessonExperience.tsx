@@ -3,101 +3,39 @@
 import Link from "next/link";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { LessonLibraryActions } from "@/components/learning/LessonLibraryActions";
+import { VideoPlayer } from "@/components/learning/VideoPlayer";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { enrolledCourse, findEnrolledLesson, lessonHref, lessonsFromIds, type LessonCollectionContext } from "@/data/courses";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
-import { DemoPlayer } from "./DemoPlayer";
+import { useApi, displayLessons, lessonLink, type Playback, type Course, type Dashboard } from "@/lib/api/learning";
 import { LessonTabs } from "./LessonTabs";
 import styles from "./page.module.css";
 
-type VideoLessonExperienceProps = {
-  lessonId?: string;
-  origin?: string;
-  playlistId?: string;
-};
-
-type LessonCollection = {
-  title: string;
-  eyebrow: string;
-  lessons: typeof enrolledCourse.lessons;
-  context: LessonCollectionContext;
-  backHref: string;
-  backLabel: string;
-};
-
-export function VideoLessonExperience({ lessonId, origin, playlistId }: VideoLessonExperienceProps) {
+export function VideoLessonExperience({lessonId, origin, playlistId}: {lessonId?: string; origin?: string; playlistId?: string}) {
+  const home = useApi<Dashboard>(lessonId ? null : "/api/learning/dashboard");
+  const selected = lessonId ?? home.data?.current_course?.continue_lesson?.id;
+  const playback = useApi<Playback>(selected ? `/api/learning/lessons/${encodeURIComponent(selected)}/playback` : null);
+  const course = useApi<Course>(playback.data ? `/api/learning/courses/${playback.data.course_id}` : null);
   const [study, saveStudy, ready] = useDemoStorage(studyDemoKey, initialStudyDemo);
-  const lesson = findEnrolledLesson(lessonId);
-  const courseCollection: LessonCollection = {
-    title: "Aulas do curso",
-    eyebrow: enrolledCourse.title,
-    lessons: enrolledCourse.lessons,
-    context: { origin: "course" },
-    backHref: `/meus-cursos/${enrolledCourse.id}`,
-    backLabel: "Voltar para o curso",
-  };
-
-  let collection = courseCollection;
-  if (ready && origin === "playlist" && playlistId) {
-    const playlist = study.playlists.find((item) => item.id === playlistId);
-    const playlistLessons = lessonsFromIds(playlist?.lessonIds ?? []);
-    if (playlist && playlistLessons.some((item) => item.id === lesson.id)) {
-      collection = {
-        title: playlist.name,
-        eyebrow: "Playlist de estudo",
-        lessons: playlistLessons,
-        context: { origin: "playlist", playlistId },
-        backHref: `/meus-cursos/playlists/${playlistId}`,
-        backLabel: "Voltar para a playlist",
-      };
-    }
-  } else if (ready && (origin === "history" || origin === "favorites")) {
-    const collectionLessons = lessonsFromIds(origin === "history" ? study.viewedLessons : study.favoriteLessons);
-    if (collectionLessons.some((item) => item.id === lesson.id)) {
-      collection = {
-        title: origin === "history" ? "Histórico" : "Favoritos",
-        eyebrow: "Biblioteca de estudo",
-        lessons: collectionLessons,
-        context: { origin },
-        backHref: "/meus-cursos",
-        backLabel: "Voltar para Meus Cursos",
-      };
-    }
-  }
-
-  const lessonIndex = collection.lessons.findIndex((item) => item.id === lesson.id);
-  const previousLesson = collection.lessons[lessonIndex - 1];
-  const nextLesson = collection.lessons[lessonIndex + 1];
-  const collectionHref = (id: string) => lessonHref(id, collection.context);
-
-  return (
-    <div className={styles.page}>
-      <div className={styles.breadcrumbs}><Link className={styles.backLink} href={collection.backHref}>← {collection.backLabel}</Link><Link href="/meus-cursos">Meus Cursos</Link></div>
-      <header className={styles.heading}>
-        <span className={styles.eyebrow}><Link className={styles.courseLink} href={`/meus-cursos/${enrolledCourse.id}`}>{enrolledCourse.title}</Link> · Aula {lesson.number}</span>
-        <h1>{lesson.title}</h1>
-        <p>{enrolledCourse.teacher}</p>
-      </header>
-
-      <div className={styles.layout}>
-        <section aria-label="Videoaula" className={styles.mainColumn}>
-          <DemoPlayer lessonId={lesson.id} thumbnail={lesson.thumbnail ?? enrolledCourse.image} />
-          <nav className={styles.lessonNavigation} aria-label="Navegar entre aulas"><span>{previousLesson ? <Link href={collectionHref(previousLesson.id)}>← Aula anterior</Link> : "Início da lista"}</span><span>{nextLesson ? <Link href={collectionHref(nextLesson.id)}>Próxima aula →</Link> : "Fim da lista"}</span></nav>
-          <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready} />
-          <LessonTabs key={lesson.id} description={lesson.description} lessonId={lesson.id} lessonTitle={lesson.title} />
-        </section>
-
-        <aside className={styles.lessonPanel} aria-labelledby="lessons-title">
-          <div className={styles.panelHeading}>
-            <span className={styles.eyebrow}>{collection.eyebrow}</span>
-            <h2 id="lessons-title">{collection.title}</h2>
-            {collection.context.origin === "course" ? <><p>Seu progresso: {enrolledCourse.progress}%</p><div className={styles.progressBar}><ProgressBar value={enrolledCourse.progress} /></div></> : <p>{collection.lessons.length} {collection.lessons.length === 1 ? "aula nesta lista" : "aulas nesta lista"}</p>}
-          </div>
-          <CourseLessonList compact lessons={collection.lessons} activeLessonId={lesson.id} getLessonHref={(item) => collectionHref(item.id)} />
-          <Link className={styles.allLessonsLink} href={collection.backHref}>{collection.context.origin === "course" ? "Ver página do curso" : collection.backLabel}</Link>
-        </aside>
-      </div>
+  const error = home.error || playback.error || course.error;
+  if (error) return <div role="alert"><h1>Aula indisponível</h1><p>{error}</p><Link href="/meus-cursos">Voltar para Meus Cursos</Link></div>;
+  if (!selected && home.data) return <p>Nenhuma aula disponível. <Link href="/meus-cursos">Ver cursos</Link></p>;
+  if (!playback.data || !course.data) return <p role="status">Carregando aula...</p>;
+  const lesson = playback.data;
+  const info = course.data;
+  const list = info.lessons;
+  const index = list.findIndex(item => item.id === lesson.id);
+  return <div className={styles.page}>
+    <div className={styles.breadcrumbs}><Link href={`/meus-cursos/${info.id}`}>← Voltar para o curso</Link><Link href="/meus-cursos">Meus Cursos</Link></div>
+    <header className={styles.heading}><span className={styles.eyebrow}><Link className={styles.courseLink} href={`/meus-cursos/${info.id}`}>{info.title}</Link> · Aula {lesson.position}</span><h1>{lesson.title}</h1><p>{info.teacher}</p></header>
+    <div className={styles.layout}>
+      <section className={styles.mainColumn} aria-label="Videoaula">
+        <VideoPlayer key={`${lesson.id}:${lesson.media_id}`} lesson={lesson} poster={list.find(item => item.id === lesson.id)?.thumbnail_url ?? info.image} />
+        <nav className={styles.lessonNavigation} aria-label="Navegar entre aulas"><span>{list[index - 1] && <Link href={lessonLink(list[index - 1].id, {origin, playlistId})}>← Aula anterior</Link>}</span><span>{list[index + 1] && <Link href={lessonLink(list[index + 1].id, {origin, playlistId})}>Próxima aula →</Link>}</span></nav>
+        <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready} />
+        <LessonTabs key={lesson.id} description={lesson.description} lessonId={lesson.id} lessonTitle={lesson.title} />
+      </section>
+      <aside className={styles.lessonPanel}><div className={styles.panelHeading}><h2>Aulas do curso</h2><p>Seu progresso: {info.progress}%</p><ProgressBar value={info.progress} /></div><CourseLessonList compact lessons={displayLessons(list, lesson.id)} activeLessonId={lesson.id} getLessonHref={item => lessonLink(item.id)} /><Link className={styles.allLessonsLink} href={`/meus-cursos/${info.id}`}>Ver página do curso</Link></aside>
     </div>
-  );
+  </div>;
 }

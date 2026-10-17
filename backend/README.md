@@ -199,6 +199,12 @@ Sem `--apply`, apenas lista candidatos. A operação ignora referências de aula
 
 ## Rodar testes
 
+O frontend encaminha `/api` para `BACKEND_URL` (padrão `http://127.0.0.1:8000`). Ative `LEARNING_DEMO_MODE=true` na API e entre novamente no site para definir também o cookie de identidade demo. O player nativo reproduz vídeos reais e salva a posição a cada cinco segundos, ao pausar e ao terminar. Falha de salvamento é informada; não se depende exclusivamente do fechamento da página.
+
+Para Selenium com backend isolado, configure `TEST_DATABASE_URL` (banco `_test`) e `STORAGE_DIR` apontando para um diretório exclusivo de testes, execute `uv run --env-file .env python -m scripts.prepare_e2e` e inicie uma API separada usando esse banco e armazenamento. Encaminhe o frontend para essa API e rode `E2E_BACKEND=true node --test tests/e2e/backend-playback.test.ts` dentro de `frontend/`. Nunca prepare esses dados sobre o banco/armazenamento normal. Sem `E2E_BACKEND=true`, esse teste é ignorado explicitamente.
+
+## Comandos de teste
+
 ```bash
 uv run python -m pytest
 ```
