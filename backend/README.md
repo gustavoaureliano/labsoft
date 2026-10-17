@@ -197,7 +197,18 @@ uv run --env-file .env python -m app.media.cleanup professor-demo --minimum-age-
 
 Sem `--apply`, apenas lista candidatos. A operação ignora referências de aulas e arquivos recentes, limita-se ao professor indicado e bloqueia registros de mídia durante a operação no PostgreSQL. Associação também bloqueia o registro, evitando competir com a limpeza. Banco e disco não são uma transação distribuída: falhas de disco/commit são reportadas, e restauração deve considerar ambos. Nunca rode limpeza no armazenamento de testes apontando para dados reais.
 
-## Rodar testes
+## Certificados
+
+- `POST /api/learning/courses/{id}/certificate`: emite ou retorna o certificado existente, exigindo acesso atual e todas as aulas concluídas. Curso vazio é inelegível.
+- `GET /api/learning/certificates` e `GET /api/learning/certificates/{id}`: consulta privada do proprietário.
+- `GET /api/learning/certificates/{id}/download`: PDF gerado do snapshot persistido.
+- `GET /api/learning/certificates/verify/{code}`: verificação pública mínima, sem identificador privado do usuário.
+
+O certificado guarda nome, título, quantidade de aulas e carga horária da emissão. Mudanças posteriores no curso, progresso ou expiração do acesso não apagam esse documento do proprietário. Emissão é única por aluno/curso e serializada no PostgreSQL. Não é assinatura digital qualificada. O PDF identifica a emissão local de desenvolvimento.
+
+Falha na notificação não desfaz emissão; nova solicitação tenta novamente a entrega sem criar outro certificado. O contrato de notificação deve usar o identificador do certificado como chave idempotente. O adaptador demo não envia mensagens reais.
+
+## Integração do player e testes
 
 O frontend encaminha `/api` para `BACKEND_URL` (padrão `http://127.0.0.1:8000`). Ative `LEARNING_DEMO_MODE=true` na API e entre novamente no site para definir também o cookie de identidade demo. O player nativo reproduz vídeos reais e salva a posição a cada cinco segundos, ao pausar e ao terminar. Falha de salvamento é informada; não se depende exclusivamente do fechamento da página.
 

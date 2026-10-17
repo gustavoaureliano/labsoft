@@ -35,6 +35,7 @@ class Integrations(Protocol):
     def has_access(self, student_id: str, course_id: str) -> bool: ...
     def recommendations(self, student_id: str) -> list[Course]: ...
     def notifications(self, user_id: str) -> list[dict[str, str]]: ...
+    def notify_certificate(self, user_id: str, certificate_id: str) -> None: ...
 
 
 class DemoIntegrations:
@@ -81,6 +82,10 @@ class DemoIntegrations:
 
     def notifications(self, user_id: str) -> list[dict[str, str]]:
         return []
+
+    def notify_certificate(self, user_id: str, certificate_id: str) -> None:
+        # No real delivery in the individual development adapter.
+        return None
 
 
 def get_integrations() -> Integrations:

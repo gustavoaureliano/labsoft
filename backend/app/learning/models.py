@@ -33,3 +33,19 @@ class LessonProgress(Base):
     position_seconds: Mapped[float] = mapped_column(Float)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Certificate(Base):
+    __tablename__ = "certificates"
+    __table_args__ = (UniqueConstraint("student_id", "course_id", name="uq_certificate_student_course"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_code: Mapped[str] = mapped_column(String(32), unique=True, default=lambda: uuid4().hex)
+    student_id: Mapped[str] = mapped_column(String(255))
+    course_id: Mapped[str] = mapped_column(String(255))
+    student_name: Mapped[str] = mapped_column(String(255))
+    course_title: Mapped[str] = mapped_column(String(255))
+    lesson_count: Mapped[int]
+    workload_seconds: Mapped[float] = mapped_column(Float)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    notification_sent: Mapped[bool] = mapped_column(default=False, server_default="false")

@@ -9,12 +9,14 @@ dependencies = [
     "pillow>=11,<13",
     "psycopg[binary]>=3.2,<4.0",
     "python-multipart>=0.0.20,<1.0",
+    "reportlab>=4,<5",
     "sqlalchemy>=2.0,<3.0",
     "uvicorn>=0.30,<1.0",
 ]
 
 [dependency-groups]
 dev = [
+    "pypdf>=5,<7",
     "httpx2>=2,<3",
     "pytest>=8.0,<10.0",
 ]

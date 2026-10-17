@@ -92,3 +92,28 @@ def test_concurrent_first_progress_and_delete_cascade(postgres_engine):
         session.delete(session.get(Lesson, "lesson"))
         session.commit()
         assert session.query(LessonProgress).count() == 0
+
+
+def test_concurrent_certificate_issuance(postgres_engine):
+    from concurrent.futures import ThreadPoolExecutor
+    from app.integrations import DemoIntegrations
+    from app.learning.certificates import issue_certificate
+    from app.learning.models import Lesson, LessonProgress, Certificate
+    from app.media.models import Media
+    from datetime import datetime, timezone
+    with Session(postgres_engine) as session:
+        media = Media(storage_key="videos/test.mp4", original_filename="test.mp4", content_type="video/mp4", size_bytes=1, status="available", duration_seconds=12)
+        session.add(media)
+        session.flush()
+        session.add(Lesson(id="certificate-lesson", course_id="fisica-quantica", title="A", position=1, media_id=media.id))
+        session.flush()
+        session.add(LessonProgress(student_id="aluno-demo", lesson_id="certificate-lesson", media_id=media.id, position_seconds=12, completed_at=datetime.now(timezone.utc)))
+        session.commit()
+    def issue(_):
+        with Session(postgres_engine) as session:
+            return str(issue_certificate(session, DemoIntegrations.users["aluno-demo"], DemoIntegrations(), "fisica-quantica").id)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ids = list(pool.map(issue, range(2)))
+    assert ids[0] == ids[1]
+    with Session(postgres_engine) as session:
+        assert session.query(Certificate).count() == 1
