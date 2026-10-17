@@ -44,6 +44,17 @@ def list_lessons(session: Session, course_id: str) -> list[Lesson]:
     ))
 
 
+def get_playback(session: Session, lesson_id: str) -> Lesson:
+    lesson = session.get(Lesson, lesson_id)
+    if lesson is None:
+        raise LessonNotFound("Aula não encontrada")
+    if lesson.media_id is None:
+        raise MediaUnavailable("A aula ainda não possui vídeo")
+    # Reuse media availability and storage checks rather than duplicating them.
+    media_service.get_video_content(session, lesson.media_id)
+    return lesson
+
+
 def associate_media(session: Session, lesson_id: str, media_id: UUID) -> Lesson:
     lesson = session.get(Lesson, lesson_id)
     if lesson is None:

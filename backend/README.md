@@ -132,6 +132,14 @@ A posição começa em 1 e é única dentro do curso (`409` em caso de conflito)
 
 É possível substituir o vídeo associado ou repetir a mesma associação. Nenhum vídeo antigo é excluído. Uploads sem associação permanecem acessíveis pelo identificador. Ainda não há autorização, integração com as telas, reordenação ou limpeza automática de mídias.
 
+## Abrir uma aula para reprodução
+
+`GET /api/learning/lessons/{lesson_id}/playback` retorna os dados da aula, `media_id` e `content_url`, um caminho relativo da API para o vídeo. Use esse caminho no mesmo servidor da API para acessar o conteúdo.
+
+Antes de retornar, verifica a existência da aula, a associação de vídeo, o estado `available` e o arquivo no armazenamento. Aula sem vídeo retorna `409`; aula inexistente, mídia indisponível ou arquivo ausente retorna `404`. A resposta não expõe caminhos no disco e não altera dados.
+
+Ainda não há autenticação, verificação de direito de acesso ou posição salva. A URL não é assinada nem temporária nesta etapa. A disponibilidade do arquivo é verificada novamente na rota de conteúdo.
+
 ## Testes do backend
 
 ```bash
