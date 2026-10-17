@@ -35,6 +35,7 @@ class LessonResponse(BaseModel):
     description: str
     position: int
     media_id: UUID | None
+    thumbnail_id: UUID | None
 
 
 class LessonPlaybackResponse(LessonResponse):

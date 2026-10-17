@@ -16,8 +16,8 @@ class UploadTooLarge(ValueError):
     pass
 
 
-def save_video(source: BinaryIO, extension: str) -> tuple[str, int]:
-    key = f"videos/{uuid4()}{extension}"
+def save_file(source: BinaryIO, extension: str, folder: str, max_bytes: int) -> tuple[str, int]:
+    key = f"{folder}/{uuid4()}{extension}"
     path = STORAGE_ROOT / key
     path.parent.mkdir(parents=True, exist_ok=True)
     size = 0
@@ -27,7 +27,7 @@ def save_video(source: BinaryIO, extension: str) -> tuple[str, int]:
         with target:
             while chunk := source.read(CHUNK_SIZE):
                 size += len(chunk)
-                if size > MAX_UPLOAD_BYTES:
+                if size > max_bytes:
                     raise UploadTooLarge("O vídeo excede o tamanho máximo permitido")
                 target.write(chunk)
             if size == 0:
@@ -37,6 +37,10 @@ def save_video(source: BinaryIO, extension: str) -> tuple[str, int]:
         raise
 
     return key, size
+
+
+def save_video(source: BinaryIO, extension: str) -> tuple[str, int]:
+    return save_file(source, extension, "videos", MAX_UPLOAD_BYTES)
 
 
 def delete_video(key: str) -> None:

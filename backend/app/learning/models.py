@@ -19,3 +19,4 @@ class Lesson(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     position: Mapped[int]
     media_id: Mapped[UUID | None] = mapped_column(ForeignKey("media.id"))
+    thumbnail_id: Mapped[UUID | None] = mapped_column(ForeignKey("media.id", name="fk_lessons_thumbnail"))

@@ -17,6 +17,27 @@ from app.media.service import MediaNotFound
 router = APIRouter(prefix="/api/learning", tags=["Aprendizagem"])
 
 
+@router.patch("/lessons/{lesson_id}/thumbnail", response_model=LessonResponse)
+def associate_thumbnail(
+    lesson_id: str, data: LessonMediaUpdate, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> LessonResponse:
+    try:
+        lesson = service.get_lesson(session, lesson_id)
+        require_course(user, integrations, lesson.course_id, write=True)
+        if data.media_id is not None:
+            media = media_service.get_media(session, data.media_id)
+            if media.owner_id != user.id:
+                raise HTTPException(403, "Imagem não pertence ao professor")
+        lesson = service.associate_thumbnail(session, lesson, data.media_id)
+    except (service.LessonNotFound, MediaNotFound) as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except service.MediaUnavailable as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return LessonResponse.model_validate(lesson)
+
+
 @router.get("/lessons/{lesson_id}/playback", response_model=LessonPlaybackResponse)
 def get_playback(
     lesson_id: str, request: Request,

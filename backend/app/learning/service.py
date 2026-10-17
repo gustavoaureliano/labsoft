@@ -110,8 +110,8 @@ def associate_media(session: Session, lesson_id: str, media_id: UUID | None) -> 
         raise LessonNotFound("Aula não encontrada")
     lock_course(session, lesson.course_id)
     if media_id is not None:
-        media = media_service.get_media(session, media_id)
-        if media.status != "available":
+        media = media_service.get_media(session, media_id, lock=True)
+        if media.status != "available" or not media.content_type.startswith("video/"):
             raise MediaUnavailable("A mídia precisa estar disponível para ser associada")
     lesson.media_id = media_id
     try:
@@ -119,4 +119,15 @@ def associate_media(session: Session, lesson_id: str, media_id: UUID | None) -> 
     except Exception:
         session.rollback()
         raise
+    return lesson
+
+
+def associate_thumbnail(session: Session, lesson: Lesson, media_id: UUID | None) -> Lesson:
+    lock_course(session, lesson.course_id)
+    if media_id is not None:
+        media = media_service.get_media(session, media_id, lock=True)
+        if media.status != "available" or media.content_type not in {"image/png", "image/jpeg"}:
+            raise MediaUnavailable("Thumbnail precisa ser uma imagem disponível")
+    lesson.thumbnail_id = media_id
+    session.commit()
     return lesson

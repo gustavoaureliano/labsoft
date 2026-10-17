@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.integrations import Course, Integrations, User
@@ -26,7 +26,7 @@ def require_course(user: User, integrations: Integrations, course_id: str, *, wr
 def require_media(user: User, integrations: Integrations, session: Session, media: Media) -> None:
     if user.role == "teacher" and media.owner_id == user.id:
         return
-    for course_id in session.scalars(select(Lesson.course_id).where(Lesson.media_id == media.id)):
+    for course_id in session.scalars(select(Lesson.course_id).where(or_(Lesson.media_id == media.id, Lesson.thumbnail_id == media.id))):
         course = integrations.course(course_id)
         if course and (
             (user.role == "teacher" and course.owner_id == user.id)

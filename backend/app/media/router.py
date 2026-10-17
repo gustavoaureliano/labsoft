@@ -16,6 +16,23 @@ from app.media.inspection import InspectionUnavailable
 router = APIRouter(prefix="/api/media", tags=["Mídia"])
 
 
+@router.post("/thumbnails", response_model=MediaResponse, status_code=201)
+def upload_thumbnail(
+    file: UploadFile, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> MediaResponse:
+    require_teacher(user)
+    try:
+        media = service.upload_thumbnail(session, file.file, file.filename or "", file.content_type or "", user.id)
+    except UploadTooLarge as exc:
+        raise HTTPException(413, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    finally:
+        file.file.close()
+    return MediaResponse.model_validate(media)
+
+
 @router.post("", response_model=MediaResponse, status_code=status.HTTP_201_CREATED)
 def upload_media(
     file: UploadFile, session: Annotated[Session, Depends(get_session)],

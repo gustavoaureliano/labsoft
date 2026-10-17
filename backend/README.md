@@ -174,7 +174,20 @@ uv run --env-file .env python -m app.claim_media UUID_DA_MIDIA professor-demo
 
 O comando recusa mídia já atribuída e verifica o proprietário dos cursos associados. Não altera os arquivos. O professor do curso ainda pode visualizar uma mídia antiga associada, mas precisa atribuí-la antes de realizar uma nova associação. As integrações demo devem estar ativadas explicitamente também no servidor.
 
-## Executar testes
+## Thumbnails e limpeza
+
+`POST /api/media/thumbnails` recebe JPEG/PNG de até 5 MiB e 20 megapixels, validando a imagem com Pillow. Associe com `PATCH /api/learning/lessons/{id}/thumbnail` e `{"media_id": "UUID"}`; envie `null` para remover. A imagem usa a mesma rota protegida de conteúdo. A interface usará a capa do curso como fallback, sem extrair frames.
+
+Limpeza explícita de uploads antigos não associados (vídeos ou thumbnails):
+
+```bash
+uv run --env-file .env python -m app.media.cleanup professor-demo --minimum-age-hours 24
+uv run --env-file .env python -m app.media.cleanup professor-demo --minimum-age-hours 24 --apply
+```
+
+Sem `--apply`, apenas lista candidatos. A operação ignora referências de aulas e arquivos recentes, limita-se ao professor indicado e bloqueia registros de mídia durante a operação no PostgreSQL. Associação também bloqueia o registro, evitando competir com a limpeza. Banco e disco não são uma transação distribuída: falhas de disco/commit são reportadas, e restauração deve considerar ambos. Nunca rode limpeza no armazenamento de testes apontando para dados reais.
+
+## Rodar testes
 
 ```bash
 uv run python -m pytest
