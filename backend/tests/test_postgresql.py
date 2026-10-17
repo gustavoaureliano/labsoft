@@ -51,3 +51,19 @@ def test_real_postgres_foreign_key(postgres_engine):
         with pytest.raises(IntegrityError):
             session.flush()
         session.rollback()
+
+
+def test_concurrent_course_reordering(postgres_engine):
+    from concurrent.futures import ThreadPoolExecutor
+    from app.learning.models import Lesson
+    from app.learning.service import reorder_lessons
+    with Session(postgres_engine) as session:
+        session.add_all([Lesson(id="a", course_id="c", title="A", position=1), Lesson(id="b", course_id="c", title="B", position=2)])
+        session.commit()
+    def reorder(ids):
+        with Session(postgres_engine) as session:
+            reorder_lessons(session, "c", ids)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(reorder, [["b", "a"], ["a", "b"]]))
+    with Session(postgres_engine) as session:
+        assert sorted(session.query(Lesson.position).all()) == [(1,), (2,)]

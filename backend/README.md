@@ -139,7 +139,16 @@ A posição começa em 1 e é única dentro do curso (`409` em caso de conflito)
 
 Antes de retornar, verifica a existência da aula, a associação de vídeo, o estado `available` e o arquivo no armazenamento. Aula sem vídeo retorna `409`; aula inexistente, mídia indisponível ou arquivo ausente retorna `404`. A resposta não expõe caminhos no disco e não altera dados.
 
-Ainda não há autenticação, verificação de direito de acesso ou posição salva. A URL não é assinada nem temporária nesta etapa. A disponibilidade do arquivo é verificada novamente na rota de conteúdo.
+Há autorização usando os contratos de identidade e acesso; a identidade demo não é autenticação segura. Ainda não há posição salva. A URL não é assinada nem temporária nesta etapa. A disponibilidade e a permissão são verificadas novamente na rota de conteúdo.
+
+## Edição e ordem das aulas
+
+- `PATCH /api/learning/lessons/{id}` altera título/descrição.
+- `PATCH /api/learning/lessons/{id}/media` com `media_id: null` remove a associação, não o arquivo.
+- `DELETE /api/learning/lessons/{id}` exclui a aula sem excluir seu vídeo.
+- `PUT /api/learning/courses/{course_id}/lessons/order` recebe `{"lesson_ids": ["id2", "id1"]}` contendo todas as aulas do curso, sem duplicatas.
+
+Todas essas operações são exclusivas do professor proprietário. A ordem é salva em transação; no PostgreSQL, um advisory lock por curso serializa alterações de ordem/criação/exclusão. Ordens concorrentes válidas seguem a última operação confirmada. Listas inválidas não alteram a ordem. Cursos sem seções externas usam uma única lista de aulas; não criamos outro gerenciador de módulos.
 
 ## Integrações individuais de desenvolvimento
 

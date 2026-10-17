@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_session
@@ -10,7 +10,7 @@ from app.learning.models import Lesson
 from app.media import service as media_service
 from app.learning import service
 from app.learning.schemas import (
-    LessonCreate, LessonMediaUpdate, LessonPlaybackResponse, LessonResponse,
+    LessonCreate, LessonMediaUpdate, LessonPlaybackResponse, LessonResponse, LessonUpdate, LessonOrder,
 )
 from app.media.service import MediaNotFound
 
@@ -79,12 +79,59 @@ def associate_media(
         if existing is None:
             raise service.LessonNotFound("Aula não encontrada")
         require_course(user, integrations, existing.course_id, write=True)
-        media = media_service.get_media(session, data.media_id)
-        if media.owner_id != user.id:
-            raise HTTPException(403, "A mídia não pertence ao professor")
+        if data.media_id is not None:
+            media = media_service.get_media(session, data.media_id)
+            if media.owner_id != user.id:
+                raise HTTPException(403, "A mídia não pertence ao professor")
         lesson = service.associate_media(session, lesson_id, data.media_id)
     except (service.LessonNotFound, MediaNotFound) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except service.MediaUnavailable as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return LessonResponse.model_validate(lesson)
+
+
+@router.patch("/lessons/{lesson_id}", response_model=LessonResponse)
+def update_lesson(
+    lesson_id: str, data: LessonUpdate, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> LessonResponse:
+    try:
+        lesson = service.get_lesson(session, lesson_id)
+        require_course(user, integrations, lesson.course_id, write=True)
+        lesson = service.update_lesson(session, lesson, data)
+    except service.LessonNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return LessonResponse.model_validate(lesson)
+
+
+@router.delete("/lessons/{lesson_id}", status_code=204)
+def delete_lesson(
+    lesson_id: str, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> Response:
+    try:
+        lesson = service.get_lesson(session, lesson_id)
+    except service.LessonNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    require_course(user, integrations, lesson.course_id, write=True)
+    service.delete_lesson(session, lesson)
+    return Response(status_code=204)
+
+
+@router.put("/courses/{course_id}/lessons/order", response_model=list[LessonResponse])
+def reorder_lessons(
+    course_id: str, data: LessonOrder, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> list[LessonResponse]:
+    require_course(user, integrations, course_id, write=True)
+    try:
+        lessons = service.reorder_lessons(session, course_id, data.lesson_ids)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return [LessonResponse.model_validate(lesson) for lesson in lessons]
