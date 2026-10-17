@@ -7,13 +7,15 @@ import { AppShell } from "@/components/layout/AppShell";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { currentLesson, enrolledCourse, lessonHref, lessonsFromIds } from "@/data/courses";
+import { lessonHref, lessonsFromIds } from "@/data/courses";
+import { useApi, lessonLink, type Course } from "@/lib/api/learning";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
+  const {data: courses, error: courseError} = useApi<Course[]>("/api/learning/courses");
   const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
   const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
   const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
@@ -40,18 +42,21 @@ export default function MeusCursos() {
 
         <section aria-labelledby="in-progress-title">
           <h2 id="in-progress-title">Em andamento</h2>
-          <article className={styles.course}>
-            <div className={styles.courseVisual}><Image alt={`Capa do curso ${enrolledCourse.title}`} fill priority sizes="(max-width: 750px) 100vw, 40vw" src={enrolledCourse.image} /><span>{enrolledCourse.category}</span></div>
+          {courseError && <p role="alert">{courseError}</p>}
+          {!courses && !courseError && <p role="status">Carregando cursos...</p>}
+          {courses?.length === 0 && <p>Nenhum curso com acesso disponível.</p>}
+          {courses?.map(course => <article className={styles.course} key={course.id}>
+            <div className={styles.courseVisual}><Image alt={`Capa do curso ${course.title}`} fill sizes="(max-width: 750px) 100vw, 40vw" src={course.image} /></div>
             <div className={styles.courseContent}>
-              <span className={styles.eyebrow}>{enrolledCourse.category} · {enrolledCourse.totalLessons} aulas</span>
-              <h3><Link href={`/meus-cursos/${enrolledCourse.id}`}>{enrolledCourse.title}</Link></h3>
-              <p>{enrolledCourse.teacher}</p>
-              <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
-              <ProgressBar value={enrolledCourse.progress} />
-              <p className={styles.nextLesson}>Próxima aula: {currentLesson.title}</p>
-              <div className={styles.courseActions}><PrimaryLink className={styles.primaryButton} href={lessonHref(currentLesson.id)}>Continuar curso</PrimaryLink><Link href={`/meus-cursos/${enrolledCourse.id}`}>Ver todas as aulas</Link></div>
+              <span className={styles.eyebrow}>{course.total_lessons} aulas · {course.completed ? "Concluído" : "Em andamento"}</span>
+              <h3><Link href={`/meus-cursos/${course.id}`}>{course.title}</Link></h3>
+              <p>{course.teacher}</p>
+              <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{course.progress}%</strong></div>
+              <ProgressBar value={course.progress} />
+              <p className={styles.nextLesson}>{course.continue_lesson ? `Próxima aula: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
+              <div className={styles.courseActions}>{course.continue_lesson && <PrimaryLink className={styles.primaryButton} href={lessonLink(course.continue_lesson.id)}>Continuar curso</PrimaryLink>}<Link href={`/meus-cursos/${course.id}`}>Ver todas as aulas</Link></div>
             </div>
-          </article>
+          </article>)}
         </section>
 
         {access.subscription?.plan === "complete" && access.subscription.status === "active" && <section aria-labelledby="new-access-title">
