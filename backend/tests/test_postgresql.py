@@ -148,3 +148,20 @@ def test_cleanup_skips_media_locked_for_association(postgres_engine, tmp_path, m
     with Session(postgres_engine) as session:
         associate_media(session, "association", media_id)
         assert cleanup(session, "professor-demo", 24, apply=True) == []
+
+
+def test_showcase_reset_on_postgresql(postgres_engine, tmp_path):
+    from app.seed_demo import reset_showcase
+    from scripts.generate_test_video import generate_video
+    from app.learning.models import Lesson, LessonProgress, Certificate
+    from app.media.models import Media
+    source = tmp_path / "source.mp4"
+    generate_video(source)
+    root = tmp_path / "storage"
+    with Session(postgres_engine) as session:
+        for _ in range(2):
+            assert reset_showcase(session, root, source)["lessons"] == 155
+            assert session.query(Lesson).count() == 155
+            assert session.query(Media).count() == 7
+            assert session.query(LessonProgress).count() == 28
+            assert session.query(Certificate).count() == 0

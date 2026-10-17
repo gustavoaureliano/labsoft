@@ -3,14 +3,15 @@
 import Link from "next/link";
 import type { CatalogCourse } from "@/data/catalog";
 import { formatPrice } from "@/data/catalog";
-import { enrolledCourse } from "@/data/courses";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useApi, type Course } from "@/lib/api/learning";
 import styles from "./Commerce.module.css";
 
 export function CourseDetails({ course }: { course: CatalogCourse }) {
   const [access, , ready] = useDemoStorage(accessDemoKey, initialAccessDemo);
-  const isEnrolled = course.id === enrolledCourse.id;
+  const learning = useApi<Course[]>("/api/learning/courses");
+  const accessibleCourse = learning.data?.find(item => item.id === course.id);
   const hasDemoAccess = access.courseIds.includes(course.id) || (access.subscription?.status === "active" && access.subscription.plan === "complete");
 
   let accessLabel = course.access === "free" ? "Acesso gratuito" : "Acesso ao curso";
@@ -18,11 +19,21 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
   let accessDescription = course.access === "free" ? "Adicione este curso à sua área de estudos." : "Compre somente este curso ou escolha a assinatura completa.";
   let action: { href: string; label: string } | null = { href: course.access === "free" ? `/checkout?curso=${course.id}&tipo=curso` : `/planos?curso=${course.id}`, label: course.access === "free" ? "Adicionar aos meus cursos" : "Escolher acesso" };
 
-  if (isEnrolled) {
-    accessLabel = "Curso em andamento";
-    accessValue = `${enrolledCourse.progress}% concluído`;
-    accessDescription = "Continue de onde parou na sua área de estudos.";
+  if (accessibleCourse) {
+    accessLabel = accessibleCourse.completed ? "Curso concluído" : "Curso disponível";
+    accessValue = `${accessibleCourse.progress}% concluído`;
+    accessDescription = "Seu acesso está disponível na área de estudos.";
     action = { href: `/meus-cursos/${course.id}`, label: "Continuar curso" };
+  } else if (!learning.data && !learning.error) {
+    accessLabel = "Verificando acesso";
+    accessValue = "Aguarde";
+    accessDescription = "Consultando seus cursos na API.";
+    action = null;
+  } else if (learning.error) {
+    accessLabel = "Acesso indisponível";
+    accessValue = "Tente novamente";
+    accessDescription = learning.error;
+    action = null;
   } else if (!ready) {
     accessLabel = "Verificando acesso";
     accessValue = "Aguarde";

@@ -249,6 +249,31 @@ Para a suíte completa, defina também `E2E_VIDEO_PATH` para o MP4 gerado e `E2E
 
 ## Demonstração e integração futura
 
+### Estado completo para navegação manual
+
+Para recriar um cenário completo e limpo, configure no `.env`:
+
+```text
+LEARNING_DEMO_MODE=true
+LEARNING_DEMO_SCENARIO=showcase
+```
+
+Em seguida, execute explicitamente:
+
+```bash
+uv run --env-file .env python -m app.seed_demo --reset --database aprovaai
+```
+
+**Destrutivo:** substitui todas as aulas, mídias, progressos e certificados do banco confirmado e os arquivos nas subpastas `videos/` e `thumbnails/` do `STORAGE_DIR` configurado. Arquivos fora dessas duas pastas são preservados. Symlinks nas pastas de upload e diretórios de código são rejeitados como alvo do reset. Não altera schema, Git, banco de testes ou armazenamento local do navegador. O vídeo é gerado e inspecionado antes do reset; a confirmação do nome do banco e o modo showcase são obrigatórios. Nunca roda ao iniciar a API. Execute com a API parada, sem uploads concorrentes.
+
+O cenário contém os sete cursos publicados e 155 aulas com os mesmos identificadores/títulos existentes quando disponíveis; os demais tópicos são aulas de prática fictícias. Cada curso recebe uma cópia do mesmo vídeo de 12 segundos. Termodinâmica continua rascunho, sem aulas para o aluno. O catálogo e os acessos permanecem no adaptador de demonstração, sem criar outro backend de cursos.
+
+`aluno-demo` acessa os sete cursos. Mecânica começa com sete aulas concluídas e Leis de Newton pela metade (58% do curso, posição 6s). Redação está concluída e pronta para emitir certificado; demais cursos começam sem progresso. `aluno-demo-2` continua restrito a Mecânica. Reinicie a API após alterar o `.env`, entre como aluno no site e abra Home/Meus Cursos. Reiniciar a página não apaga o progresso; apenas repetir o comando destrutivo restaura o cenário.
+
+O cenário padrão (`LEARNING_DEMO_SCENARIO=default`) mantém os fixtures pequenos/restritos para testes automatizados, sem ser alterado por este seed. O comando `app.seed` anterior continua sendo não destrutivo.
+
+### Integração dos demais módulos
+
 1. Aplique migrações e ative as integrações demo.
 2. Use `python -m app.seed` para criar aulas sem sobrescrever posições existentes.
 3. No site, entre como professor e abra um curso conhecido, como Física Quântica. Edite/crie aula, envie vídeo/thumbnail e visualize a prévia.

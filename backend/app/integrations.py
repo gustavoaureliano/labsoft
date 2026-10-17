@@ -92,6 +92,9 @@ class DemoIntegrations:
 def get_integrations() -> Integrations:
     if os.environ.get("LEARNING_DEMO_MODE", "false").lower() != "true":
         raise HTTPException(503, "Integrações reais ainda não configuradas")
+    if os.environ.get("LEARNING_DEMO_SCENARIO") == "showcase":
+        from app.showcase import ShowcaseIntegrations
+        return ShowcaseIntegrations()
     return DemoIntegrations()
 
 

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     if not (url.database or "").endswith("_test"):
         raise RuntimeError("Dedicated _test database required")
     root = Path(os.environ["STORAGE_DIR"]).resolve()
-    if "opencode" not in str(root) and "test" not in root.name:
+    if "test" not in root.name:
         raise RuntimeError("Explicit test storage directory required")
     path = root / "videos/e2e-fixture.mp4"
     if not path.exists():
