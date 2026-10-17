@@ -1,12 +1,14 @@
 # Backend — AprovaAí
 
-Estrutura inicial da API em Python com FastAPI.
+Backend individual de vídeo e aprendizagem em Python com FastAPI. Inclui mídia, aulas, progresso, Home e certificados; os outros domínios usam contratos demonstrativos explícitos.
 
 ## Requisitos
 
 - Python 3.12 ou superior
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - PostgreSQL com usuário e banco criados
+- `ffprobe` (pacote FFmpeg) para inspecionar vídeos
+- FFmpeg para gerar as mídias dos testes
 
 ## Executar
 
@@ -77,18 +79,18 @@ Após aplicar as migrações e iniciar a API, abra http://127.0.0.1:8000/docs e 
 Também é possível enviar pelo terminal:
 
 ```bash
-curl -F 'file=@/caminho/aula.mp4;type=video/mp4' http://127.0.0.1:8000/api/media
+curl -H 'X-Demo-User: professor-demo' -F 'file=@/caminho/aula.mp4;type=video/mp4' http://127.0.0.1:8000/api/media
 ```
 
 - Aceita extensões `.mp4` e `.webm` com os tipos declarados `video/mp4` e `video/webm`, respectivamente.
 - Novos uploads são inspecionados com `ffprobe` (instale FFmpeg no servidor). São aceitos MP4/H.264 e WebM/VP8/VP9, com duração positiva. A resposta inclui `duration_seconds` e `codec`. Isso não transcodifica nem garante suporte a todos os fluxos de áudio de cada navegador.
 - O limite padrão é 100 MiB. Configure `MAX_UPLOAD_BYTES` para alterá-lo.
 - Os arquivos são gravados em blocos, com nomes UUID, em `backend/storage/videos/`. `STORAGE_DIR` pode indicar outro diretório absoluto ou relativo a `backend/`.
-- A resposta `201` contém o identificador e os metadados públicos da mídia. O estado `available` indica que o arquivo foi armazenado, não que seus codecs foram verificados.
+- A resposta `201` contém o identificador e os metadados públicos da mídia. Novos vídeos disponíveis foram armazenados e inspecionados. Arquivos antigos podem precisar da inspeção explícita descrita abaixo.
 - Arquivo vazio ou formato inválido retorna `400`. Tamanho excedido retorna `413`.
 - A validação de tamanho acontece ao copiar o arquivo recebido. O parser multipart pode armazenar temporariamente a requisição antes disso; esse limite não é uma limitação do tráfego de entrada.
 
-Os endpoints de mídia são de desenvolvimento, ainda sem autorização ou associação com aula. Arquivos armazenados não são versionados no Git.
+As rotas aplicam autorização de proprietário/acesso. A identidade ainda é demonstrativa: ative `LEARNING_DEMO_MODE=true` e preencha `X-Demo-User` no `/docs`, ou use o cookie pelo site. Arquivos armazenados não são versionados no Git.
 
 ## Consultar e reproduzir vídeo
 
@@ -102,7 +104,7 @@ Abra `http://127.0.0.1:8000/api/media/{id}/content` no navegador, substituindo `
 Para solicitar apenas um trecho:
 
 ```bash
-curl -i -H 'Range: bytes=0-15' http://127.0.0.1:8000/api/media/ID/content
+curl -i -H 'X-Demo-User: professor-demo' -H 'Range: bytes=0-15' http://127.0.0.1:8000/api/media/ID/content
 ```
 
 O servidor retorna `206 Partial Content` e `Content-Range` para um intervalo válido. Um intervalo fora do arquivo retorna `416`. Mídia inexistente retorna `404`; na rota de conteúdo, mídia não disponível ou arquivo ausente também retorna `404`. Os metadados continuam consultáveis se apenas o arquivo estiver ausente.
@@ -127,11 +129,11 @@ Exemplo de criação de aula:
 }
 ```
 
-O backend gera o identificador da aula como uma string UUID. `course_id` aceita os identificadores textuais do frontend, mas ainda não consulta nem valida a existência do curso em outro módulo. As aulas demonstrativas existentes no frontend não são importadas automaticamente.
+O backend gera o identificador da aula como uma string UUID. `course_id` é validado no contrato de cursos (em memória no modo demo), sem criar uma tabela de cursos concorrente ao domínio do outro integrante. As aulas demonstrativas antigas do frontend não são importadas automaticamente.
 
 A posição começa em 1 e é única dentro do curso (`409` em caso de conflito). Curso sem aulas retorna uma lista vazia. Associação exige aula e mídia existentes (`404`) e mídia no estado `available` (`409` caso contrário). Essa validação consulta os metadados; a rota de conteúdo continua responsável por verificar a existência do arquivo.
 
-É possível substituir o vídeo associado ou repetir a mesma associação. Nenhum vídeo antigo é excluído. Uploads sem associação permanecem acessíveis pelo identificador. Ainda não há autorização, integração com as telas, reordenação ou limpeza automática de mídias.
+É possível substituir o vídeo associado ou repetir a mesma associação. Nenhum vídeo antigo é excluído. Uploads sem associação só podem ser consultados pelo proprietário. A gestão de aulas, uploads, reprodução, progresso e certificados estão integrados às telas. A criação/publicação de novos cursos e seus materiais ainda são demonstrativos de outro domínio; seus rascunhos locais continuam explicitamente separados de aulas reais. Não há limpeza automática.
 
 ## Abrir uma aula para reprodução
 
@@ -149,7 +151,7 @@ A aula é concluída ao informar pelo menos 90% da duração. Isso não comprova
 
 ## Home e cursos do aluno
 
-`GET /api/learning/courses` lista cursos acessíveis (ou cursos próprios para o professor). `GET /api/learning/courses/{id}` inclui aulas, seção padrão, estado de reprodução, thumbnails, progresso e aula para continuar. `GET /api/learning/dashboard` retorna os cursos, curso atual e recomendações/avisos dos contratos externos (vazios na implementação demo). Falhas nesses contratos opcionais não impedem a Home. Cursos sem aulas não estão concluídos. Cursos inacessíveis não são apresentados como reproduzíveis.
+`GET /api/learning/courses` lista cursos acessíveis (ou cursos próprios para o professor). `GET /api/learning/courses/{id}` inclui aulas, seção padrão, estado de reprodução, thumbnails, progresso e aula para continuar. `GET /api/learning/dashboard` retorna os cursos, curso atual e recomendações/avisos dos contratos externos (a recomendação demo é uma amostra fixa e os avisos são vazios). Falhas nesses contratos opcionais não impedem a Home. Cursos sem aulas não estão concluídos. Cursos inacessíveis não são apresentados como reproduzíveis.
 
 ## Gerenciar aulas
 
@@ -212,7 +214,59 @@ Falha na notificação não desfaz emissão; nova solicitação tenta novamente 
 
 O frontend encaminha `/api` para `BACKEND_URL` (padrão `http://127.0.0.1:8000`). Ative `LEARNING_DEMO_MODE=true` na API e entre novamente no site para definir também o cookie de identidade demo. O player nativo reproduz vídeos reais e salva a posição a cada cinco segundos, ao pausar e ao terminar. Falha de salvamento é informada; não se depende exclusivamente do fechamento da página.
 
+O Next.js usa `proxyClientMaxBodySize: "101mb"` para permitir o limite de 100 MiB mais overhead multipart. O proxy pode bufferizar uploads até esse limite; a entrega de conteúdo usa a resposta parcial/stream do servidor. Se aumentar `MAX_UPLOAD_BYTES`, ajuste também o limite do frontend. Essa configuração local não substitui controles de ingresso de uma futura implantação.
+
+Biblioteca, comentários, dúvidas e moderação continuam no navegador, mas recebem os IDs corretos de curso/aula. Referências antigas não são apagadas nem remapeadas silenciosamente. Itens sem resolução/acesso são informados como indisponíveis. A biblioteca é um adaptador local, não uma implementação do backend de outro integrante.
+
 Para Selenium com backend isolado, configure `TEST_DATABASE_URL` (banco `_test`) e `STORAGE_DIR` apontando para um diretório exclusivo de testes, execute `uv run --env-file .env python -m scripts.prepare_e2e` e inicie uma API separada usando esse banco e armazenamento. Encaminhe o frontend para essa API e rode `E2E_BACKEND=true node --test tests/e2e/backend-playback.test.ts` dentro de `frontend/`. Nunca prepare esses dados sobre o banco/armazenamento normal. Sem `E2E_BACKEND=true`, esse teste é ignorado explicitamente.
+
+Exemplo completo, após criar `aprovaai_learning_test` com o mesmo proprietário do banco local:
+
+```bash
+# Terminal do backend. Substitua a senha local, sem versionar este comando.
+export TEST_DATABASE_URL='postgresql+psycopg://aprovaai:SENHA@127.0.0.1:5432/aprovaai_learning_test'
+export STORAGE_DIR='/tmp/aprovaai-learning-test'
+uv run --env-file .env python -m scripts.prepare_e2e
+DATABASE_URL="$TEST_DATABASE_URL" LEARNING_DEMO_MODE=true uv run uvicorn app.main:app --port 18000
+```
+
+```bash
+# Terminal do frontend
+BACKEND_URL=http://127.0.0.1:18000 npm run dev
+```
+
+```bash
+# Outro terminal do frontend
+E2E_BACKEND=true \
+E2E_VIDEO_PATH=/tmp/aprovaai-learning-test/videos/e2e-fixture.mp4 \
+E2E_THUMBNAIL_PATH=/tmp/aprovaai-learning-test/thumbnails/e2e-fixture.png \
+npm run test:e2e
+```
+
+`prepare_e2e` é exclusivo do banco de teste: cria mídias conhecidas e associa apenas as aulas de fixture. Os cursos recebem mídias distintas para testar permissões sem acesso cruzado por uma mídia compartilhada. Para um estado completamente novo, pare os servidores de teste e recrie somente esse banco dedicado e o diretório de testes, nunca `aprovaai` ou o armazenamento normal. Não existe reset automático dos dados pessoais de desenvolvimento.
+
+Para a suíte completa, defina também `E2E_VIDEO_PATH` para o MP4 gerado e `E2E_THUMBNAIL_PATH` para o PNG gerado pelo script, e execute `E2E_BACKEND=true npm run test:e2e` no frontend. Os testes de aprendizagem existentes também precisam do backend e das aulas de exemplo. Chromium é headless por padrão; `E2E_HEADLESS=false` abre janela somente quando solicitado.
+
+## Demonstração e integração futura
+
+1. Aplique migrações e ative as integrações demo.
+2. Use `python -m app.seed` para criar aulas sem sobrescrever posições existentes.
+3. No site, entre como professor e abra um curso conhecido, como Física Quântica. Edite/crie aula, envie vídeo/thumbnail e visualize a prévia.
+4. Troque para aluno e abra Meus Cursos. Assista, avance, pause e recarregue. Confirme a posição salva e o progresso na Home/curso.
+5. Conclua as aulas e emita o certificado. Abra PDF e verificação.
+
+Para a mídia antiga enviada manualmente, execute os comandos explícitos de atribuição de proprietário e inspeção apenas se desejar completar seus metadados; nada é atribuído ou reinspecionado automaticamente.
+
+Para integrar os outros integrantes, substitua `get_integrations` e `get_current_user`: identidade/sessão real, dados/posse/publicação do curso, direitos de matrícula, recomendações/avisos e entrega idempotente de notificação. A biblioteca local será substituída pelo contrato de coleções ordenadas. Não existe autenticação real, pagamento, catálogo persistido ou envio real de mensagem nesta entrega individual.
+
+Backup/restauração deve preservar conjuntamente PostgreSQL e `STORAGE_DIR`. Migrações alteram estrutura, não movem arquivos nem geram backup. Certificados são gerados de snapshots no banco. Banco e arquivos não têm atomicidade distribuída: após uma queda de processo pode ser necessária reconciliação manual. Não exponha esta configuração demo à internet.
+
+## Validação desta entrega
+
+- 71 verificações de backend, incluindo PostgreSQL isolado, migrações, concorrência, permissões e conteúdo do PDF.
+- 38 testes de navegador/transporte na suíte completa em Chromium headless, usando a API e mídia de teste reais.
+- Lint, TypeScript e build de produção do frontend aprovados; permanece o aviso pré-existente de `<img>` no avatar do perfil.
+- Foram conferidas visualmente Home, videoaula e certificados. Nenhum arquivo de vídeo, credencial ou banco de testes é versionado.
 
 ## Comandos de teste
 
