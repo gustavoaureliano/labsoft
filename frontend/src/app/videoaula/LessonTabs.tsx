@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { questionHref } from "@/data/courses";
 import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
@@ -10,7 +9,7 @@ import styles from "./page.module.css";
 const tabs = ["Visão Geral", "Comentários", "Anotações", "Avaliações", "Materiais"] as const;
 type Tab = (typeof tabs)[number];
 
-export function LessonTabs({ description, lessonId, lessonTitle }: { description: string; lessonId: string; lessonTitle: string }) {
+export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { description: string; lessonId: string; lessonTitle: string; courseId: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Visão Geral");
   const [comment, setComment] = useState("");
   const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsStorageKey(lessonId), initialLessonInteractions);
@@ -69,7 +68,7 @@ export function LessonTabs({ description, lessonId, lessonTitle }: { description
             <p>Os comentários são públicos para os participantes do curso e servem para compartilhar observações sobre a aula.</p>
             <div className={styles.questionCallout}>
               <span>Precisa de uma resposta do professor?</span>
-              <Link href={questionHref(lessonId)}>Enviar dúvida ao professor</Link>
+              <Link href={`/duvidas?${new URLSearchParams({curso: courseId, aula: lessonId})}`}>Enviar dúvida ao professor</Link>
             </div>
             {interactions.comments.length ? (
               <ul className={styles.comments}>

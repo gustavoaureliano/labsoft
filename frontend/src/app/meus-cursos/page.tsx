@@ -7,8 +7,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { lessonHref, lessonsFromIds } from "@/data/courses";
-import { useApi, lessonLink, type Course } from "@/lib/api/learning";
+import { useApi, displayLessons, lessonLink, type Course } from "@/lib/api/learning";
+import { resolveLessons } from "@/lib/api/library";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
@@ -20,8 +20,8 @@ export default function MeusCursos() {
   const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
   const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const [playlistName, setPlaylistName] = useState("");
-  const historyLessons = lessonsFromIds(study.viewedLessons);
-  const favoriteLessons = lessonsFromIds(study.favoriteLessons);
+  const historyLessons = displayLessons(resolveLessons(study.viewedLessons, courses ?? []));
+  const favoriteLessons = displayLessons(resolveLessons(study.favoriteLessons, courses ?? []));
 
   function createPlaylist(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,14 +72,15 @@ export default function MeusCursos() {
             <button type="button" aria-pressed={activeTab === "playlists"} onClick={() => setActiveTab("playlists")}>Playlists</button>
           </div>
           <div className={styles.libraryContent}>
-            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
-            {activeTab === "favorites" && (favoriteLessons.length > 0 ? <CourseLessonList lessons={favoriteLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "favorites" })} /> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
+            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonLink(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
+            {activeTab === "favorites" && (favoriteLessons.length > 0 ? <CourseLessonList lessons={favoriteLessons} getLessonHref={(lesson) => lessonLink(lesson.id, { origin: "favorites" })} /> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
             {activeTab === "playlists" && <>
               <form className={styles.playlistForm} onSubmit={createPlaylist}><label htmlFor="playlist-name">Nova playlist</label><input id="playlist-name" value={playlistName} onChange={(event) => setPlaylistName(event.target.value)} maxLength={60} placeholder="Ex.: Revisão de Física" /><button type="submit" disabled={!playlistName.trim()}>Criar playlist</button></form>
               <ul className={styles.playlistList}>{study.playlists.map((playlist) => <li key={playlist.id}><Link href={`/meus-cursos/playlists/${playlist.id}`}><span><strong>{playlist.name}</strong><small>{playlist.lessonIds.length} {playlist.lessonIds.length === 1 ? "aula" : "aulas"}</small></span><b>Ver playlist →</b></Link></li>)}</ul>
             </>}
           </div>
           <p className={styles.demoNote}>Histórico, favoritos e playlists ficam somente neste navegador.</p>
+          {courses && (historyLessons.length < study.viewedLessons.length || favoriteLessons.length < study.favoriteLessons.length) && <p>Referências antigas ou sem acesso foram preservadas no navegador, mas não substituídas por outras aulas.</p>}
         </section>
       </div>
     </AppShell>
