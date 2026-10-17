@@ -147,7 +147,11 @@ Há autorização usando os contratos de identidade e acesso; a identidade demo 
 
 A aula é concluída ao informar pelo menos 90% da duração. Isso não comprova que todos os segundos foram assistidos. Recuar o vídeo atualiza a posição sem desfazer a conclusão. Trocar o vídeo invalida efetivamente a posição/conclusão anterior. Os saves concorrentes são serializados por curso: a última gravação confirmada vence. Excluir aula remove seu progresso; o vídeo é preservado. A limpeza também preserva mídias referenciadas por progresso.
 
-## Edição e ordem das aulas
+## Home e cursos do aluno
+
+`GET /api/learning/courses` lista cursos acessíveis (ou cursos próprios para o professor). `GET /api/learning/courses/{id}` inclui aulas, seção padrão, estado de reprodução, thumbnails, progresso e aula para continuar. `GET /api/learning/dashboard` retorna os cursos, curso atual e recomendações/avisos dos contratos externos (vazios na implementação demo). Falhas nesses contratos opcionais não impedem a Home. Cursos sem aulas não estão concluídos. Cursos inacessíveis não são apresentados como reproduzíveis.
+
+## Gerenciar aulas
 
 - `PATCH /api/learning/lessons/{id}` altera título/descrição.
 - `PATCH /api/learning/lessons/{id}/media` com `media_id: null` remove a associação, não o arquivo.

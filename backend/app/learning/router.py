@@ -9,6 +9,7 @@ from app.permissions import require_course
 from app.learning.models import Lesson
 from app.media import service as media_service
 from app.learning import progress
+from app.learning import dashboard
 from app.learning.schemas import ProgressResponse, ProgressUpdate
 from app.learning import service
 from app.learning.schemas import (
@@ -17,6 +18,33 @@ from app.learning.schemas import (
 from app.media.service import MediaNotFound
 
 router = APIRouter(prefix="/api/learning", tags=["Aprendizagem"])
+
+
+@router.get("/courses")
+def learning_courses(
+    session: Annotated[Session, Depends(get_session)], user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> list[dict]:
+    return dashboard.learning_courses(session, user, integrations)
+
+
+@router.get("/courses/{course_id}")
+def course_detail(
+    course_id: str, session: Annotated[Session, Depends(get_session)], user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> dict:
+    course = require_course(user, integrations, course_id)
+    return dashboard.course_detail(session, user, course)
+
+
+@router.get("/dashboard")
+def learning_dashboard(
+    session: Annotated[Session, Depends(get_session)], user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> dict:
+    if user.role != "student":
+        raise HTTPException(403, "Painel exclusivo do aluno")
+    return dashboard.dashboard(session, user, integrations)
 
 
 @router.patch("/lessons/{lesson_id}/thumbnail", response_model=LessonResponse)

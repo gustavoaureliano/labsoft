@@ -33,6 +33,8 @@ class Integrations(Protocol):
     def course(self, course_id: str) -> Course | None: ...
     def courses(self) -> list[Course]: ...
     def has_access(self, student_id: str, course_id: str) -> bool: ...
+    def recommendations(self, student_id: str) -> list[Course]: ...
+    def notifications(self, user_id: str) -> list[dict[str, str]]: ...
 
 
 class DemoIntegrations:
@@ -73,6 +75,12 @@ class DemoIntegrations:
 
     def has_access(self, student_id: str, course_id: str) -> bool:
         return (student_id, course_id) in self.grants
+
+    def recommendations(self, student_id: str) -> list[Course]:
+        return []
+
+    def notifications(self, user_id: str) -> list[dict[str, str]]:
+        return []
 
 
 def get_integrations() -> Integrations:
