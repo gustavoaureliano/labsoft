@@ -1,7 +1,7 @@
 from alembic import context
 
 from app.database import Base, engine
-from app.learning.models import Lesson
+from app.learning.models import Lesson, LessonProgress
 from app.media.models import Media
 
 target_metadata = Base.metadata

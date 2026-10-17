@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -41,3 +42,18 @@ class LessonResponse(BaseModel):
 class LessonPlaybackResponse(LessonResponse):
     media_id: UUID
     content_url: str
+    duration_seconds: float | None = None
+    position_seconds: float = 0
+    completed: bool = False
+
+
+class ProgressUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    position_seconds: float = Field(ge=0, allow_inf_nan=False)
+    media_id: UUID
+
+
+class ProgressResponse(BaseModel):
+    position_seconds: float
+    completed: bool
+    updated_at: datetime | None = None

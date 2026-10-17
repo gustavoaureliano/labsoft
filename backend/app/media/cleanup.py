@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.integrations import get_integrations
-from app.learning.models import Lesson
+from app.learning.models import Lesson, LessonProgress
 from app.media.models import Media
 from app.media.storage import get_video_path
 
@@ -26,6 +26,8 @@ def cleanup(session: Session, owner_id: str, minimum_age_hours: int, *, apply: b
             Lesson.media_id == media.id, Lesson.thumbnail_id == media.id
         )).limit(1))
         if reference is not None:
+            continue
+        if session.scalar(select(LessonProgress.lesson_id).where(LessonProgress.media_id == media.id).limit(1)) is not None:
             continue
         removed.append(str(media.id))
         if apply:

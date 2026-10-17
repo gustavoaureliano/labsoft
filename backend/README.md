@@ -139,7 +139,13 @@ A posição começa em 1 e é única dentro do curso (`409` em caso de conflito)
 
 Antes de retornar, verifica a existência da aula, a associação de vídeo, o estado `available` e o arquivo no armazenamento. Aula sem vídeo retorna `409`; aula inexistente, mídia indisponível ou arquivo ausente retorna `404`. A resposta não expõe caminhos no disco e não altera dados.
 
-Há autorização usando os contratos de identidade e acesso; a identidade demo não é autenticação segura. Ainda não há posição salva. A URL não é assinada nem temporária nesta etapa. A disponibilidade e a permissão são verificadas novamente na rota de conteúdo.
+Há autorização usando os contratos de identidade e acesso; a identidade demo não é autenticação segura. A resposta inclui duração, posição salva e conclusão. A URL não é assinada nem temporária nesta etapa. A disponibilidade e a permissão são verificadas novamente na rota de conteúdo.
+
+## Progresso
+
+`PATCH /api/learning/lessons/{id}/progress` recebe `{"media_id": "UUID-atual", "position_seconds": 4.5}`. A identidade vem da dependência; prévias do professor não gravam progresso. Posição negativa/não finita é rejeitada; posição além da duração retorna `400`, vídeo alterado ou sem duração verificada retorna `409`.
+
+A aula é concluída ao informar pelo menos 90% da duração. Isso não comprova que todos os segundos foram assistidos. Recuar o vídeo atualiza a posição sem desfazer a conclusão. Trocar o vídeo invalida efetivamente a posição/conclusão anterior. Os saves concorrentes são serializados por curso: a última gravação confirmada vence. Excluir aula remove seu progresso; o vídeo é preservado. A limpeza também preserva mídias referenciadas por progresso.
 
 ## Edição e ordem das aulas
 

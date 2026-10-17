@@ -67,3 +67,28 @@ def test_concurrent_course_reordering(postgres_engine):
         list(pool.map(reorder, [["b", "a"], ["a", "b"]]))
     with Session(postgres_engine) as session:
         assert sorted(session.query(Lesson.position).all()) == [(1,), (2,)]
+
+
+def test_concurrent_first_progress_and_delete_cascade(postgres_engine):
+    from concurrent.futures import ThreadPoolExecutor
+    from app.learning.models import Lesson, LessonProgress
+    from app.media.models import Media
+    from app.learning.progress import save_progress
+    with Session(postgres_engine) as session:
+        media = Media(storage_key="videos/test.mp4", original_filename="test.mp4", content_type="video/mp4", size_bytes=1, status="available", duration_seconds=12)
+        session.add(media)
+        session.flush()
+        media_id = media.id
+        session.add(Lesson(id="lesson", course_id="course", title="A", position=1, media_id=media_id))
+        session.commit()
+    def save(position):
+        with Session(postgres_engine) as session:
+            save_progress(session, "student", "lesson", media_id, position)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(save, [3, 4]))
+    with Session(postgres_engine) as session:
+        assert session.query(LessonProgress).count() == 1
+        assert session.get(LessonProgress, ("student", "lesson")).position_seconds in (3, 4)
+        session.delete(session.get(Lesson, "lesson"))
+        session.commit()
+        assert session.query(LessonProgress).count() == 0

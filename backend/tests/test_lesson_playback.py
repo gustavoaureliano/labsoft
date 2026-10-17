@@ -37,6 +37,7 @@ def test_playback_returns_lesson_and_working_content_url(playback_context):
     assert response.json() == {
         **lesson, "media_id": media["id"],
         "content_url": f"/api/media/{media['id']}/content",
+        "duration_seconds": 12.0, "position_seconds": 0, "completed": False,
     }
     video = client.get(response.json()["content_url"], headers={"Range": "bytes=0-3"})
     assert video.status_code == 206

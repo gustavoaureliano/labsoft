@@ -8,6 +8,8 @@ from app.integrations import Integrations, User, get_current_user, get_integrati
 from app.permissions import require_course
 from app.learning.models import Lesson
 from app.media import service as media_service
+from app.learning import progress
+from app.learning.schemas import ProgressResponse, ProgressUpdate
 from app.learning import service
 from app.learning.schemas import (
     LessonCreate, LessonMediaUpdate, LessonPlaybackResponse, LessonResponse, LessonUpdate, LessonOrder,
@@ -56,12 +58,37 @@ def get_playback(
     except service.MediaUnavailable as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     data = LessonResponse.model_validate(lesson).model_dump()
+    media = media_service.get_media(session, lesson.media_id)
+    saved = progress.get_progress(session, user.id, lesson) if user.role == "student" else ProgressResponse(position_seconds=0, completed=False)
     return LessonPlaybackResponse(
         **data,
+        duration_seconds=media.duration_seconds,
+        position_seconds=saved.position_seconds,
+        completed=saved.completed,
         content_url=str(request.app.url_path_for(
             "get_media_content", media_id=str(lesson.media_id)
         )),
     )
+
+
+@router.patch("/lessons/{lesson_id}/progress", response_model=ProgressResponse)
+def save_progress(
+    lesson_id: str, data: ProgressUpdate, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
+) -> ProgressResponse:
+    if user.role != "student":
+        raise HTTPException(403, "Prévia do professor não registra progresso")
+    try:
+        lesson = service.get_lesson(session, lesson_id)
+        require_course(user, integrations, lesson.course_id)
+        return progress.save_progress(session, user.id, lesson_id, data.media_id, data.position_seconds)
+    except (service.LessonNotFound, MediaNotFound) as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except service.MediaUnavailable as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @router.post("/lessons", response_model=LessonResponse, status_code=201)
