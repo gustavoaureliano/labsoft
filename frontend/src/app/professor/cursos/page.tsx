@@ -7,18 +7,23 @@ import { TeacherShell } from "@/components/teacher/TeacherShell";
 import { SimpleScreen } from "@/components/ui/SimpleScreen";
 import { initialTeacherCourses, teacherCoursesKey } from "@/data/teacherCourses";
 import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useApi, type Course } from "@/lib/api/learning";
 import styles from "./page.module.css";
 
 export default function GestaoCursos() {
   const [courses] = useDemoStorage(teacherCoursesKey, initialTeacherCourses);
+  const backend = useApi<Course[]>("/api/learning/courses");
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [sort, setSort] = useState("recentes");
   const orderedCourses = sort === "titulo" ? [...courses].sort((a, b) => a.title.localeCompare(b.title, "pt-BR")) : courses;
   const selected = courses.find((course) => course.id === selectedCourse);
+  const selectedBackend = backend.data?.find(course => course.id === selectedCourse);
 
   return (
     <TeacherShell activePage="courses">
       <SimpleScreen eyebrow="Área do professor" title="Gestão de cursos" description="Acompanhe seus cursos publicados e rascunhos.">
+        <p>Dados e indicadores dos cursos são demonstrativos; aulas dos cursos integrados são consultadas no backend.</p>
+        {backend.error && <p role="alert">Aulas reais indisponíveis: {backend.error}. Listagens locais abaixo são demonstrativas.</p>}
         <div className={styles.summary} aria-label="Resumo dos cursos">
           <article><span>Total de alunos</span><strong>18.420 inscritos</strong></article>
           <article><span>Tempo de vídeo publicado</span><strong>5h 51min</strong></article>
@@ -35,7 +40,7 @@ export default function GestaoCursos() {
               <div className={styles.image}><Image src={course.image} alt="" fill sizes="(max-width: 900px) 100vw, 30vw" /><span>{course.status}</span></div>
               <div className={styles.cardContent}>
                 <h3>{course.title}</h3>
-                <p>{course.students} · {course.lessons.length} {course.lessons.length === 1 ? "aula" : "aulas"}</p>
+                 <p>{course.students} · {backend.data?.find(item => item.id === course.id)?.lessons.length ?? course.lessons.length} aulas{backend.data?.some(item => item.id === course.id) ? "" : " demonstrativas"}</p>
                 <div className={styles.actions}>
                   <Link href={`/professor/cursos/${course.id}/editar`}>Editar</Link>
                   <button type="button" onClick={() => setSelectedCourse(selectedCourse === course.id ? null : course.id)}>{selectedCourse === course.id ? "Fechar aulas" : "Aulas"}</button>
@@ -44,7 +49,7 @@ export default function GestaoCursos() {
             </article>
           ))}
         </div>
-        {selected && <section className={styles.lessonPanel} aria-label={`Aulas de ${selected.title}`}><h2>Aulas de {selected.title}</h2>{selected.lessons.length ? <ol>{selected.lessons.map((lesson) => <li key={lesson.id}>{lesson.title}</li>)}</ol> : <p>Este rascunho ainda não tem aulas.</p>}</section>}
+        {selected && <section className={styles.lessonPanel} aria-label={`Aulas de ${selected.title}`}><h2>Aulas de {selected.title}</h2>{!selectedBackend && <p>Lista demonstrativa do navegador.</p>}{(selectedBackend?.lessons ?? selected.lessons).length ? <ol>{(selectedBackend?.lessons ?? selected.lessons).map((lesson) => <li key={lesson.id}>{lesson.title}</li>)}</ol> : <p>Este curso ainda não tem aulas.</p>}</section>}
       </SimpleScreen>
     </TeacherShell>
   );

@@ -1,6 +1,14 @@
 from app.integrations import DemoIntegrations, get_current_user
 from app.main import app
 from tests.test_lessons import create_lesson, upload
+import pytest
+
+
+@pytest.mark.parametrize("position", ["NaN", "Infinity", "-Infinity"])
+def test_nonfinite_progress_is_rejected(upload_context, position):
+    client, _, _ = upload_context
+    response = client.patch("/api/learning/lessons/any/progress", json={"media_id": "00000000-0000-0000-0000-000000000000", "position_seconds": position})
+    assert response.status_code == 422
 
 
 def test_resume_completion_rewind_and_media_replacement(upload_context):

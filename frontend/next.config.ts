@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     useTypeScriptCli: false,
+    proxyClientMaxBodySize: "101mb",
   },
 };
 

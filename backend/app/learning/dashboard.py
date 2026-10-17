@@ -28,6 +28,7 @@ def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course)
         "id": lesson.id, "course_id": lesson.course_id, "title": lesson.title,
         "description": lesson.description, "position": lesson.position,
         "media_id": str(lesson.media_id) if lesson.media_id else None,
+        "thumbnail_id": str(lesson.thumbnail_id) if lesson.thumbnail_id else None,
         "thumbnail_url": thumbnail_url, "duration_seconds": media.duration_seconds if media else None,
         "playable": playable, "position_seconds": progress.position_seconds,
         "completed": progress.completed,

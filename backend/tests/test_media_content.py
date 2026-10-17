@@ -33,6 +33,7 @@ def test_get_full_video(uploaded_video):
     assert int(response.headers["content-length"]) == len(content)
     assert response.headers["accept-ranges"] == "bytes"
     assert response.headers["content-disposition"].startswith("inline;")
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 @pytest.mark.parametrize(

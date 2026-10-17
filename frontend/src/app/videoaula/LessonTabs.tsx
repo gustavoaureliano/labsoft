@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, type LessonReport } from "@/data/lessonInteractionsDemo";
+import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
@@ -13,7 +13,9 @@ export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { d
   const [activeTab, setActiveTab] = useState<Tab>("Visão Geral");
   const [comment, setComment] = useState("");
   const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsStorageKey(lessonId), initialLessonInteractions);
-  const [report, saveReport] = useDemoStorage<LessonReport | null>(lessonReportStorageKey(lessonId), null);
+  const [localReport, saveReport] = useDemoStorage<LessonReport | null>(lessonReportStorageKey(lessonId), null);
+  const [latestReport, saveLatestReport] = useDemoStorage<LessonReport | null>(lessonReportKey, null);
+  const report = latestReport?.lessonId === lessonId ? latestReport : localReport;
   const [note, setNote] = useState<string | null>(null);
 
   function addComment(event: FormEvent<HTMLFormElement>) {
@@ -27,7 +29,11 @@ export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { d
   function reportLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const reason = String(new FormData(event.currentTarget).get("reason") ?? "").trim();
-    if (reason && !report) saveReport({ reason, lessonId, lessonTitle });
+    if (reason && !report) {
+      const next = {reason, lessonId, lessonTitle};
+      saveReport(next);
+      saveLatestReport(next); // Existing moderation demo consumes the latest report.
+    }
   }
 
   return (

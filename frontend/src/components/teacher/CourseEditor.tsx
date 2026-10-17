@@ -7,6 +7,7 @@ import { blankTeacherCourse, initialTeacherCourses, teacherCoursesKey, type Teac
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { DemoFileField } from "./DemoFileField";
 import { LessonEditor } from "./LessonEditor";
+import { DemoLessonDrafts } from "./DemoLessonDrafts";
 import styles from "./CourseEditor.module.css";
 
 export function CourseEditor({ courseId }: { courseId?: string }) {
@@ -64,7 +65,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
         </div>
       </section>
 
-      {isNew ? <section className={styles.card}><h2>2. Aulas</h2><p>A criação do curso ainda é demonstrativa. Para gerenciar aulas reais, abra um curso disponibilizado pelo contrato do backend.</p></section> : <LessonEditor courseId={initialCourse.id} />}
+      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <LessonEditor courseId={initialCourse.id} />}
 
       <section className={styles.card} aria-labelledby="materials-title">
         <div className={styles.sectionHeading}><div><h2 id="materials-title">3. Materiais complementares</h2><p>Envie PDFs, documentos, apresentações ou arquivos compactados.</p></div><DemoFileField accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" inputLabel="Enviar material" onSelect={addMaterial} /></div>

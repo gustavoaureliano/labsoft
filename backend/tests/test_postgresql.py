@@ -117,3 +117,34 @@ def test_concurrent_certificate_issuance(postgres_engine):
     assert ids[0] == ids[1]
     with Session(postgres_engine) as session:
         assert session.query(Certificate).count() == 1
+
+
+def test_cleanup_skips_media_locked_for_association(postgres_engine, tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timedelta, timezone
+    from app.learning.models import Lesson
+    from app.learning.service import associate_media
+    from app.media.models import Media
+    from app.media.service import get_media
+    from app.media.cleanup import cleanup
+    from app.media import storage
+    monkeypatch.setattr(storage, "STORAGE_ROOT", tmp_path)
+    with Session(postgres_engine) as session:
+        media = Media(owner_id="professor-demo", storage_key="a.mp4", original_filename="a.mp4", content_type="video/mp4", size_bytes=1, status="available", created_at=datetime.now(timezone.utc) - timedelta(days=2))
+        session.add(media)
+        session.flush()
+        media_id = media.id
+        session.add(Lesson(id="association", course_id="c", title="A", position=1))
+        session.commit()
+    (tmp_path / "a.mp4").write_bytes(b"x")
+    with Session(postgres_engine) as locked:
+        get_media(locked, media_id, lock=True)
+        def clean():
+            with Session(postgres_engine) as session:
+                return cleanup(session, "professor-demo", 24, apply=True)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            assert pool.submit(clean).result(timeout=10) == []
+        locked.rollback()
+    with Session(postgres_engine) as session:
+        associate_media(session, "association", media_id)
+        assert cleanup(session, "professor-demo", 24, apply=True) == []

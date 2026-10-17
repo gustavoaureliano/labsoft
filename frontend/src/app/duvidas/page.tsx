@@ -6,6 +6,7 @@ import { enrolledCourse } from "@/data/courses";
 import { initialProfile } from "@/data/profile";
 import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useApi, type Course } from "@/lib/api/learning";
 import styles from "./page.module.css";
 
 type Discussion = {
@@ -47,28 +48,28 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
   const query = use(searchParams);
   const requestedCourseId = firstParam(query.curso);
   const requestedLessonId = firstParam(query.aula);
-  const initialLessonId = requestedCourseId === enrolledCourse.id && enrolledCourse.lessons.some((item) => item.id === requestedLessonId)
-    ? requestedLessonId
-    : "";
-  const [lessonId, setLessonId] = useState(initialLessonId);
+  const {data: courses, error} = useApi<Course[]>("/api/learning/courses");
+  const [courseId, setCourseId] = useState(requestedCourseId ?? "");
+  const course = courseId ? courses?.find(item => item.id === courseId) : courses?.[0];
+  const [lessonId, setLessonId] = useState(requestedLessonId ?? "");
   const [questionText, setQuestionText] = useState("");
   const discussions = initialDiscussions;
   const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
   const [notice, setNotice] = useState("");
-  const selectedLesson = enrolledCourse.lessons.find((item) => item.id === lessonId);
+  const selectedLesson = course?.lessons.find((item) => item.id === lessonId);
 
   function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const prompt = questionText.trim();
-    if (!prompt) return;
+    if (!prompt || !course) return;
 
     saveSharedQuestions([{
       id: Date.now(),
       student: initialProfile.nickname,
-      courseId: enrolledCourse.id,
-      course: enrolledCourse.title,
+      courseId: course.id,
+      course: course.title,
       lessonId: selectedLesson?.id,
-      lesson: selectedLesson ? `Aula ${selectedLesson.number} — ${selectedLesson.title}` : "Dúvida geral sobre o curso",
+      lesson: selectedLesson ? `Aula ${selectedLesson.position} — ${selectedLesson.title}` : "Dúvida geral sobre o curso",
       prompt,
     }, ...sharedQuestions]);
     setQuestionText("");
@@ -81,19 +82,22 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
         <section className={styles.compose} aria-labelledby="compose-title">
           <h1 id="compose-title">Enviar nova dúvida ao professor</h1>
           <p className={styles.composeDescription}>Esta conversa fica entre você e o professor. Selecione uma aula ou envie uma dúvida geral sobre o curso.</p>
+          {error && <p role="alert">{error}</p>}
+          <p>As dúvidas continuam demonstrativas neste navegador; curso e aula usam os identificadores reais.</p>
           <form onSubmit={submitQuestion}>
             <div className={styles.selects}>
               <label>
                 <span className={styles.visuallyHidden}>Curso</span>
-                <select name="course" defaultValue={enrolledCourse.id}>
-                  <option value={enrolledCourse.id}>{enrolledCourse.title}</option>
+                <select name="course" value={course?.id ?? ""} onChange={event => {setCourseId(event.target.value); setLessonId("");}}>
+                  {!course && <option value="">Selecione um curso disponível</option>}
+                  {courses?.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
                 </select>
               </label>
               <label>
                 <span className={styles.visuallyHidden}>Aula</span>
-                <select name="lesson" onChange={(event) => setLessonId(event.target.value)} value={lessonId}>
+                <select name="lesson" onChange={(event) => setLessonId(event.target.value)} value={selectedLesson?.id ?? ""}>
                   <option value="">Dúvida geral sobre o curso</option>
-                  {enrolledCourse.lessons.map((lessonOption) => <option key={lessonOption.id} value={lessonOption.id}>Aula {lessonOption.number} — {lessonOption.title}</option>)}
+                  {course?.lessons.map((lessonOption) => <option key={lessonOption.id} value={lessonOption.id}>Aula {lessonOption.position} — {lessonOption.title}</option>)}
                 </select>
               </label>
             </div>
@@ -108,7 +112,7 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
             />
             <div className={styles.composeFooter}>
               <p>Seu plano Mensal garante respostas em até 24 horas úteis.</p>
-              <button className={styles.primaryButton} type="submit">Enviar Pergunta</button>
+              <button className={styles.primaryButton} type="submit" disabled={!course}>Enviar Pergunta</button>
             </div>
             <p className={styles.notice} aria-live="polite" role="status">{notice}</p>
           </form>

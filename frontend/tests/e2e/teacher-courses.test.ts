@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
-test("o professor cria um curso com uma aula e o encontra na gestão", async () => {
+test("o professor consulta aulas reais e mantém a criação demonstrativa de cursos", async () => {
   const videoPath = "/tmp/aprova-demo-video.mp4";
   const materialPath = "/tmp/aprova-demo-material.pdf";
   const thumbnailPath = resolve("public/images/video/leis-de-newton.webp");
@@ -16,9 +16,9 @@ test("o professor cria um curso com uma aula e o encontra na gestão", async () 
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Gestão de cursos"]')), 10000);
     const cards = await driver.findElements(By.css("article"));
     assert.ok(cards.length >= 3);
-    assert.match(await driver.findElement(By.css("main")).getText(), /Física para o ENEM: Mecânica[\s\S]*6\.000 alunos · 12 aulas/);
+    await driver.wait(async () => /Física para o ENEM: Mecânica[\s\S]*6\.000 alunos · 2 aulas/.test(await driver.findElement(By.css("main")).getText()), 10000);
     await driver.findElement(By.xpath('//button[normalize-space()="Aulas"]')).click();
-    assert.match(await driver.findElement(By.css("main")).getText(), /Introdução e contexto histórico/);
+    assert.match(await driver.findElement(By.css('section[aria-label="Aulas de Introdução à Física Quântica"]')).getText(), /Introdução/);
     await driver.findElement(By.css("select")).sendKeys("Título");
     await driver.findElement(By.linkText("+ Novo curso")).click();
     await driver.wait(until.urlContains("/professor/cursos/novo"), 10000);

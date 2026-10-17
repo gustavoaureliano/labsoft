@@ -18,7 +18,7 @@ test("o visitante conhece cursos e entra pela landing pública", async () => {
     await driver.findElement(By.css('input[name="password"]')).sendKeys("demo");
     await driver.findElement(By.css('button[type="submit"]')).click();
     await driver.wait(until.urlIs(`${baseUrl}/`), 10000);
-    await driver.findElement(By.linkText("Explorar todos")).click();
+    await (await driver.wait(until.elementLocated(By.linkText("Explorar todos")), 10000)).click();
     await driver.wait(until.urlContains("/explorar-cursos"), 10000);
   }, null);
 });

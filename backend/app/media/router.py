@@ -73,7 +73,7 @@ def get_media(
     "/{media_id}/content",
     response_class=FileResponse,
     responses={
-        200: {"content": {"video/mp4": {}, "video/webm": {}}},
+        200: {"content": {"video/mp4": {}, "video/webm": {}, "image/png": {}, "image/jpeg": {}}},
         206: {"description": "Trecho do vídeo solicitado por HTTP Range"},
         404: {"description": "Mídia indisponível ou arquivo não encontrado"},
         416: {"description": "Intervalo solicitado fora do arquivo"},
@@ -94,4 +94,5 @@ def get_media_content(
         media_type=media.content_type,
         filename=media.original_filename,
         content_disposition_type="inline",
+        headers={"Cache-Control": "private, no-store", "Vary": "Cookie, Authorization, X-Demo-User"},
     )

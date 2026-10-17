@@ -118,4 +118,4 @@ def detail(certificate_id: UUID, session: Annotated[Session, Depends(get_session
 @router.get("/certificates/{certificate_id}/download")
 def download(certificate_id: UUID, session: Annotated[Session, Depends(get_session)], user: Annotated[User, Depends(get_current_user)]) -> Response:
     certificate = owned_certificate(session, user, certificate_id)
-    return Response(certificate_pdf(certificate), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="certificado-{certificate.id}.pdf"'})
+    return Response(certificate_pdf(certificate), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="certificado-{certificate.id}.pdf"', "Cache-Control": "private, no-store"})

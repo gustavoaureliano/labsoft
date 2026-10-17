@@ -23,3 +23,17 @@ test("o aluno reproduz um vídeo real, busca posição e retoma após recarregar
     assert.match(result.range, /^bytes 0-15\//);
   });
 });
+
+test("o aluno sem matrícula não contorna acesso pela URL direta do vídeo", {skip: process.env.E2E_BACKEND !== "true"}, async () => {
+  await withBrowser(async driver => {
+    await driver.get(`${baseUrl}/videoaula?aula=demo-quantica-introducao`);
+    const video = await driver.wait(until.elementLocated(By.css("video")), 10000);
+    const url = await video.getAttribute("src");
+    await driver.executeScript("document.cookie = 'aprovaai_demo_user=aluno-demo-2; Path=/; SameSite=Lax'");
+    const status = await driver.executeAsyncScript<number>("const url = arguments[0], done = arguments[arguments.length - 1]; fetch(url, {headers: {Range: 'bytes=0-15'}}).then(r => done(r.status));", url);
+    assert.equal(status, 403);
+    await driver.navigate().refresh();
+    await driver.wait(until.elementLocated(By.css('[role="alert"]')), 10000);
+    assert.equal((await driver.findElements(By.css("video"))).length, 0);
+  });
+});

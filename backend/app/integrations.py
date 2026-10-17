@@ -7,8 +7,9 @@ or authentication backend. Replace get_integrations when those modules exist.
 import os
 from dataclasses import dataclass
 from typing import Protocol
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request
 
 
 @dataclass(frozen=True)
@@ -78,7 +79,7 @@ class DemoIntegrations:
         return (student_id, course_id) in self.grants
 
     def recommendations(self, student_id: str) -> list[Course]:
-        return []
+        return [self.catalog["biologia-celular"]] if student_id == "aluno-demo" else []
 
     def notifications(self, user_id: str) -> list[dict[str, str]]:
         return []
@@ -94,9 +95,13 @@ def get_integrations() -> Integrations:
     return DemoIntegrations()
 
 
-def get_current_user(request: Request, integrations: Integrations = Depends(get_integrations)) -> User:
+def get_current_user(
+    request: Request,
+    integrations: Integrations = Depends(get_integrations),
+    x_demo_user: Annotated[str | None, Header(alias="X-Demo-User")] = None,
+) -> User:
     # Explicitly insecure development identity; never enabled implicitly.
-    identity = request.headers.get("X-Demo-User") or request.cookies.get("aprovaai_demo_user")
+    identity = x_demo_user or request.headers.get("X-Demo-User") or request.cookies.get("aprovaai_demo_user")
     user = integrations.user(identity or "")
     if user is None:
         raise HTTPException(401, "Identifique o usuário de desenvolvimento")

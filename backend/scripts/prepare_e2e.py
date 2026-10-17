@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import shutil
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
@@ -34,16 +35,24 @@ if __name__ == "__main__":
     engine = create_engine(url)
     with Session(engine) as session:
         seed_lessons(session)
-        media_id = uuid5(NAMESPACE_URL, "aprovaai-e2e-fixture")
-        media = session.get(Media, media_id)
-        if media is None:
-            media = Media(id=media_id, storage_key="videos/e2e-fixture.mp4", original_filename="e2e-fixture.mp4", content_type="video/mp4", size_bytes=path.stat().st_size, status="available", owner_id="professor-demo", duration_seconds=12, codec="h264")
-            session.add(media)
-            session.flush()
-        for lesson_id in ("demo-quantica-introducao", "demo-quantica-radiacao", "demo-mecanica-vetores", "demo-mecanica-movimento"):
-            lesson = session.get(Lesson, lesson_id)
-            if lesson:
-                lesson.media_id = media_id
+        for course, ids in (
+            ("quantica", ("demo-quantica-introducao", "demo-quantica-radiacao")),
+            ("mecanica", ("demo-mecanica-vetores", "demo-mecanica-movimento")),
+        ):
+            key = f"videos/e2e-{course}.mp4"
+            target = root / key
+            if not target.exists():
+                shutil.copyfile(path, target)
+            media_id = uuid5(NAMESPACE_URL, f"aprovaai-e2e-{course}")
+            media = session.get(Media, media_id)
+            if media is None:
+                media = Media(id=media_id, storage_key=key, original_filename=target.name, content_type="video/mp4", size_bytes=target.stat().st_size, status="available", owner_id="professor-demo", duration_seconds=12, codec="h264")
+                session.add(media)
+                session.flush()
+            for lesson_id in ids:
+                lesson = session.get(Lesson, lesson_id)
+                if lesson:
+                    lesson.media_id = media_id
         session.commit()
     engine.dispose()
     print("Dedicated test lessons/video ready")
