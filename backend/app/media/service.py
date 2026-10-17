@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.media import storage
 from app.media.models import Media
+from app.media.inspection import inspect_video
 
 VIDEO_TYPES = {".mp4": "video/mp4", ".webm": "video/webm"}
 
@@ -41,7 +42,10 @@ def upload_video(
 
     key, size = storage.save_video(source, extension)
     try:
+        info = inspect_video(storage.get_video_path(key), content_type)
         media = Media(
+            duration_seconds=info.duration_seconds,
+            codec=info.codec,
             owner_id=owner_id,
             storage_key=key,
             original_filename=filename,

@@ -11,6 +11,7 @@ from app.permissions import require_media, require_teacher
 from app.media import service
 from app.media.schemas import MediaResponse
 from app.media.storage import UploadTooLarge
+from app.media.inspection import InspectionUnavailable
 
 router = APIRouter(prefix="/api/media", tags=["Mídia"])
 
@@ -27,6 +28,8 @@ def upload_media(
         )
     except UploadTooLarge as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc
+    except InspectionUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     finally:

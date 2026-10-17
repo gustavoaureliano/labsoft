@@ -13,3 +13,5 @@ class MediaResponse(BaseModel):
     size_bytes: int
     status: str
     created_at: datetime
+    duration_seconds: float | None
+    codec: str | None

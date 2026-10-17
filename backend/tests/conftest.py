@@ -11,6 +11,8 @@ from app.database import Base, get_session
 from app.main import app
 from app.media import storage
 from app.integrations import DemoIntegrations, get_integrations, get_current_user
+from app.media import service as media_service
+from app.media.inspection import VideoInfo
 
 
 @pytest.fixture
@@ -23,6 +25,8 @@ def upload_context(tmp_path, monkeypatch):
     sessions = sessionmaker(bind=engine)
     root = tmp_path / "storage"
     monkeypatch.setattr(storage, "STORAGE_ROOT", root)
+    # Transport tests deliberately isolate probing. Real files are covered separately.
+    monkeypatch.setattr(media_service, "inspect_video", lambda *args: VideoInfo(12.0, "h264"))
 
     def test_session():
         with sessions() as session:

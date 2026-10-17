@@ -80,7 +80,8 @@ Também é possível enviar pelo terminal:
 curl -F 'file=@/caminho/aula.mp4;type=video/mp4' http://127.0.0.1:8000/api/media
 ```
 
-- Aceita extensões `.mp4` e `.webm` com os tipos declarados `video/mp4` e `video/webm`, respectivamente. Ainda não inspeciona o conteúdo ou os codecs.
+- Aceita extensões `.mp4` e `.webm` com os tipos declarados `video/mp4` e `video/webm`, respectivamente.
+- Novos uploads são inspecionados com `ffprobe` (instale FFmpeg no servidor). São aceitos MP4/H.264 e WebM/VP8/VP9, com duração positiva. A resposta inclui `duration_seconds` e `codec`. Isso não transcodifica nem garante suporte a todos os fluxos de áudio de cada navegador.
 - O limite padrão é 100 MiB. Configure `MAX_UPLOAD_BYTES` para alterá-lo.
 - Os arquivos são gravados em blocos, com nomes UUID, em `backend/storage/videos/`. `STORAGE_DIR` pode indicar outro diretório absoluto ou relativo a `backend/`.
 - A resposta `201` contém o identificador e os metadados públicos da mídia. O estado `available` indica que o arquivo foi armazenado, não que seus codecs foram verificados.
@@ -171,3 +172,9 @@ uv run python -m pytest
 ```
 
 Os testes de upload e consulta usam SQLite e arquivos temporários, sem alterar o PostgreSQL ou os vídeos locais. Verificam os bytes entregues e HTTP Range; não testam decodificação ou reprodução visual no navegador.
+
+Testes de inspeção geram vídeos reais de 12 segundos com FFmpeg em diretórios temporários. Para gerar manualmente um vídeo descartável: `uv run python scripts/generate_test_video.py /caminho/temporario/teste.mp4`.
+
+Para inspecionar um upload anterior explicitamente, sem alterar o arquivo: `uv run --env-file .env python -m app.inspect_media UUID_DA_MIDIA`. Falhas não apagam o vídeo original. Novas colunas permanecem nulas até essa inspeção.
+
+Testes PostgreSQL são opcionais: configure `TEST_DATABASE_URL` para um banco exclusivo cujo nome termine em `_test`. O papel não precisa de permissão de criar bancos, apenas de schemas nesse banco. Os testes criam/removem somente schemas aleatórios próprios. Nunca use o banco normal da aplicação. Sem essa variável, esses testes são marcados como ignorados.
