@@ -106,6 +106,32 @@ curl -i -H 'Range: bytes=0-15' http://127.0.0.1:8000/api/media/ID/content
 
 O servidor retorna `206 Partial Content` e `Content-Range` para um intervalo válido. Um intervalo fora do arquivo retorna `416`. Mídia inexistente retorna `404`; na rota de conteúdo, mídia não disponível ou arquivo ausente também retorna `404`. Os metadados continuam consultáveis se apenas o arquivo estiver ausente.
 
+## Aulas e associação de vídeo
+
+Depois de aplicar as migrações, use os endpoints no `/docs`:
+
+1. `POST /api/learning/lessons`: cria uma aula sem vídeo.
+2. `POST /api/media`: envia um vídeo e retorna seu `id`.
+3. `PATCH /api/learning/lessons/{lesson_id}/media`: associa o vídeo já enviado com `{"media_id": "UUID-da-midia"}`.
+4. `GET /api/learning/courses/{course_id}/lessons`: lista as aulas em ordem de `position`, incluindo `media_id`.
+
+Exemplo de criação de aula:
+
+```json
+{
+  "course_id": "fisica-quantica",
+  "title": "Introdução",
+  "description": "Contexto histórico da física quântica",
+  "position": 1
+}
+```
+
+O backend gera o identificador da aula como uma string UUID. `course_id` aceita os identificadores textuais do frontend, mas ainda não consulta nem valida a existência do curso em outro módulo. As aulas demonstrativas existentes no frontend não são importadas automaticamente.
+
+A posição começa em 1 e é única dentro do curso (`409` em caso de conflito). Curso sem aulas retorna uma lista vazia. Associação exige aula e mídia existentes (`404`) e mídia no estado `available` (`409` caso contrário). Essa validação consulta os metadados; a rota de conteúdo continua responsável por verificar a existência do arquivo.
+
+É possível substituir o vídeo associado ou repetir a mesma associação. Nenhum vídeo antigo é excluído. Uploads sem associação permanecem acessíveis pelo identificador. Ainda não há autorização, integração com as telas, reordenação ou limpeza automática de mídias.
+
 ## Testes do backend
 
 ```bash
