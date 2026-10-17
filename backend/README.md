@@ -87,7 +87,24 @@ curl -F 'file=@/caminho/aula.mp4;type=video/mp4' http://127.0.0.1:8000/api/media
 - Arquivo vazio ou formato inválido retorna `400`. Tamanho excedido retorna `413`.
 - A validação de tamanho acontece ao copiar o arquivo recebido. O parser multipart pode armazenar temporariamente a requisição antes disso; esse limite não é uma limitação do tráfego de entrada.
 
-Este endpoint é de desenvolvimento, ainda sem autorização, associação com aula ou reprodução. Arquivos armazenados não são versionados no Git.
+Os endpoints de mídia são de desenvolvimento, ainda sem autorização ou associação com aula. Arquivos armazenados não são versionados no Git.
+
+## Consultar e reproduzir vídeo
+
+Use o `id` retornado pelo upload:
+
+- `GET /api/media/{id}`: consulta os metadados, sem expor o caminho no disco.
+- `GET /api/media/{id}/content`: entrega o arquivo para reprodução no navegador.
+
+Abra `http://127.0.0.1:8000/api/media/{id}/content` no navegador, substituindo `{id}` pelo identificador. A reprodução depende de o arquivo ser um vídeo válido com codecs suportados pelo navegador.
+
+Para solicitar apenas um trecho:
+
+```bash
+curl -i -H 'Range: bytes=0-15' http://127.0.0.1:8000/api/media/ID/content
+```
+
+O servidor retorna `206 Partial Content` e `Content-Range` para um intervalo válido. Um intervalo fora do arquivo retorna `416`. Mídia inexistente retorna `404`; na rota de conteúdo, mídia não disponível ou arquivo ausente também retorna `404`. Os metadados continuam consultáveis se apenas o arquivo estiver ausente.
 
 ## Testes do backend
 
@@ -95,4 +112,4 @@ Este endpoint é de desenvolvimento, ainda sem autorização, associação com a
 uv run python -m pytest
 ```
 
-Os testes de upload usam SQLite e arquivos temporários, sem alterar o PostgreSQL ou os vídeos locais.
+Os testes de upload e consulta usam SQLite e arquivos temporários, sem alterar o PostgreSQL ou os vídeos locais. Verificam os bytes entregues e HTTP Range; não testam decodificação ou reprodução visual no navegador.

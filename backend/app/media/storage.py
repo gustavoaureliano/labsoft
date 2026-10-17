@@ -41,3 +41,11 @@ def save_video(source: BinaryIO, extension: str) -> tuple[str, int]:
 
 def delete_video(key: str) -> None:
     (STORAGE_ROOT / key).unlink(missing_ok=True)
+
+
+def get_video_path(key: str) -> Path:
+    root = STORAGE_ROOT.resolve()
+    path = (root / key).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise FileNotFoundError("Arquivo de vídeo não encontrado")
+    return path

@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import BinaryIO
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,24 @@ from app.media import storage
 from app.media.models import Media
 
 VIDEO_TYPES = {".mp4": "video/mp4", ".webm": "video/webm"}
+
+
+class MediaNotFound(LookupError):
+    pass
+
+
+def get_media(session: Session, media_id: UUID) -> Media:
+    media = session.get(Media, media_id)
+    if media is None:
+        raise MediaNotFound("Mídia não encontrada")
+    return media
+
+
+def get_video_content(session: Session, media_id: UUID) -> tuple[Media, Path]:
+    media = get_media(session, media_id)
+    if media.status != "available":
+        raise MediaNotFound("Vídeo indisponível")
+    return media, storage.get_video_path(media.storage_key)
 
 
 def upload_video(
