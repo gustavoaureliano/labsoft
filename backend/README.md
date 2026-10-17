@@ -154,6 +154,16 @@ uv run --env-file .env python -m app.seed
 
 Esse comando nunca roda ao iniciar o servidor. Não importa vídeos nem substitui o módulo de cursos dos outros integrantes.
 
+As rotas de aula e mídia agora exigem identidade: professor proprietário cria/associa; aluno com acesso válido assiste; o professor proprietário pode visualizar prévias. O arquivo e as requisições Range passam pelas mesmas verificações. Upload não associado é privado do professor que o enviou.
+
+Uploads anteriores ficam com `owner_id` nulo, sem atribuição automática. Para atribuir explicitamente uma mídia antiga:
+
+```bash
+uv run --env-file .env python -m app.claim_media UUID_DA_MIDIA professor-demo
+```
+
+O comando recusa mídia já atribuída e verifica o proprietário dos cursos associados. Não altera os arquivos. O professor do curso ainda pode visualizar uma mídia antiga associada, mas precisa atribuí-la antes de realizar uma nova associação. As integrações demo devem estar ativadas explicitamente também no servidor.
+
 ## Executar testes
 
 ```bash

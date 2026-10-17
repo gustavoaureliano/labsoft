@@ -39,10 +39,10 @@ def test_lessons_are_ordered_and_filtered(upload_context):
     client, _, _ = upload_context
     second = create_lesson(client, 2)
     first = create_lesson(client, 1)
-    create_lesson(client, 1, "outro-curso")
+    create_lesson(client, 1, "fisica-enem-mecanica")
     response = client.get("/api/learning/courses/fisica-quantica/lessons")
     assert [item["id"] for item in response.json()] == [first["id"], second["id"]]
-    assert client.get("/api/learning/courses/sem-aulas/lessons").json() == []
+    assert client.get("/api/learning/courses/sem-aulas/lessons").status_code == 404
 
 
 def test_duplicate_position(upload_context):

@@ -6,6 +6,8 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_session
+from app.integrations import Integrations, User, get_current_user, get_integrations
+from app.permissions import require_media, require_teacher
 from app.media import service
 from app.media.schemas import MediaResponse
 from app.media.storage import UploadTooLarge
@@ -15,11 +17,13 @@ router = APIRouter(prefix="/api/media", tags=["Mídia"])
 
 @router.post("", response_model=MediaResponse, status_code=status.HTTP_201_CREATED)
 def upload_media(
-    file: UploadFile, session: Annotated[Session, Depends(get_session)]
+    file: UploadFile, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
 ) -> MediaResponse:
+    require_teacher(user)
     try:
         media = service.upload_video(
-            session, file.file, file.filename or "", file.content_type or ""
+            session, file.file, file.filename or "", file.content_type or "", user.id
         )
     except UploadTooLarge as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc
@@ -33,10 +37,13 @@ def upload_media(
 
 @router.get("/{media_id}", response_model=MediaResponse)
 def get_media(
-    media_id: UUID, session: Annotated[Session, Depends(get_session)]
+    media_id: UUID, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
 ) -> MediaResponse:
     try:
         media = service.get_media(session, media_id)
+        require_media(user, integrations, session, media)
     except service.MediaNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return MediaResponse.model_validate(media)
@@ -53,9 +60,12 @@ def get_media(
     },
 )
 def get_media_content(
-    media_id: UUID, session: Annotated[Session, Depends(get_session)]
+    media_id: UUID, session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    integrations: Annotated[Integrations, Depends(get_integrations)],
 ) -> FileResponse:
     try:
+        require_media(user, integrations, session, service.get_media(session, media_id))
         media, path = service.get_video_content(session, media_id)
     except (service.MediaNotFound, FileNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

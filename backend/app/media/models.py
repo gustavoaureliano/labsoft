@@ -18,6 +18,7 @@ class Media(Base):
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[str | None] = mapped_column(String(255))
     storage_key: Mapped[str] = mapped_column(String(512), unique=True)
     original_filename: Mapped[str] = mapped_column(String(255))
     content_type: Mapped[str] = mapped_column(String(255))

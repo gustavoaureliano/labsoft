@@ -29,7 +29,7 @@ def get_video_content(session: Session, media_id: UUID) -> tuple[Media, Path]:
 
 
 def upload_video(
-    session: Session, source: BinaryIO, filename: str, content_type: str
+    session: Session, source: BinaryIO, filename: str, content_type: str, owner_id: str
 ) -> Media:
     filename = filename.replace("\\", "/").rsplit("/", 1)[-1]
     if not filename or len(filename) > 255:
@@ -42,6 +42,7 @@ def upload_video(
     key, size = storage.save_video(source, extension)
     try:
         media = Media(
+            owner_id=owner_id,
             storage_key=key,
             original_filename=filename,
             content_type=content_type,
