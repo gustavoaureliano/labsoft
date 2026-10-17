@@ -140,7 +140,21 @@ Antes de retornar, verifica a existência da aula, a associação de vídeo, o e
 
 Ainda não há autenticação, verificação de direito de acesso ou posição salva. A URL não é assinada nem temporária nesta etapa. A disponibilidade do arquivo é verificada novamente na rota de conteúdo.
 
-## Testes do backend
+## Integrações individuais de desenvolvimento
+
+`app/integrations.py` define contratos de usuário, curso e direito de acesso. A implementação local é ativada explicitamente com `LEARNING_DEMO_MODE=true` no `.env`; fora desse modo, a dependência responde `503` até a integração real ser configurada.
+
+Identidades locais: `aluno-demo`, `aluno-demo-2`, `professor-demo` e `professor-demo-2`. O primeiro aluno acessa Física Quântica e Mecânica; o segundo apenas Mecânica. O segundo professor possui Biologia. Envie `X-Demo-User` na API ou o cookie `aprovaai_demo_user` (necessário também para requisições nativas de vídeo). Ambos são manipuláveis e **não constituem autenticação segura**. O cookie de papel do frontend não identifica sozinho um usuário.
+
+Para criar aulas de exemplo sem sobrescrever registros ou posições existentes:
+
+```bash
+uv run --env-file .env python -m app.seed
+```
+
+Esse comando nunca roda ao iniciar o servidor. Não importa vídeos nem substitui o módulo de cursos dos outros integrantes.
+
+## Executar testes
 
 ```bash
 uv run python -m pytest
