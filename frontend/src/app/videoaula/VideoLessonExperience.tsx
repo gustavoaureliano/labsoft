@@ -5,8 +5,7 @@ import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { LessonLibraryActions } from "@/components/learning/LessonLibraryActions";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { enrolledCourse, findEnrolledLesson, lessonHref, lessonsFromIds, type LessonCollectionContext } from "@/data/courses";
-import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useStudyLibrary } from "@/lib/engagementApi";
 import { DemoPlayer } from "./DemoPlayer";
 import { LessonTabs } from "./LessonTabs";
 import styles from "./page.module.css";
@@ -27,7 +26,14 @@ type LessonCollection = {
 };
 
 export function VideoLessonExperience({ lessonId, origin, playlistId }: VideoLessonExperienceProps) {
-  const [study, saveStudy, ready] = useDemoStorage(studyDemoKey, initialStudyDemo);
+  const {
+    study,
+    saveStudy,
+    ready,
+    recordLessonView,
+    toggleFavoriteLesson,
+    updatePlaylistLessons,
+  } = useStudyLibrary();
   const lesson = findEnrolledLesson(lessonId);
   const courseCollection: LessonCollection = {
     title: "Aulas do curso",
@@ -84,7 +90,15 @@ export function VideoLessonExperience({ lessonId, origin, playlistId }: VideoLes
         <section aria-label="Videoaula" className={styles.mainColumn}>
           <DemoPlayer lessonId={lesson.id} thumbnail={lesson.thumbnail ?? enrolledCourse.image} />
           <nav className={styles.lessonNavigation} aria-label="Navegar entre aulas"><span>{previousLesson ? <Link href={collectionHref(previousLesson.id)}>← Aula anterior</Link> : "Início da lista"}</span><span>{nextLesson ? <Link href={collectionHref(nextLesson.id)}>Próxima aula →</Link> : "Fim da lista"}</span></nav>
-          <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready} />
+          <LessonLibraryActions
+            lessonId={lesson.id}
+            study={study}
+            saveStudy={saveStudy}
+            ready={ready}
+            onRecordView={recordLessonView}
+            onToggleFavorite={toggleFavoriteLesson}
+            onUpdatePlaylistLessons={updatePlaylistLessons}
+          />
           <LessonTabs key={lesson.id} description={lesson.description} lessonId={lesson.id} lessonTitle={lesson.title} />
         </section>
 

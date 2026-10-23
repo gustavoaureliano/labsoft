@@ -9,24 +9,26 @@ import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse, lessonHref, lessonsFromIds } from "@/data/courses";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
-import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
+import { useStudyLibrary } from "@/lib/engagementApi";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
   const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
-  const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
+  const { study, usingBackend, createPlaylist: createPlaylistInLibrary } = useStudyLibrary();
   const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const [playlistName, setPlaylistName] = useState("");
   const historyLessons = lessonsFromIds(study.viewedLessons);
   const favoriteLessons = lessonsFromIds(study.favoriteLessons);
 
-  function createPlaylist(event: FormEvent<HTMLFormElement>) {
+  async function createPlaylist(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = playlistName.trim();
-    if (!name || study.playlists.some((playlist) => playlist.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) return;
-    saveStudy({ ...study, playlists: [...study.playlists, { id: crypto.randomUUID(), name, lessonIds: [] }] });
-    setPlaylistName("");
+    if (!name) return;
+    const created = await createPlaylistInLibrary(name);
+    if (created) {
+      setPlaylistName("");
+    }
   }
 
   return (
@@ -67,14 +69,14 @@ export default function MeusCursos() {
             <button type="button" aria-pressed={activeTab === "playlists"} onClick={() => setActiveTab("playlists")}>Playlists</button>
           </div>
           <div className={styles.libraryContent}>
-            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
+            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico.</p>)}
             {activeTab === "favorites" && (favoriteLessons.length > 0 ? <CourseLessonList lessons={favoriteLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "favorites" })} /> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
             {activeTab === "playlists" && <>
               <form className={styles.playlistForm} onSubmit={createPlaylist}><label htmlFor="playlist-name">Nova playlist</label><input id="playlist-name" value={playlistName} onChange={(event) => setPlaylistName(event.target.value)} maxLength={60} placeholder="Ex.: Revisão de Física" /><button type="submit" disabled={!playlistName.trim()}>Criar playlist</button></form>
               <ul className={styles.playlistList}>{study.playlists.map((playlist) => <li key={playlist.id}><Link href={`/meus-cursos/playlists/${playlist.id}`}><span><strong>{playlist.name}</strong><small>{playlist.lessonIds.length} {playlist.lessonIds.length === 1 ? "aula" : "aulas"}</small></span><b>Ver playlist →</b></Link></li>)}</ul>
             </>}
           </div>
-          <p className={styles.demoNote}>Histórico, favoritos e playlists ficam somente neste navegador.</p>
+          <p className={styles.demoNote}>{usingBackend ? "Histórico, favoritos e playlists sincronizados com o banco de dados." : "Histórico, favoritos e playlists ficam somente neste navegador."}</p>
         </section>
       </div>
     </AppShell>

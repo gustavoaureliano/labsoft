@@ -1,39 +1,11 @@
 "use client";
 
-import { use, useState, type FormEvent } from "react";
+import { use, useEffect, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { enrolledCourse } from "@/data/courses";
 import { initialProfile } from "@/data/profile";
-import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
+import { apiFetch, type ApiQuestion } from "@/lib/engagementApi";
 import styles from "./page.module.css";
-
-type Discussion = {
-  id: number;
-  course: string;
-  lesson: string;
-  createdAt: string;
-  prompt: string;
-  answer?: string;
-};
-
-const initialDiscussions: Discussion[] = [
-  {
-    id: 1,
-    course: enrolledCourse.title,
-    lesson: "Aula 08 — Leis de Newton e suas aplicações",
-    createdAt: "Há 2 horas",
-    prompt: "Como identifico a força resultante quando o exercício mostra várias forças em sentidos diferentes?",
-    answer: "Escolha um sentido positivo, some as forças nesse sentido e subtraia as forças no sentido contrário. O resultado com sinal indica o sentido da força resultante.",
-  },
-  {
-    id: 2,
-    course: enrolledCourse.title,
-    lesson: "Aula 10 — Trabalho e energia",
-    createdAt: "Há 1 dia",
-    prompt: "Quando o trabalho de uma força deve ser considerado negativo?",
-  },
-];
 
 type StudentDoubtsProps = {
   searchParams: Promise<{ curso?: string | string[]; aula?: string | string[] }>;
@@ -52,27 +24,49 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
     : "";
   const [lessonId, setLessonId] = useState(initialLessonId);
   const [questionText, setQuestionText] = useState("");
-  const discussions = initialDiscussions;
-  const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
+  const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [notice, setNotice] = useState("");
   const selectedLesson = enrolledCourse.lessons.find((item) => item.id === lessonId);
 
-  function submitQuestion(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let active = true;
+    apiFetch<ApiQuestion[]>("/api/questions/me")
+      .then((data) => {
+        if (active) setQuestions(data);
+      })
+      .catch((err) => {
+        if (active) {
+          setNotice(err instanceof Error ? `Erro ao carregar dúvidas: ${err.message}` : "Erro ao carregar dúvidas.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const prompt = questionText.trim();
     if (!prompt) return;
+    setNotice("");
 
-    saveSharedQuestions([{
-      id: Date.now(),
-      student: initialProfile.nickname,
-      courseId: enrolledCourse.id,
-      course: enrolledCourse.title,
-      lessonId: selectedLesson?.id,
-      lesson: selectedLesson ? `Aula ${selectedLesson.number} — ${selectedLesson.title}` : "Dúvida geral sobre o curso",
-      prompt,
-    }, ...sharedQuestions]);
-    setQuestionText("");
-    setNotice("Sua dúvida foi enviada ao professor.");
+    try {
+      const created = await apiFetch<ApiQuestion>("/api/questions", {
+        method: "POST",
+        body: JSON.stringify({
+          course_id: enrolledCourse.id,
+          lesson_id: selectedLesson?.id ?? null,
+          prompt,
+        }),
+      });
+      setQuestions((prev) => [created, ...prev]);
+      setQuestionText("");
+      setNotice("Sua dúvida foi enviada ao professor.");
+    } catch (err) {
+      setNotice(
+        err instanceof Error ? `Erro ao enviar dúvida: ${err.message}` : "Erro ao enviar dúvida."
+      );
+    }
   }
 
   return (
@@ -117,14 +111,14 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
         <section className={styles.discussions} aria-labelledby="discussions-title">
           <h2 id="discussions-title">Minhas dúvidas recentes</h2>
           <div className={styles.discussionList}>
-            {[...sharedQuestions.map((question) => ({ ...question, createdAt: "Agora" })), ...discussions].map((discussion) => (
+            {questions.map((discussion) => (
               <article className={styles.discussion} key={discussion.id}>
                 <div className={styles.discussionMeta}>
                   <span className={`${styles.status} ${discussion.answer ? styles.answered : styles.pending}`}>
                     {discussion.answer ? "Respondida" : "Pendente"}
                   </span>
-                  <span>Matéria: {discussion.course} • {discussion.lesson}</span>
-                  <time>{discussion.createdAt}</time>
+                  <span>Matéria: {discussion.course_title} • {discussion.lesson_title}</span>
+                  <time>{new Date(discussion.created_at).toLocaleDateString("pt-BR")}</time>
                 </div>
                 <div className={styles.message}>
                   <span className={styles.studentMark} aria-hidden="true">{initialProfile.nickname.slice(0, 1)}</span>
@@ -137,7 +131,7 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
                   <div className={styles.answer}>
                     <span className={styles.teacherMark} aria-hidden="true">MA</span>
                     <div>
-                      <strong>{enrolledCourse.teacher}:</strong>
+                      <strong>{discussion.teacher_name}:</strong>
                       <p>{discussion.answer}</p>
                     </div>
                   </div>
