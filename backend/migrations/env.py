@@ -1,7 +1,18 @@
 from alembic import context
 
+from app.communication.models import Notification, Question
 from app.database import Base, engine
+from app.library_interaction.models import (
+    ContentRating,
+    LessonComment,
+    LessonFavorite,
+    LessonHistory,
+    Playlist,
+    PlaylistItem,
+    PrivateNote,
+)
 from app.media.models import Media
+from app.moderation.models import ContentReport, ModerationQueueItem
 
 target_metadata = Base.metadata
 
