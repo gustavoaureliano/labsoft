@@ -85,8 +85,10 @@ class AuthDependencies:
     def __init__(
         self,
         get_db: Callable,
+        settings: Settings | None = None,
     ):
         self.get_db = get_db
+        self.settings = settings or Settings.from_env()
         self.bearer = OAuth2PasswordBearer(
             tokenUrl="/api/v1/auth/token",
             auto_error=False
@@ -97,6 +99,7 @@ class AuthDependencies:
 
         get_db = self.get_db
         bearer = self.bearer
+        settings = self.settings
 
         def resolve(
             db: Session = Depends(get_db),
@@ -113,6 +116,7 @@ class AuthDependencies:
                 return self.sessions.authenticate(
                     db,
                     token,
+                    settings,
                 )
 
             raise AssertionError("unreachable")
@@ -149,7 +153,7 @@ def create_router(
 
     settings = settings or Settings.from_env()
 
-    auth = AuthDependencies(get_db)
+    auth = AuthDependencies(get_db, settings)
     current_user = auth.user()
 
     identity = IdentityService()
@@ -574,6 +578,25 @@ def create_router(
             db,
             user,
         )
+
+    @router.patch(
+        "/notifications/{notification_id}/read",
+        response_model=NotificationOut,
+    )
+    def mark_notification_read(
+        notification_id: str,
+        user: User = Depends(current_user),
+        db: Session = Depends(get_db),
+    ):
+        with translate_service_error():
+            notification = notifications.mark_read(
+                db,
+                user,
+                notification_id,
+            )
+
+        db.commit()
+        return notification
 
     # F06 - TESTE DE AUTORIZACAO POR PERFIL
 

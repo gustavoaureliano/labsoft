@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { demoAccountKey, roleHome, teacherApplicationKey, type DemoAccount, type TeacherApplication } from "@/data/demoAccount";
 import { initialProfile } from "@/data/profile";
 import { setDemoRole } from "@/lib/demoSessionClient";
+import { isApiConfigured, loginWithApi } from "@/lib/apiClient";
 import { writeDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./AccessPage.module.css";
 
@@ -24,12 +25,32 @@ export function AccessPage({ mode }: { mode: Mode }) {
   const [notice, setNotice] = useState("");
   const [role, setRole] = useState<DemoAccount["role"]>("student");
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim();
+    const password = String(data.get("password") ?? "");
     if (mode === "recover") {
       setNotice(`Solicitação simulada para ${email}. Nenhum e-mail foi enviado.`);
+      return;
+    }
+
+    if (mode === "login" && isApiConfigured) {
+      setNotice("");
+      try {
+        const user = await loginWithApi(email, password);
+        const account: DemoAccount = {
+          name: user.email.split("@")[0] || user.email,
+          email: user.email,
+          role: user.role,
+        };
+        writeDemoStorage(demoAccountKey, account);
+        setDemoRole(user.role);
+        router.replace(roleHome[user.role]);
+        router.refresh();
+      } catch (error) {
+        setNotice(error instanceof Error ? error.message : "Não foi possível entrar.");
+      }
       return;
     }
 
@@ -60,16 +81,16 @@ export function AccessPage({ mode }: { mode: Mode }) {
           {(mode === "register" || mode === "teacher") && <label>Nome completo<input autoComplete="name" name="name" required /></label>}
           <label>E-mail<span className={styles.inputWithIcon}><Image src="/login-mail.svg" alt="" width={18} height={18} /><input autoComplete="email" name="email" placeholder="nome@exemplo.com" required type="email" /></span></label>
           {mode === "login" && <label>Senha<span className={styles.inputWithIcon}><Image src="/login-lock.svg" alt="" width={18} height={18} /><input autoComplete="current-password" name="password" required type="password" /></span></label>}
-          {mode === "login" && <label>Entrar como<select value={role} onChange={(event) => setRole(event.target.value as DemoAccount["role"])}><option value="student">Aluno</option><option value="teacher">Professor</option><option value="admin">Administrador</option></select></label>}
+          {mode === "login" && !isApiConfigured && <label>Entrar como<select value={role} onChange={(event) => setRole(event.target.value as DemoAccount["role"])}><option value="student">Aluno</option><option value="teacher">Professor</option><option value="admin">Administrador</option></select></label>}
           {mode === "teacher" && <label>Área de ensino<input name="area" placeholder="Ex.: Física" required /></label>}
-          <button className={styles.primaryButton} type="submit">{copy[mode].action}</button>
+          <button className={styles.primaryButton} type="submit">{mode === "login" && isApiConfigured ? "Entrar" : copy[mode].action}</button>
         </form>
         {notice && <p className={styles.notice} role="status">{notice}</p>}
         <div className={styles.links}>
           {mode === "login" ? <><Link href="/recuperar-acesso">Esqueceu sua senha?</Link><Link href="/cadastro">Criar conta</Link></> : <Link href="/login">Voltar para entrar</Link>}
           {mode === "register" && <Link href="/cadastro/professor">Sou professor</Link>}
         </div>
-        <p className={styles.demoNote}>Protótipo: nenhum acesso é autenticado e nenhuma senha é armazenada.</p>
+        <p className={styles.demoNote}>{mode === "login" && isApiConfigured ? "Acesso autenticado pela API; o token fica apenas nesta sessão do navegador." : "Protótipo: nenhum acesso é autenticado e nenhuma senha é armazenada."}</p>
       </section>
     </main>
   );

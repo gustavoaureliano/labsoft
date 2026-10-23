@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from jwt import InvalidTokenError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,7 +13,8 @@ from ..models import (
     utcnow,
 )
 from ..security import (
-    generate_secret,
+    create_access_token,
+    decode_access_token,
     token_digest,
 )
 from .errors import ServiceError
@@ -27,14 +29,19 @@ class SessionService:
         settings: Settings,
     ) -> str:
 
-        raw = generate_secret()
+        expires_at = utcnow() + timedelta(
+            hours=settings.session_hours
+        )
+        raw = create_access_token(
+            user.id,
+            settings.jwt_secret,
+            expires_at,
+        )
 
         session = AuthSession(
             user_id=user.id,
             token_hash=token_digest(raw),
-            expires_at=utcnow() + timedelta(
-                hours=settings.session_hours
-            ),
+            expires_at=expires_at,
         )
 
         db.add(session)
@@ -46,7 +53,20 @@ class SessionService:
         self,
         db: Session,
         raw_token: str,
+        settings: Settings | None = None,
     ) -> User:
+        settings = settings or Settings.from_env()
+
+        try:
+            subject = decode_access_token(
+                raw_token,
+                settings.jwt_secret,
+            )
+        except InvalidTokenError as exc:
+            raise ServiceError(
+                "unauthorized",
+                "Token inválido ou expirado.",
+            ) from exc
 
         session = db.scalar(
             select(AuthSession).where(
@@ -59,6 +79,7 @@ class SessionService:
             session is None
             or session.revoked_at is not None
             or session.expires_at <= utcnow()
+            or session.user_id != subject
         ):
             raise ServiceError(
                 "unauthorized",

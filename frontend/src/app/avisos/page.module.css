@@ -5,4 +5,10 @@
 .notice span { color: var(--primary); font-size: 12px; font-weight: 700; }
 .notice a { align-items: center; background: var(--primary); border-radius: 5px; color: #fff; display: inline-flex; font-size: 13px; font-weight: 700; min-height: 42px; padding: 9px 16px; }
 .notice a:hover { background: #064b63; box-shadow: var(--action-shadow); }
+.notice time { color: var(--muted); display: block; font-size: 12px; margin-bottom: 8px; }
+.notice button { background: var(--primary); border: 0; border-radius: 5px; color: #fff; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; min-height: 42px; padding: 9px 16px; }
+.notice button:disabled { background: var(--border); color: var(--muted); cursor: default; }
+.read { opacity: 0.8; }
+.error { color: #a12622; font-size: 14px; }
+.error a { color: var(--primary); font-weight: 700; }
 .demoNote { color: var(--muted); font-size: 12px; margin: 0; }

@@ -41,6 +41,13 @@ Em outro terminal, também dentro de `frontend/`, execute os testes:
 npm run test:e2e
 ```
 
+Para usar o frontend com a API, copie `frontend/.env.example` para
+`frontend/.env.local` e mantenha o backend disponível em `http://localhost:8000`.
+Com `NEXT_PUBLIC_API_URL` configurada, o login usa a API e a página `/avisos`
+lista as notificações da conta autenticada; sem essa variável, os fluxos
+demonstrativos locais continuam disponíveis. Configure `AA_FRONTEND_ORIGIN` no
+backend quando a origem do frontend não for `http://localhost:3000`.
+
 Abra `/` sem perfil demo para ver a landing, com cursos de exemplo e links para entrar ou criar conta. Depois de entrar como aluno, `/` mostra a Home de estudos. Professor e administrador são direcionados às suas áreas em `/professor/cursos` e `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
 
 O papel escolhido fica em um cookie de demonstração, usado para mostrar o menu e a área correspondentes. Esse cookie pode ser alterado pelo navegador e **não é uma autenticação segura**. Os demais dados demonstrativos continuam no armazenamento local do navegador.

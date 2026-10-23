@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..config import Settings
-from ..models import Notification, User
+from ..models import Notification, User, utcnow
 from .errors import ServiceError
 
 
@@ -178,3 +178,30 @@ class NotificationService:
                 .limit(100)
             )
         )
+
+    def mark_read(
+        self,
+        db: Session,
+        user: User,
+        notification_id: str,
+    ) -> Notification:
+
+        notification = db.scalar(
+            select(Notification).where(
+                Notification.id == notification_id,
+                Notification.user_id == user.id,
+            )
+        )
+
+        if notification is None:
+            raise ServiceError(
+                "not_found",
+                "Notificação não encontrada.",
+            )
+
+        if notification.read_at is None:
+            notification.read_at = utcnow()
+
+        db.flush()
+
+        return notification
