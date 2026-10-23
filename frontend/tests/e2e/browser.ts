@@ -4,6 +4,11 @@ import { Browser, Builder, type WebDriver } from "selenium-webdriver";
 
 type DemoRole = "student" | "teacher" | "admin";
 const demoRoleCookieName = "aprovaai_demo_role";
+const roleToDemoUser: Record<DemoRole, string> = {
+  student: "aluno-demo",
+  teacher: "professor-demo",
+  admin: "admin-demo",
+};
 
 const require = createRequire(import.meta.url);
 const chrome = require("selenium-webdriver/chrome") as typeof import("selenium-webdriver/chrome");
@@ -16,16 +21,29 @@ export function pauseForReview() {
 }
 
 export async function setDemoRoleForTest(driver: WebDriver, role: DemoRole | null) {
-  if (role) await driver.manage().addCookie({ name: demoRoleCookieName, value: role, path: "/" });
-  else await driver.manage().deleteCookie(demoRoleCookieName);
+  if (role) {
+    await driver.manage().addCookie({ name: demoRoleCookieName, value: role, path: "/" });
+    await driver.manage().addCookie({ name: "aprovaai_demo_user", value: roleToDemoUser[role], path: "/" });
+  } else {
+    await driver.manage().deleteCookie(demoRoleCookieName);
+    await driver.manage().deleteCookie("aprovaai_demo_user");
+  }
 }
 
 export async function withBrowser(run: (driver: WebDriver) => Promise<void>, role: DemoRole | null = "student") {
   const options = new chrome.Options();
   options.addArguments("--window-size=1440,900");
+  if (process.env.E2E_HEADLESS !== "false") {
+    options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
+  }
 
   const chromeBinary = process.env.CHROME_BINARY ?? "/usr/bin/chromium";
   if (existsSync(chromeBinary)) options.setChromeBinaryPath(chromeBinary);
+
+  const resetRes = await fetch(`${baseUrl}/api/testing/reset`, { method: "POST" });
+  if (!resetRes.ok) {
+    throw new Error(`Falha ao resetar banco de testes via /api/testing/reset: ${resetRes.status}`);
+  }
 
   const driver = await new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
 

@@ -21,6 +21,11 @@ test("o aluno envia uma dúvida geral pela página do curso", async () => {
     await driver.wait(until.elementLocated(By.xpath('//*[@role="status" and normalize-space()="Sua dúvida foi enviada ao professor."]')), 5000);
     const latestDiscussion = await driver.findElement(By.css("article"));
     assert.match(await latestDiscussion.getText(), /Pendente[\s\S]*Física para o ENEM: Mecânica[\s\S]*Dúvida geral sobre o curso[\s\S]*Qual conteúdo devo revisar/);
+
+    await driver.navigate().refresh();
+    await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Enviar nova dúvida ao professor"]')), 10000);
+    const persistedDiscussion = await driver.wait(until.elementLocated(By.css("article")), 10000);
+    assert.match(await persistedDiscussion.getText(), /Qual conteúdo devo revisar primeiro para acompanhar o curso\?/);
     await pauseForReview();
   });
 });

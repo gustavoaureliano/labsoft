@@ -10,7 +10,9 @@ test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", as
     const submit = await driver.findElement(By.xpath('//button[normalize-space()="Enviar denúncia"]'));
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", submit);
     await submit.click();
-    assert.match(await driver.findElement(By.css('[role="tabpanel"]')).getText(), /Denúncia enviada para análise/);
+    const initialPanel = await driver.findElement(By.css('[role="tabpanel"]'));
+    await driver.wait(until.elementTextContains(initialPanel, "Denúncia enviada para análise"), 5000);
+    assert.match(await initialPanel.getText(), /Denúncia enviada para análise/);
     assert.equal(await driver.findElement(By.css("#lesson-report")).isEnabled(), false);
     await pauseForReview();
 
@@ -20,6 +22,7 @@ test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", as
     const keep = await report.findElement(By.xpath('.//button[normalize-space()="Manter conteúdo"]'));
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", keep);
     await keep.click();
+    await driver.wait(until.elementTextContains(report, "conteúdo mantido"), 5000);
     assert.match(await report.getText(), /conteúdo mantido/);
     await setDemoRoleForTest(driver, "student");
     await driver.get(`${baseUrl}/videoaula`);

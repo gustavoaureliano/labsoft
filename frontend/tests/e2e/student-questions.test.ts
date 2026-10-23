@@ -7,6 +7,7 @@ test("o professor responde dúvidas e troca para o perfil de aluno", async () =>
   await withBrowser(async (driver) => {
     await driver.get(`${baseUrl}/professor/duvidas`);
     await driver.wait(until.elementLocated(By.xpath('//span[normalize-space()="Dúvidas dos alunos"]')), 10000);
+    await driver.wait(until.elementLocated(By.css("article")), 10000);
     await pauseForReview();
 
     await driver.findElement(By.xpath('//button[contains(normalize-space(),"Pendentes")]')).click();
