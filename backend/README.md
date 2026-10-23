@@ -79,6 +79,10 @@ Uploads são gravados em `MEDIA_ROOT`. Links de download são temporários e
 assinados com `MEDIA_SIGNING_KEY`; troque a chave de exemplo em qualquer ambiente
 que não seja exclusivamente local.
 
+O frontend é autorizado pela variável `CORS_ORIGINS`. Informe uma ou mais origens
+separadas por vírgula, sempre com protocolo e sem barra final, por exemplo
+`http://localhost:3000,https://aprovaai-frontend-lucas.onrender.com`.
+
 Para executar os testes:
 
 ```bash

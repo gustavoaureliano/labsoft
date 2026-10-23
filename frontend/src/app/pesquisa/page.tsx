@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
-import { searchCatalogCourses, searchCatalogMaterials } from "@/data/catalog";
+import { toCatalogCourse, toComplementaryMaterial } from "@/lib/api/adapters";
+import { apiRequest } from "@/lib/api/client";
+import type { ApiSearch } from "@/lib/api/types";
 import styles from "./page.module.css";
 
 type SearchPageProps = {
@@ -11,9 +13,19 @@ type SearchPageProps = {
 export default async function Pesquisa({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = Array.isArray(params.q) ? params.q[0] ?? "" : params.q ?? "";
-  const courses = searchCatalogCourses(query);
-  const materials = searchCatalogMaterials(query);
   const hasQuery = query.trim().length > 0;
+  let courses: ReturnType<typeof toCatalogCourse>[] = [];
+  let materials: ReturnType<typeof toComplementaryMaterial>[] = [];
+  let error = "";
+  if (query.trim().length >= 2) {
+    try {
+      const result = await apiRequest<ApiSearch>(`/api/search?q=${encodeURIComponent(query.trim())}`);
+      courses = result.courses.map((course) => toCatalogCourse(course));
+      materials = result.materials.map((material) => toComplementaryMaterial(material));
+    } catch {
+      error = "Não foi possível consultar a biblioteca agora.";
+    }
+  }
 
   return (
     <AppShell activePage="explore">
@@ -24,7 +36,7 @@ export default async function Pesquisa({ searchParams }: SearchPageProps) {
           {hasQuery ? <p>Para “{query}”</p> : <p>Digite um termo para buscar cursos e materiais.</p>}
         </header>
 
-        {hasQuery && (courses.length > 0 || materials.length > 0) ? (
+        {error ? <div className={styles.emptyState}><h2>Busca indisponível</h2><p>{error}</p></div> : hasQuery && (courses.length > 0 || materials.length > 0) ? (
           <>
             {courses.length > 0 && (
               <section aria-labelledby="course-results-title">

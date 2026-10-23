@@ -1,15 +1,24 @@
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { catalogCourses } from "@/data/catalog";
 import { currentLesson, enrolledCourse, lessonHref } from "@/data/courses";
+import { toCatalogCourse } from "@/lib/api/adapters";
+import { apiRequest, studentHeaders } from "@/lib/api/client";
+import type { ApiRecommendation } from "@/lib/api/types";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./HomeDashboard.module.css";
 
-export function HomeDashboard() {
+export async function HomeDashboard() {
   const currentLessonIndex = enrolledCourse.lessons.findIndex((lesson) => lesson.number === currentLesson.number);
   const previousLesson = enrolledCourse.lessons[currentLessonIndex - 1];
   const nextLesson = enrolledCourse.lessons[currentLessonIndex + 1];
+  let recommendations: ReturnType<typeof toCatalogCourse>[] = [];
+  try {
+    const response = await apiRequest<ApiRecommendation>("/api/recommendations", { headers: studentHeaders() });
+    recommendations = response.items.map((course) => toCatalogCourse(course));
+  } catch {
+    recommendations = [];
+  }
 
   return (
     <div className={styles.dashboard}>
@@ -61,7 +70,8 @@ export function HomeDashboard() {
           <div><span className={styles.eyebrow}>Descubra algo novo</span><h2 id="recommended-title">Recomendados para você</h2></div>
           <Link href="/explorar-cursos">Explorar todos</Link>
         </div>
-        <div className={styles.courseGrid}>{catalogCourses.filter((course) => course.id !== enrolledCourse.id).map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>
+        <div className={styles.courseGrid}>{recommendations.map((course) => <CatalogCourseCard course={course} key={course.id} />)}</div>
+        {!recommendations.length && <p>As recomendações aparecerão quando houver cursos publicados.</p>}
       </section>
 
       <section className={styles.studySection} aria-labelledby="study-title">

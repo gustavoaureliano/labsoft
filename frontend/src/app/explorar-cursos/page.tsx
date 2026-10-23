@@ -1,25 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
-import { catalogCourses, courseGroups } from "@/data/catalog";
+import { courseGroups, type CatalogCourse } from "@/data/catalog";
+import { toCatalogCourse } from "@/lib/api/adapters";
+import { apiRequest } from "@/lib/api/client";
+import type { ApiCoursePage, ApiSearch } from "@/lib/api/types";
 import styles from "./page.module.css";
 
 export default function ExplorarCursos() {
   const [query, setQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("Todos");
   const [sortOrder, setSortOrder] = useState("relevance");
-  const normalizedQuery = query.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
-  const filteredCourses = catalogCourses
-    .filter((course) => selectedGroup === "Todos" || course.group === selectedGroup)
-    .filter((course) => !normalizedQuery || [course.title, course.subject, course.group, course.teacher, course.summary, ...course.exams]
-      .join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").includes(normalizedQuery))
-    .sort((first, second) => {
-      if (sortOrder === "rating") return second.rating - first.rating;
-      if (sortOrder === "title") return first.title.localeCompare(second.title, "pt-BR");
-      return 0;
-    });
+  const [courses, setCourses] = useState<CatalogCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(async () => {
+      setLoading(true);
+      try {
+        const term = query.trim();
+        if (term.length >= 2) {
+          const response = await apiRequest<ApiSearch>(`/api/search?q=${encodeURIComponent(term)}&limit=100`);
+          let items = response.courses.map((course) => toCatalogCourse(course));
+          if (selectedGroup !== "Todos") items = items.filter((course) => course.group === selectedGroup);
+          if (sortOrder === "rating") items.sort((a, b) => b.rating - a.rating);
+          if (sortOrder === "title") items.sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+          setCourses(items);
+        } else {
+          const params = new URLSearchParams({ order: sortOrder, page: "1", size: "100" });
+          if (selectedGroup !== "Todos") params.set("area", selectedGroup);
+          const response = await apiRequest<ApiCoursePage>(`/api/courses?${params}`);
+          setCourses(response.items.map((course) => toCatalogCourse(course)));
+        }
+        setError("");
+      } catch {
+        setCourses([]);
+        setError("Não foi possível carregar o catálogo.");
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query, selectedGroup, sortOrder]);
 
   return (
     <AppShell activePage="explore">
@@ -68,11 +93,11 @@ export default function ExplorarCursos() {
         <section aria-labelledby="courses-title">
           <div className={styles.resultsHeading}>
             <h2 id="courses-title">Cursos em destaque</h2>
-            <span aria-live="polite">{filteredCourses.length} {filteredCourses.length === 1 ? "curso encontrado" : "cursos encontrados"}</span>
+            <span aria-live="polite">{courses.length} {courses.length === 1 ? "curso encontrado" : "cursos encontrados"}</span>
           </div>
-          {filteredCourses.length ? (
+          {loading ? <p className={styles.emptyState}>Carregando cursos...</p> : error ? <p className={styles.emptyState}>{error}</p> : courses.length ? (
             <div className={styles.courseGrid}>
-              {filteredCourses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}
+              {courses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}
             </div>
           ) : (
             <p className={styles.emptyState}>Nenhum curso encontrado. Tente outra busca ou matéria.</p>
