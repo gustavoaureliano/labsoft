@@ -43,10 +43,13 @@ npm run test:e2e
 
 Para usar o frontend com a API, copie `frontend/.env.example` para
 `frontend/.env.local` e mantenha o backend disponível em `http://localhost:8000`.
-Com `NEXT_PUBLIC_API_URL` configurada, o login usa a API e a página `/avisos`
-lista as notificações da conta autenticada; sem essa variável, os fluxos
-demonstrativos locais continuam disponíveis. Configure `AA_FRONTEND_ORIGIN` no
-backend quando a origem do frontend não for `http://localhost:3000`.
+Com `NEXT_PUBLIC_API_URL` configurada, login, cadastro, confirmação de e-mail e
+recuperação de senha usam a API; `/avisos` lista as notificações da conta
+autenticada. O backend precisa ter um provedor de e-mail configurado e o worker
+da outbox em execução para enviar os links de confirmação e recuperação. Sem
+essa variável, os fluxos demonstrativos locais continuam disponíveis. Configure
+`AA_FRONTEND_ORIGIN` no backend quando a origem do frontend não for
+`http://localhost:3000`.
 
 Abra `/` sem perfil demo para ver a landing, com cursos de exemplo e links para entrar ou criar conta. Depois de entrar como aluno, `/` mostra a Home de estudos. Professor e administrador são direcionados às suas áreas em `/professor/cursos` e `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
 
@@ -58,4 +61,8 @@ Use `BASE_URL` se a aplicação estiver em outra porta. Use `CHROME_BINARY` se o
 
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
-Este é um protótipo de interface. Conta, dúvidas, anotações, playlists, cursos do professor, assinatura e decisões de moderação são simuladas no navegador. O editor abre o seletor de arquivos e guarda apenas seus metadados. Não há autenticação, envio real de arquivos ou e-mail, pagamento, reprodução de vídeo ou backend.
+As áreas de dúvidas, anotações, playlists, cursos do professor, assinatura e
+decisões de moderação continuam demonstrativas no navegador. O editor abre o
+seletor de arquivos e guarda apenas seus metadados. O backend fornece identidade
+e autorização, notificações e armazenamento de metadados de mídia; upload
+completo, pagamentos e reprodução de vídeo ainda não estão implementados.

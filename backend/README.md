@@ -1,6 +1,8 @@
 # Backend — AprovaAí
 
-Estrutura inicial da API em Python com FastAPI.
+API em FastAPI. O fluxo de identidade segue a especificação do microsserviço:
+JWT Ed25519 de curta duração, refresh token opaco em cookie HttpOnly,
+confirmação de e-mail, recuperação de senha, RBAC, rate limiting e auditoria.
 
 ## Requisitos
 
@@ -8,81 +10,133 @@ Estrutura inicial da API em Python com FastAPI.
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - PostgreSQL com usuário e banco criados
 
-## Executar
+## Configuração local
 
-Dentro de `backend/`, instale as dependências:
+Dentro de `backend/`, instale as dependências e copie o exemplo de ambiente:
 
 ```bash
 uv sync --locked
+cp .env.example .env
 ```
 
-Copie `.env.example` para `.env`, preencha a variável `DATABASE_URL` e defina
-uma chave de assinatura JWT forte em `AA_JWT_SECRET`:
+Defina `DATABASE_URL`, as chaves e o serviço de envio de e-mail em `.env`.
+Gere um par Ed25519 PEM e uma chave Fernet localmente com:
 
 ```bash
-cp .env.example .env
-python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
+uv run python - <<'PY'
+import base64
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+private = Ed25519PrivateKey.generate()
+private_pem = private.private_bytes(
+    serialization.Encoding.PEM,
+    serialization.PrivateFormat.PKCS8,
+    serialization.NoEncryption(),
+)
+public_pem = private.public_key().public_bytes(
+    serialization.Encoding.PEM,
+    serialization.PublicFormat.SubjectPublicKeyInfo,
+)
+print("AA_JWT_PRIVATE_KEY_B64=" + base64.urlsafe_b64encode(private_pem).decode())
+print("AA_JWT_PUBLIC_KEY_B64=" + base64.urlsafe_b64encode(public_pem).decode())
+print("AA_EMAIL_ENCRYPTION_KEY=" + Fernet.generate_key().decode())
+PY
 ```
 
-Copie o valor gerado (com pelo menos 32 bytes) para `AA_JWT_SECRET` no `.env`.
-O arquivo `.env` é local e não é versionado. O `uv` carrega suas variáveis com
-`--env-file`.
+Copie as três linhas geradas para `.env`. Não compartilhe nem versione esse
+arquivo. As configurações de tokens, emissor, audiência, cookies e origem do
+frontend estão documentadas em `.env.example`. Em produção, use HTTPS e
+configure `AA_COOKIE_SECURE=true`.
 
-Inicie o servidor de desenvolvimento:
+Configure **um** provedor de e-mail:
+
+- Brevo: `BREVO_API_KEY` e `BREVO_SENDER_EMAIL` (opcionalmente
+  `BREVO_SENDER_NAME`); ou
+- SMTP: `AA_SMTP_HOST`, `AA_SMTP_PORT`, `AA_SMTP_USERNAME`,
+  `AA_SMTP_PASSWORD` e `AA_SMTP_FROM` (opcionalmente
+  `AA_SMTP_STARTTLS`).
+
+Sem um provedor configurado, cadastro e recuperação de senha não poderão
+enviar mensagens. Ajuste `AA_PUBLIC_APP_URL` para a origem do frontend e
+`AA_PASSWORD_RESET_URL` para `http://localhost:3000/recuperar-acesso` (ou para
+a página `/recuperar-acesso` na origem usada pela aplicação).
+Configure também `AA_FRONTEND_ORIGIN` com a origem exata permitida pelo CORS.
+
+## Banco de dados e primeiro administrador
+
+Com `.env` configurado, aplique as migrações:
+
+```bash
+uv run --env-file .env alembic upgrade head
+uv run --env-file .env alembic current
+```
+
+Crie o primeiro administrador (a senha é solicitada sem eco e não vai para o
+histórico do shell):
+
+```bash
+uv run --env-file .env python -m app.identity_access.bootstrap_admin admin@exemplo.com
+```
+
+O comando só cria o administrador inicial se ainda não houver um. Para
+atribuir papéis ou suspender contas posteriormente, use os endpoints
+administrativos de identidade.
+
+## Executar
+
+Inicie a API dentro de `backend/`:
 
 ```bash
 uv run --env-file .env uvicorn app.main:app --reload
 ```
 
 - API: http://127.0.0.1:8000
-- Documentação Swagger: http://127.0.0.1:8000/docs
-- Verificação de funcionamento: http://127.0.0.1:8000/api/health
+- Health check: http://127.0.0.1:8000/api/health
+- Login administrativo do Swagger: http://127.0.0.1:8000/admin/login
+- Swagger: http://127.0.0.1:8000/docs
 
-No Swagger, clique em **Authorize**, informe o e-mail no campo `username` e a
-senha da conta. O Swagger envia as credenciais para `POST /api/v1/auth/token`,
-que emite e aplica automaticamente um JWT assinado às chamadas protegidas.
-O endpoint JSON `POST /api/v1/auth/login` continua disponível para os clientes
-da aplicação. Configure a mesma `AA_JWT_SECRET` em todas as instâncias do
-backend; trocar essa chave invalida os tokens existentes. As sessões criadas
-antes desta alteração também precisarão ser refeitas após a atualização.
+O OpenAPI e o Swagger estão disponíveis somente para uma sessão administrativa
+ativa. Após entrar em `/admin/login`, abra `/docs`. Para autorizar chamadas,
+faça login pelo endpoint `POST /api/v1/auth/login` e informe o access token no
+botão **Authorize** usando o esquema Bearer. O endpoint de login da API retorna
+JWT; o refresh token é mantido em cookie HttpOnly. Não há fluxo OAuth2 password
+grant.
 
-## Verificar o banco
+O access token expira em 15 minutos por padrão e o refresh token opaco é
+rotacionado, com validade padrão de 7 dias. Uma reutilização de refresh token
+revoga a sessão. Alterações de papel/status e redefinição de senha também
+invalidam as sessões conforme a política de identidade.
 
-Dentro de `backend/`, execute uma consulta sem criar tabelas:
+## Worker de e-mail
+
+O worker entrega mensagens persistidas na outbox e tenta novamente em caso de
+falha. Execute-o em um processo separado, mantendo-o ativo junto à API:
 
 ```bash
-uv run --env-file .env python -c 'from sqlalchemy import text; from app.database import engine; conn = engine.connect(); print(conn.execute(text("SELECT 1")).scalar_one()); conn.close(); engine.dispose()'
+uv run --env-file .env python -m app.identity_access.email_worker
 ```
 
-O resultado esperado é `1`. O arquivo `app/database.py` fornece a conexão e `get_session`, que poderá ser usado pelas rotas com `Depends`. A sessão é fechada ao final da requisição; cada operação de escrita será responsável por confirmar sua transação com `commit()`.
-
-O endpoint `/api/health` continua verificando apenas se a API responde, sem consultar o banco.
-
-Para permitir chamadas autenticadas do frontend, `AA_FRONTEND_ORIGIN` define a
-origem CORS autorizada. O valor padrão é `http://localhost:3000`; ajuste-o se o
-frontend estiver publicado em outra origem.
+Confirmação de e-mail expira em 24 horas por padrão; links de redefinição de
+senha expiram em 20 minutos. Tokens da outbox são cifrados com
+`AA_EMAIL_ENCRYPTION_KEY`.
 
 ## Migrações
 
-O Alembic usa a mesma `DATABASE_URL` da aplicação. Para criar ou atualizar as tabelas, execute dentro de `backend/`:
-
-```bash
-uv run --env-file .env alembic upgrade head
-```
-
-Para consultar a revisão aplicada:
+O Alembic usa a mesma `DATABASE_URL` da aplicação. Para conferir a revisão
+aplicada:
 
 ```bash
 uv run --env-file .env alembic current
 ```
 
-A primeira migração cria `media`, com identificador UUID, chave relativa do arquivo, nome original, tipo, tamanho em bytes, estado e data de criação. Os estados permitidos são `pending`, `available` e `failed`. O arquivo fica no disco; a tabela guarda apenas seus metadados.
-
-Ao alterar modelos, gere uma migração e revise o arquivo antes de aplicá-lo:
+Ao alterar modelos, gere uma migração e revise-a antes de aplicar:
 
 ```bash
 uv run --env-file .env alembic revision --autogenerate -m "Describe schema change"
 uv run --env-file .env alembic upgrade head
 ```
 
-Novos modelos precisam ser importados em `migrations/env.py` para que o Alembic reconheça suas tabelas. As migrações ficam versionadas em `migrations/versions/`.
+Os modelos de identidade e mídia compartilham a metadata carregada pelo Alembic.
+As revisões ficam em `migrations/versions/`.

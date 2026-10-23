@@ -13,6 +13,8 @@ from pydantic import (
 
 
 class RegisterIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
     display_name: str = Field(
         min_length=2, max_length=120
@@ -81,6 +83,28 @@ class ProfileUpdateIn(BaseModel):
 
 class PasswordRecoveryIn(BaseModel):
     email: EmailStr
+
+
+class EmailVerificationIn(BaseModel):
+    token: str = Field(min_length=32, max_length=256)
+
+
+class UserRoleUpdateIn(BaseModel):
+    role: Literal["student", "teacher", "admin"]
+
+
+class UserStatusUpdateIn(BaseModel):
+    status: Literal["active", "suspended", "disabled"]
+
+
+class SessionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    created_at: datetime
+    expires_at: datetime
+    last_activity_at: datetime
+    revoked_at: datetime | None
 
 
 class PasswordResetIn(BaseModel):

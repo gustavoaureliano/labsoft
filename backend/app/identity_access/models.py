@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Integer,
@@ -14,11 +15,12 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import (
-    DeclarativeBase,
     Mapped,
     mapped_column,
     relationship,
 )
+
+from app.dbbase import Base
 
 
 def utcnow() -> datetime:
@@ -31,12 +33,18 @@ def uuid_str() -> str:
     return str(uuid4())
 
 
-class Base(DeclarativeBase):
-    pass
-
-
 class User(Base):
     __tablename__ = "aa_users"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('student', 'teacher', 'admin')",
+            name="ck_aa_users_role",
+        ),
+        CheckConstraint(
+            "status IN ('pending_verification', 'active', 'suspended', 'disabled')",
+            name="ck_aa_users_status",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         String(36),
@@ -66,6 +74,23 @@ class User(Base):
         Boolean,
         nullable=False,
         default=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="active",
+        index=True,
+    )
+
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+    )
+
+    token_version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -115,6 +140,51 @@ class AuthSession(Base):
         index=True,
     )
 
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime
+    )
+
+    last_activity_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    user: Mapped[User] = relationship()
+
+
+class RefreshToken(Base):
+    __tablename__ = "aa_refresh_tokens"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=uuid_str,
+    )
+
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("aa_sessions.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+
+    family_id: Mapped[str] = mapped_column(
+        String(36),
+        index=True,
+        nullable=False,
+    )
+
     token_hash: Mapped[str] = mapped_column(
         String(64),
         unique=True,
@@ -133,11 +203,199 @@ class AuthSession(Base):
         nullable=False,
     )
 
-    revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
     )
 
-    user: Mapped[User] = relationship()
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+    )
+
+    replaced_by_id: Mapped[str | None] = mapped_column(
+        ForeignKey("aa_refresh_tokens.id"),
+    )
+
+
+class EmailToken(Base):
+    __tablename__ = "aa_email_tokens"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=uuid_str,
+    )
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("aa_users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+
+    purpose: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        index=True,
+    )
+
+    token_hash: Mapped[str] = mapped_column(
+        String(64),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+
+    consumed_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+    )
+
+
+class EmailOutbox(Base):
+    __tablename__ = "aa_email_outbox"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=uuid_str,
+    )
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("aa_users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+
+    recipient: Mapped[str] = mapped_column(
+        String(320),
+        nullable=False,
+    )
+
+    purpose: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
+
+    encrypted_token: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    attempts: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    delivered_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+    )
+
+    last_error: Mapped[str | None] = mapped_column(
+        String(500),
+    )
+
+    idempotency_key: Mapped[str] = mapped_column(
+        String(36),
+        unique=True,
+        nullable=False,
+        default=uuid_str,
+    )
+
+
+class AuditEvent(Base):
+    __tablename__ = "aa_audit_events"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=uuid_str,
+    )
+
+    actor_id: Mapped[str | None] = mapped_column(
+        ForeignKey("aa_users.id", ondelete="SET NULL"),
+        index=True,
+    )
+
+    subject_id: Mapped[str | None] = mapped_column(
+        ForeignKey("aa_users.id", ondelete="SET NULL"),
+        index=True,
+    )
+
+    event: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        index=True,
+    )
+
+    outcome: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+    request_id: Mapped[str | None] = mapped_column(
+        String(100),
+        index=True,
+    )
+
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utcnow,
+        nullable=False,
+    )
+
+    details: Mapped[dict] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+    )
+
+
+class RateLimitBucket(Base):
+    __tablename__ = "aa_rate_limit_buckets"
+
+    key_hash: Mapped[str] = mapped_column(
+        String(64),
+        primary_key=True,
+    )
+
+    window_started_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+
+    attempts: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+    )
 
 
 class PasswordReset(Base):

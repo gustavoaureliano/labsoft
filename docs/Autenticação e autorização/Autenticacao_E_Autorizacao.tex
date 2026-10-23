@@ -1,0 +1,395 @@
+\documentclass[10pt,a4paper,oneside]{extarticle}
+\usepackage{fontspec}
+\setmainfont{Lato}
+\setsansfont{Inter}
+\setmonofont{DejaVu Sans Mono}[Scale=.83]
+\usepackage[brazil]{babel}
+\usepackage[a4paper,top=1.83cm,bottom=1.85cm,left=2.05cm,right=2.05cm,headheight=14pt,headsep=7pt,footskip=17pt]{geometry}
+\usepackage{graphicx,xcolor,tabularx,array,booktabs,colortbl,multirow,tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr,titlesec,enumitem,lastpage,microtype,hyperref,xurl,listings}
+\definecolor{navy}{HTML}{0A2850}
+\definecolor{blue}{HTML}{1D598A}
+\definecolor{ink}{HTML}{203144}
+\definecolor{muted}{HTML}{576D80}
+\definecolor{line}{HTML}{C7D7E6}
+\definecolor{pale}{HTML}{EEF5FA}
+\definecolor{whitegray}{HTML}{F6F9FB}
+\definecolor{yes}{HTML}{147A63}
+\definecolor{red}{HTML}{A1432B}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,pdftitle={Microsserviço de Autenticação e Autorização - AprovaAi},pdfauthor={AprovaAi},pdfsubject={Especificação de microsserviço, JWT, RBAC, cursos, Brevo e Swagger}}
+\color{ink}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\sffamily\scriptsize\color{navy}\textbf{APROVAAI} \; / \; MICROSSERVIÇO DE IDENTIDADE}
+\fancyhead[R]{\sffamily\scriptsize\color{muted}Especificação v1.3}
+\fancyfoot[L]{\sffamily\scriptsize\color{muted}23 de outubro de 2026 \quad • \quad Uso interno}
+\fancyfoot[R]{\sffamily\scriptsize\color{muted}\thepage\ / \pageref{LastPage}}
+\renewcommand{\headrulewidth}{.35pt}
+\renewcommand{\footrulewidth}{0pt}
+\titleformat{\section}{\sffamily\bfseries\color{navy}\fontsize{14}{16.5}\selectfont}{\thesection}{.62em}{}
+\titleformat{\subsection}{\sffamily\bfseries\color{blue}\fontsize{11}{13.2}\selectfont}{\thesubsection}{.55em}{}
+\titlespacing*{\section}{0pt}{1.1ex plus .3ex}{.55ex}
+\titlespacing*{\subsection}{0pt}{.8ex plus .2ex}{.25ex}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.46em}
+\linespread{1.055}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=1.25em,itemsep=.1em,topsep=.13em,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.35em,itemsep=.1em,topsep=.13em,parsep=0pt}
+\renewcommand{\arraystretch}{1.27}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\good}{\textcolor{yes}{\textbf{SIM}}}
+\newcommand{\deny}{\textcolor{red}{\textbf{NÃO}}}
+\newcommand{\conditional}{\textcolor{blue}{\textbf{COND.}}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newtcolorbox{callout}[1][]{enhanced,breakable,colback=pale,colframe=line,boxrule=.5pt,arc=1.5mm,left=2.4mm,right=2.4mm,top=1.5mm,bottom=1.5mm,#1}
+\newtcolorbox{keybox}[1][]{enhanced,breakable,colback=whitegray,colframe=navy,boxrule=.6pt,arc=1mm,left=2.4mm,right=2.4mm,top=1.5mm,bottom=1.5mm,#1}
+\lstdefinestyle{mini}{basicstyle=\ttfamily\fontsize{8.0}{10}\selectfont,columns=fullflexible,breaklines=true,showstringspaces=false,frame=single,rulecolor=\color{line},backgroundcolor=\color{whitegray},xleftmargin=1mm,framesep=4pt,aboveskip=4pt,belowskip=4pt}
+\lstset{style=mini}
+\newcommand{\smalltable}{\fontsize{9}{11}\selectfont}
+\begin{document}
+
+% 1 --- COVER
+\begin{titlepage}
+\thispagestyle{empty}
+\noindent\colorbox{navy}{\parbox[c][.13cm]{\dimexpr\textwidth-2\fboxsep\relax}{\hfill}}
+\vspace*{2.65cm}
+\begin{center}
+\includegraphics[width=.87\textwidth]{LogoAprovaAi.jpeg}\\[1.5cm]
+{\sffamily\bfseries\color{navy}\fontsize{26}{32}\selectfont MICROSSERVIÇO DE\\ AUTENTICAÇÃO E AUTORIZAÇÃO\par}
+\vspace{.48cm}
+{\sffamily\color{muted}\fontsize{12}{16}\selectfont Especificação técnica concisa de arquitetura e regras de segurança\par}
+\vspace{1.0cm}
+\begin{tcolorbox}[colback=pale,colframe=line,boxrule=.5pt,arc=1.6mm,width=.95\textwidth]
+\centering\sffamily\bfseries\color{navy}\fontsize{10}{14}\selectfont JWT \quad | \quad RBAC \quad | \quad PROTEÇÃO DE CURSOS\\[3pt]
+{\normalfont\color{ink}ALUNO \; • \; PROFESSOR \; • \; CONVIDADO \; • \; ADMIN}\end{tcolorbox}
+\vspace{.55cm}
+{\sffamily\color{blue}\small FastAPI \; • \; React \; • \; PostgreSQL \; • \; Brevo API \; • \; Swagger UI}
+\end{center}
+\vfill
+\begin{tabularx}{\textwidth}{@{}L{3cm}Y@{}}
+\textbf{Documento} & AprovaAi--SEC--001\\
+\textbf{Versão} & 1.3 — políticas de senha e acesso admin atualizadas\\
+\textbf{Data} & 23/10/2026\\
+\textbf{Status} & Proposta de implementação; regras comerciais e operacionais sujeitas à validação\\
+\end{tabularx}
+\vspace{.28cm}
+\noindent\colorbox{navy}{\parbox[c][.11cm]{\dimexpr\textwidth-2\fboxsep\relax}{\hfill}}
+\end{titlepage}
+
+% 2 --- overview & decisions
+\section{Escopo e arquitetura do microsserviço}
+O \textbf{Microsserviço de Autenticação e Autorização do AprovaAi} é responsável pelo cadastro, confirmação de email, autenticação, emissão e renovação de tokens, sessões, atribuição de papéis e políticas de acesso. A aplicação utilizará \textbf{JWT para usuários autenticados}; \textbf{CONVIDADO não se autentica e não recebe JWT}. \textbf{RBAC} é o modelo principal, com checagem adicional do vínculo entre pessoa e curso para recursos privados.
+
+\begin{center}
+\begin{tikzpicture}[node distance=5mm and 7mm,>=Latex, every node/.style={font=\sffamily\fontsize{8.2}{9.5}\selectfont}, bx/.style={draw=line,fill=pale,rounded corners=1.5mm,align=center,minimum height=9.3mm,text width=3.2cm}]
+\node[bx] (react) {React / navegador\\Frontend não confiável};
+\node[bx,right=of react] (auth) {FastAPI — Auth\\JWT • sessão • RBAC};
+\node[bx,right=of auth] (data) {PostgreSQL\\Usuários • compras • cursos};
+\node[bx,below=of auth] (courses) {API de cursos / mídia\\Aplica autorização por curso};
+\node[bx,below=of data] (brevo) {Brevo Email API\\Somente mensagens transacionais};
+\draw[->,thick,color=blue] (react) -- node[above,font=\scriptsize]{HTTPS} (auth);
+\draw[<->,thick,color=blue] (auth) -- (data);
+\draw[->,thick,color=blue] (auth) -- (courses);
+\draw[->,thick,color=blue] (auth) -- (brevo);
+\draw[<->,color=blue] (courses) -- (data);
+\end{tikzpicture}
+\end{center}
+\begin{callout}
+\textbf{Separação de responsabilidades.} O serviço de identidade autentica, administra sessões e define papéis. A API de cursos \textbf{deve verificar, a cada acesso privado}, a autorização efetiva por compra/matrícula ou autoria; não confiar em flags vindas do React. Se um serviço consumir JWT de outro, deve verificar assinatura, emissor, destinatário e validade.
+\end{callout}
+
+\section{Decisões técnicas adotadas}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{3.6cm}Y@{}}\toprule
+\textbf{Assunto} & \textbf{Decisão para a versão inicial}\\\midrule
+Identidade / cadastro & UUID; email único, normalizado; senha; cadastro público cria somente \textbf{ALUNO}.\\
+Confirmação & Email obrigatório via Brevo; conta permanece pendente até confirmar token de uso único (24 h).\\
+Senhas & Argon2id; mínimo de 12 caracteres e aceitação de pelo menos 64 caracteres.\\
+Autenticação & Email + senha para todos os usuários, inclusive ADMIN; login social fora do escopo inicial.\\
+Access token & JWT assinado com EdDSA/Ed25519; expiração em \textbf{15 minutos}; validação estrita.\\
+Refresh token & Opaco aleatório, 256 bits; \textbf{7 dias}; hash em banco; rotação e detecção de reutilização.\\
+Frontend & Access JWT em memória; refresh em cookie \code{HttpOnly}, \code{Secure} (produção) e \code{SameSite} adequado.\\
+Autorização & Negar por padrão; roles ALUNO, PROFESSOR e ADMIN; CONVIDADO = anônimo; verificação de curso.\\
+Papéis privilegiados & PROFESSOR e ADMIN atribuídos apenas por administrador; alteração revoga sessões.\\
+Swagger & \code{/docs} e \code{/openapi.json} somente para ADMIN autenticado e com sessão válida.\\
+Mídia / pagamentos & Entitlement apenas após confirmação confiável de pagamento; arquivos privados nunca públicos por URL estática.\\
+\bottomrule\end{tabularx}}
+
+\textbf{Premissas:} uma role persistente por usuário, autoria primária de curso e acesso do aluno por matrícula ativa. Administração irrestrita se refere às \emph{funcionalidades da aplicação}, não a segredos, senhas ou chaves.
+\clearpage
+
+% 3 --- roles
+\section{Papéis RBAC e política de acesso}
+\textbf{CONVIDADO:} usuário anônimo, sem JWT; acesso a homepage, catálogo, descrição e conteúdos marcados como prévias públicas. \textbf{ALUNO:} usuário autenticado e ativo; somente conteúdos privados dos cursos cuja compra/matrícula lhe conceda direito de acesso. \textbf{PROFESSOR:} usuário autenticado e ativo; somente conteúdos privados dos cursos de sua autoria, além das operações de criação/edição desses cursos. \textbf{ADMIN:} conta privilegiada autenticada; todos os recursos funcionais e documentação da API.
+
+\subsection{Matriz de autorizações}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}Y L{1.55cm} L{1.55cm} L{1.55cm} L{1.40cm}@{}}\toprule
+\textbf{Ação / recurso} & \textbf{Convidado} & \textbf{Aluno} & \textbf{Professor} & \textbf{Admin}\\\midrule
+Navegar em páginas, catálogo e preços públicos & \good & \good & \good & \good\\
+Ver prévia pública de aula & \good & \good & \good & \good\\
+Ler / baixar aula ou material privado & \deny & \conditional & \conditional & \good\\
+Consultar e editar \emph{próprio} perfil & \deny & \good & \good & \good\\
+Consultar \emph{próprias} compras & \deny & \good & \deny & \good\\
+Comprar curso / iniciar checkout & \deny & \good & \deny & \good\\
+Criar curso e aulas & \deny & \deny & \good & \good\\
+Editar / excluir curso privado & \deny & \deny & \conditional & \good\\
+Visualizar curso não publicado & \deny & \deny & \conditional & \good\\
+Publicar / aprovar cursos de terceiros & \deny & \deny & \deny & \good\\
+Administrar usuários, papéis e matrículas & \deny & \deny & \deny & \good\\
+Consultar auditoria e área administrativa & \deny & \deny & \deny & \good\\
+Acessar Swagger UI e esquema OpenAPI & \deny & \deny & \deny & \good\\
+\bottomrule\end{tabularx}}
+\vspace{1mm}
+{\footnotesize\textbf{Legenda:} COND. significa que o backend deve confirmar \emph{curso específico}: direito de matrícula para ALUNO ou autoria para PROFESSOR. Estas regras valem mesmo quando alguém descobre o identificador do recurso.}
+
+\subsection{Predicado de autorização para conteúdo privado}
+\begin{keybox}
+\textbf{Permitir acesso ao recurso privado do curso C se e somente se:}
+\begin{enumerate}
+\item Usuário autenticado, ativo e com token/sessão válidos; \textbf{E}
+\item Role = \textbf{ADMIN}; \textbf{OU} role = \textbf{ALUNO} com matrícula/entitlement ativo para C; \textbf{OU} role = \textbf{PROFESSOR} e \code{C.created_by == user.id}; \textbf{E}
+\item Operação e estado do recurso estão autorizados. Na ausência de qualquer condição, \textbf{NEGAR}.
+\end{enumerate}
+\end{keybox}
+\textbf{Regras de negócio:} uma compra pendente, estornada ou revogada não libera acesso. Professor não obtém acesso automático a cursos de outros professores e, inicialmente, não acumula permissões de aluno. ADMIN pode alterar roles; jamais aceitar \code{role}, \code{is_admin} ou \code{purchased=true} informados pelo cliente como fonte de autoridade. O professor pode editar apenas cursos que produziu; publicação final fica reservada ao ADMIN na política inicial.
+
+\subsection{Erros de autorização}
+Sem credencial válida: \textbf{401}. Autenticado e proibido: \textbf{403}. Para recursos privados cuja existência deva ser ocultada, pode-se responder \textbf{404} de forma consistente. A UI pode esconder botões; a API deve impor todas as regras.
+\clearpage
+
+% 4 --- onboarding brevo
+\section{Cadastro e envio transacional de email — Brevo}
+\begin{keybox}
+\textbf{Integração oficial: Brevo Transactional Email API.} A Brevo \textbf{envia} emails de confirmação, recuperação e segurança, mas \textbf{não autentica}, não emite JWT e não define permissões. Somente o backend tem acesso à chave da API. O envio gratuito está sujeito às cotas e condições vigentes do plano (referência: \textbf{300 emails/dia}, a confirmar no painel da Brevo).
+\end{keybox}
+
+\subsection{Confirmação obrigatória do cadastro}
+\begin{enumerate}
+\item \code{POST /auth/register}: validar dados, atribuir ALUNO e criar conta pendente, com hash Argon2id da senha. Estado inicial: \code{PENDING_VERIFICATION}.
+\item Gerar token criptograficamente aleatório (\textbf{256 bits}), armazenar apenas seu \textbf{hash} e expiração \textbf{24 h}; publicar trabalho em fila de envio.
+\item Worker chama a Brevo via \code{POST https://api.brevo.com/v3/smtp/email}; o template recebe o link de verificação e o destinatário.
+\item React abre \code{/verificar-email?token=...} e encaminha o token para \code{POST /auth/verify-email}; o backend verifica hash, validade e uso único.
+\item Marcar email verificado e conta \code{ACTIVE}, invalidar o token e liberar login. Reenvio cria novo token e invalida o anterior.
+\end{enumerate}
+
+\begin{center}
+\begin{tikzpicture}[node distance=2mm and 4.8mm,>=Latex, every node/.style={font=\sffamily\fontsize{7.7}{8.8}\selectfont},bx/.style={draw=line,fill=pale,rounded corners=1mm,align=center,text width=2.6cm,minimum height=11mm}]
+\node[bx] (a) {React\\Cadastro};
+\node[bx,right=of a] (b) {FastAPI + BD\\Pendente + token};
+\node[bx,right=of b] (c) {Brevo\\Email com link};
+\node[bx,right=of c] (d) {FastAPI\\Valida e ativa};
+\draw[->,thick,color=blue] (a) -- (b);\draw[->,thick,color=blue] (b) -- (c);\draw[->,thick,color=blue] (c) -- (d);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Configuração mínima e contrato}
+\begin{lstlisting}
+# Variaveis de ambiente do servico (nunca enviar ao React)
+BREVO_API_KEY=<segredo_armazenado_em_secret_manager>
+BREVO_SENDER_EMAIL=contato@dominio-verificado.com
+BREVO_VERIFY_TEMPLATE_ID=<id_do_template>
+PUBLIC_APP_URL=https://app.seudominio.com
+
+POST https://api.brevo.com/v3/smtp/email
+Headers: api-key: <BREVO_API_KEY>
+         Content-Type: application/json
+Body: {
+ "to": [{"email": "aluno@exemplo.com"}],
+ "templateId": 123,
+ "params": {"VERIFY_URL": "https://app.seudominio.com/..."}
+}
+\end{lstlisting}
+\textbf{Operação:} fila persistente com retentativas, idempotência, limite por usuário/IP e monitoramento de entregas, falhas e consumo da cota. Não registrar links contendo tokens, nem enviar senhas ou JWTs por email. Usar \code{Referrer-Policy: no-referrer} na página de confirmação. Recuperação de senha usa o mesmo provedor, token de uso único (\textbf{20 min}) e invalida sessões após troca.
+
+\textbf{Domínio:} não é necessário para JWT, RBAC nem testes locais; para email real em produção, configurar remetente e domínio autenticado na Brevo (SPF, DKIM e política DMARC). Em desenvolvimento pode-se usar caixa de testes como Mailpit. Nunca montar o link de confirmação a partir de um cabeçalho \code{Host} não validado.
+\clearpage
+
+% 5 JWT
+\section{Tokens, sessões e segurança de login}
+\subsection{JWT de acesso — obrigatório para usuários autenticados}
+O token é \textbf{assinado} com EdDSA (Ed25519), vence após \textbf{15 minutos} e carrega apenas dados necessários. JWT não é criptografado: \textbf{não incluir senha, email sensível, segredos ou informações financeiras}. APIs validam assinatura, algoritmo permitido, \code{iss}, \code{aud}, \code{exp}, \code{nbf}, \code{sub}, \code{sid}, status atual da conta e política de sessão.
+\begin{lstlisting}
+{
+ "sub": "<uuid-do-usuario>", "role": "ALUNO",
+ "iss": "aprovaai-auth", "aud": "aprovaai-api",
+ "typ": "access", "sid": "<uuid-da-sessao>",
+ "jti": "<id-unico>", "iat": 1792780000,
+ "nbf": 1792780000, "exp": 1792780900
+}
+\end{lstlisting}
+\textbf{Mudança de role:} revogar sessões anteriores; se a aplicação usar claims de role, não confiar cegamente em roles antigas. Consultar role atual ou versão de autorização em armazenamento controlado. O esquema de chaves requer \code{kid}, guarda segura da chave privada e rotação controlada.
+
+\subsection{Refresh token, armazenamento e logout}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{3.25cm}Y@{}}\toprule
+\textbf{Elemento} & \textbf{Política}\\\midrule
+Refresh token & Opaco, aleatório, 256 bits; validade de 7 dias; armazenar \textbf{hash} no BD; uso único e rotação atômica.\\
+Reutilização & Se um token já rotacionado reaparecer, invalidar família de sessão e registrar alerta.\\
+Access no React & Manter em memória, enviar \code{Authorization: Bearer <JWT>}; não persistir em \code{localStorage}.\\
+Refresh no navegador & Cookie \code{HttpOnly}, \code{Secure} em produção, \code{SameSite} adequado, \code{Path} restrito; proteger o refresh contra CSRF.\\
+Logout & Revogar refresh/sessão no servidor e limpar cookie; access JWT existente exige verificação de sessão/revogação para bloqueio imediato.\\
+Múltiplos dispositivos & Sessões individuais identificadas por \code{sid}; suportar revogação individual e global.\\
+\bottomrule\end{tabularx}}
+
+\subsection{Fluxos de login e recuperação}
+\textbf{Login:} \code{POST /auth/login} valida email/senha, conta \code{ACTIVE} e proteção contra tentativas excessivas. A role ADMIN utiliza o mesmo fluxo de autenticação por senha, mas suas rotas permanecem sujeitas às verificações de role e sessão ativa. Alteração de senha ou email exige autenticação recente. Recuperação de conta devolve resposta genérica para evitar enumeração.
+
+\subsection{Proteções de infraestrutura}
+Todas as rotas sensíveis usam HTTPS em produção, CORS restrito às origens aprovadas, CSRF nas operações por cookie, cabeçalhos seguros e \code{Cache-Control: no-store} em respostas privadas. Manter relógios sincronizados, rate limiting no login, cadastro, refresh e reenvio de emails, além de segredos fora do repositório e logs.
+\clearpage
+
+% 6 data courses
+\section{Autorização de cursos e modelo de dados}
+\subsection{Direito de acesso do aluno e autoria do professor}
+\textbf{ALUNO:} um pagamento só concede acesso após confirmação idônea no servidor (webhook validado ou consulta confiável ao provedor). Persistir \emph{entitlement} ou matrícula com \code{student_id}, \code{course_id}, \code{status}, início, validade e revogação. A verificação ocorre em \emph{todas} as aulas, arquivos, provas privadas e streams, não só na página inicial do curso. \textbf{PROFESSOR:} em cada operação de edição ou leitura privada, exigir autoria \code{courses.created_by == user.id}; IDs arbitrários da URL não alteram o escopo.
+
+\begin{callout}
+\textbf{Arquivos e vídeos.} Nunca expor bucket público como única proteção. A API verifica a regra e fornece mídia via proxy autenticado ou URL assinada de curta validade. Links de prévia pública precisam estar marcados explicitamente. Negar acesso a compra estornada, vencida ou revogada.
+\end{callout}
+
+\subsection{Persistência PostgreSQL mínima}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{3.75cm}Y@{}}\toprule
+\textbf{Tabela} & \textbf{Campos e condições principais}\\\midrule
+\code{users} & \code{id UUID PK}, \code{email UNIQUE}, \code{password_hash}, \code{role} (ALUNO/PROFESSOR/ADMIN), \code{status}, \code{verified_at}, \code{token_version}.\\
+\code{courses} & \code{id UUID PK}, \code{created_by FK users}, \code{publication_status}, \code{title}.\\
+\code{lessons} & \code{id UUID PK}, \code{course_id FK}, \code{is_preview}, \code{visibility}, referência segura da mídia.\\
+\code{enrollments} & \code{student_id FK}, \code{course_id FK}, \code{status}, \code{valid_until}, \code{revoked_at}, vínculo com compra.\\
+\code{sessions} & \code{id UUID}, \code{user_id FK}, \code{revoked_at}, datas de criação/última atividade.\\
+\code{refresh_tokens} & \code{id}, \code{session_id FK}, \code{token_hash}, \code{expires_at}, \code{used_at}, \code{family_id}.\\
+\code{email_tokens} & \code{user_id FK}, \code{token_hash}, \code{purpose}, \code{expires_at}, \code{consumed_at}.\\
+\code{audit_events} & \code{actor_id}, \code{event}, \code{resource_id}, \code{outcome}, \code{occurred_at}, \code{request_id}.\\
+\bottomrule\end{tabularx}}
+
+\subsection{Política de consistência e escopo}
+Uma role persistente por usuário simplifica a versão inicial. CONVIDADO não é linha de usuário. Apenas fluxo administrativo pode elevar ALUNO a PROFESSOR ou ADMIN; criar o primeiro ADMIN por mecanismo seguro de implantação. Contas \code{PENDING_VERIFICATION}, \code{SUSPENDED} ou \code{DISABLED} não mantêm acesso privado; suspensões revogam sessões. Regras financeiras e de autoria são validadas por consultas indexadas/transações consistentes; uma alteração deve refletir-se nas autorizações subsequentes.
+
+\begin{keybox}
+\textbf{Regra obrigatória de microsserviços:} nem JWT válido nem a simples role \code{ALUNO} autorizam aula privada. A operação só é liberada após confirmação do \emph{entitlement} para aquele \code{course_id}. A mesma lógica vale para autoria docente. O serviço que entrega o recurso é responsável pela decisão final, mesmo quando consulta um serviço de autorização central.
+\end{keybox}
+\clearpage
+
+% 7 endpoints
+\section{Contrato inicial da API e respostas}
+Os nomes de rotas são propostos. A documentação OpenAPI deve explicitar os esquemas de segurança, contratos de erro e direitos necessários para cada operação.
+\subsection{Identidade, sessões e Brevo}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{2.1cm}L{5.1cm}Y@{}}\toprule
+\textbf{Método} & \textbf{Rota} & \textbf{Acesso / efeito}\\\midrule
+POST & \code{/auth/register} & Público; cria ALUNO pendente e agenda email Brevo.\\
+POST & \code{/auth/verify-email} & Público; consome token válido e ativa conta.\\
+POST & \code{/auth/resend-verification} & Público limitado; token novo e email via Brevo.\\
+POST & \code{/auth/login} & Público; valida credenciais e conta ativa, inclusive para ADMIN.\\
+POST & \code{/auth/refresh} & Cookie de refresh válido; rotação e JWT novo.\\
+POST & \code{/auth/logout} & Sessão autenticada; revogação e limpeza de cookie.\\
+POST & \code{/auth/forgot-password} & Público limitado; gera token e aciona Brevo; resposta genérica.\\
+POST & \code{/auth/reset-password} & Token de uso único; troca hash e revoga sessões.\\
+GET & \code{/auth/me} & Usuário autenticado; só dados do próprio perfil.\\
+GET & \code{/auth/sessions} & Usuário autenticado; sessões próprias.\\
+POST & \code{/auth/logout-all} & Usuário autenticado; revoga sessões da conta.\\
+\bottomrule\end{tabularx}}
+
+\subsection{Cursos e administração}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{2.1cm}L{5.1cm}Y@{}}\toprule
+\textbf{Método} & \textbf{Rota} & \textbf{Autorização}\\\midrule
+GET & \code{/courses} & Público; apenas cursos publicados.\\
+GET & \code{/courses/{id}} & Público se publicado; não vazar conteúdo privado.\\
+GET & \code{/courses/{id}/lessons/{id}} & ALUNO matriculado, PROFESSOR autor, ou ADMIN.\\
+GET & \code{/courses/{id}/files/{id}} & Mesma verificação; gerar URL assinada curta.\\
+POST & \code{/courses} & PROFESSOR ou ADMIN; atribuir autor pelo servidor.\\
+PATCH & \code{/courses/{id}} & PROFESSOR autor ou ADMIN.\\
+POST & \code{/admin/courses/{id}/publish} & Exclusivo ADMIN.\\
+PATCH & \code{/admin/users/{id}/role} & Exclusivo ADMIN; auditar e revogar sessões.\\
+GET & \code{/docs}, \code{/openapi.json} & Exclusivo ADMIN autenticado, com sessão de documentação válida.\\
+\bottomrule\end{tabularx}}
+
+\subsection{Semântica de erros}
+\textbf{400/422}: entrada inválida; \textbf{401}: credencial ausente, inválida ou expirada; \textbf{403}: identidade válida sem autorização; \textbf{404}: recurso inexistente ou oculto por política; \textbf{409}: conflito de estado; \textbf{429}: limite de tentativas; \textbf{503}: dependência essencial indisponível. Usar \code{request_id}; não revelar se o email solicitado no fluxo de recuperação existe.
+\clearpage
+
+% 8 docs implementation
+\section{Swagger UI — acesso exclusivo do ADMIN}
+\begin{keybox}
+\textbf{Exigência do produto:} apenas a role ADMIN poderá obter a página Swagger, o esquema OpenAPI e qualquer rota alternativa de documentação. A restrição é \textbf{no backend}, não um simples botão oculto no React. Mesmo ADMIN precisa de conta ativa e sessão válida.
+\end{keybox}
+
+\subsection{Duas barreiras que não podem ser confundidas}
+\begin{enumerate}
+\item \textbf{Acesso à documentação:} navegação a \code{/docs} e busca de \code{/openapi.json} devem usar \textbf{cookie de sessão administrativa} \code{HttpOnly}, com JWT curto de finalidade \code{admin_docs} ou identificador de sessão opaco. O navegador normalmente não envia Bearer ao abrir uma página por URL; por isso a verificação administrativa precisa funcionar com a credencial de navegação.
+\item \textbf{Uso das rotas dentro da documentação:} cada requisição de API disparada pelo Swagger continua exigindo \code{Authorization: Bearer <JWT>} e todas as verificações RBAC + curso. Acesso ao HTML \textbf{não} concede acesso automático às operações.
+\end{enumerate}
+
+\subsection{Esqueleto seguro no FastAPI}
+\begin{lstlisting}[language=Python]
+from fastapi import FastAPI, Depends
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+
+app = FastAPI(docs_url=None, redoc_url=None,
+              openapi_url=None)
+
+async def require_admin_docs_session():
+    # Implementar: cookie valido, sessao nao revogada,
+    # usuario ACTIVE, role ADMIN atual.
+    raise NotImplementedError("Implementar verificacao real")
+
+@app.get("/openapi.json", include_in_schema=False)
+async def openapi_admin(_=Depends(require_admin_docs_session)):
+    return JSONResponse(get_openapi(
+        title="AprovaAi API", version="1.0", routes=app.routes),
+        headers={"Cache-Control": "no-store"})
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_admin(_=Depends(require_admin_docs_session)):
+    return get_swagger_ui_html(openapi_url="/openapi.json",
+        title="AprovaAi | Swagger (ADMIN)",
+        swagger_ui_parameters={"persistAuthorization": False})
+\end{lstlisting}
+\textbf{ATENÇÃO:} a dependência acima é \emph{intencionalmente não implementada}; \textbf{não} deve ser publicada como proteção funcional. A implementação real verifica sessão, conta ativa e role atual a cada requisição. ReDoc deve ficar desabilitado ou protegido da mesma forma. Recursos estáticos da UI devem obedecer à política de segurança e CSP escolhida.
+
+\subsection{Jornada administrativa}
+ADMIN entra por \code{/admin/login} com email e senha, recebe cookie exclusivo de documentação, acessa \code{/docs} e, para testar endpoints, utiliza \emph{Authorize} com access JWT administrativo de curta duração. Sessão expirada ou role removida bloqueiam imediatamente HTML, OpenAPI e APIs. Não usar \emph{password grant} OAuth2 como novo fluxo moderno; se futuramente houver provedor OIDC, preferir \emph{Authorization Code + PKCE}.
+\clearpage
+
+% 9 security & tests
+\section{Operação, segurança e critérios de aceite}
+\subsection{Proteções obrigatórias}
+\begin{itemize}
+\item \textbf{Credenciais:} hashing Argon2id, política de tamanho mínimo e recuperação com tokens aleatórios de uso único.
+\item \textbf{Rede e navegador:} HTTPS; cookies \code{Secure}/\code{HttpOnly}; CSRF em fluxos com cookie; CORS restrito; validação de origem; proteção XSS/CSP.
+\item \textbf{Abusos:} rate limits por conta, IP e operação; reenvio Brevo limitado; respostas genéricas contra enumeração; alertas de login suspeito.
+\item \textbf{Segredos:} chave JWT privada e \code{BREVO_API_KEY} em gerenciador de segredos; nunca em JavaScript, Git ou logs; rotação planejada.
+\item \textbf{Auditoria:} registrar login, logout, falhas, alterações de role, revogações, acesso Swagger e negações relevantes com ator, alvo, resultado e \code{request_id}; nunca registrar tokens completos, senhas ou links de confirmação.
+\end{itemize}
+
+\subsection{Checklist mínimo de testes automatizados}
+{\smalltable
+\begin{tabularx}{\textwidth}{@{}L{1.0cm}Y@{}}\toprule
+\textbf{ID} & \textbf{Cenário / resultado exigido}\\\midrule
+T01 & CONVIDADO visualiza apenas catálogo e prévias; acesso a aula privada negado.\\
+T02 & ALUNO com matrícula ativa acessa seu curso; sem matrícula ou com revogação é negado.\\
+T03 & PROFESSOR acessa curso de sua autoria; tentativa de acessar curso privado de outro autor é negada.\\
+T04 & ADMIN autenticado com sessão válida acessa todos os cursos e a Swagger UI.\\
+T05 & CONVIDADO, ALUNO e PROFESSOR não recebem \code{/docs}, \code{/openapi.json} ou ReDoc.\\
+T06 & JWT expirado, adulterado, com \code{iss}/\code{aud} errados ou sessão revogada é rejeitado.\\
+T07 & Refresh rotacionado não pode ser reutilizado; logout invalida a sessão prevista.\\
+T08 & Cadastro gera email via Brevo; token expira, é de uso único e não ativa duas vezes.\\
+T09 & Falha Brevo não ativa a conta; fila tenta novamente sem mensagens duplicadas indevidas.\\
+T10 & Payload com role ADMIN, autoria falsa ou compra forjada nunca concede acesso.\\
+\bottomrule\end{tabularx}}
+
+\subsection{Ambientes e roteiro de implantação}
+\textbf{Desenvolvimento:} React em \code{localhost:5173}, API em \code{localhost:8000}, banco local e captura de email com Mailpit; não exige domínio. \textbf{Produção:} DNS controlado, HTTPS, cookies seguros, remetente Brevo autenticado (SPF/DKIM/DMARC), variáveis secretas e métricas de filas/cota. \textbf{Etapas:} (1) tabelas, (2) cadastro + Brevo, (3) login/JWT/refresh, (4) RBAC + cursos, (5) Swagger ADMIN, (6) testes e deploy.
+
+\begin{callout}
+\textbf{Critério de conclusão:} nenhuma operação privada é liberada apenas por conhecer URL ou identificador; nenhuma role comum acessa o Swagger; Brevo entrega emails mas a validação de tokens e as autorizações permanecem no backend.
+\end{callout}
+\vspace{1mm}
+{\footnotesize\color{muted}\textbf{Referências técnicas:} FastAPI (segurança e OpenAPI), OWASP Authentication/Authorization/Session Management Cheat Sheets, RFC 7519 (JWT), RFC 9700 (OAuth2 Security BCP), documentação Brevo Transactional Email API. As cotas do plano gratuito podem mudar.}
+\end{document}

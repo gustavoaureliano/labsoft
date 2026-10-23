@@ -9,7 +9,9 @@ from ..config import Settings
 from ..models import (
     User,
     AuthSession,
+    EmailToken,
     PasswordReset,
+    RefreshToken,
     utcnow,
 )
 from ..schemas import RegisterIn
@@ -48,11 +50,192 @@ class IdentityService:
             email=email,
             password_hash=hash_password(data.password),
             role="student",
+            is_active=False,
+            status="pending_verification",
         )
 
         db.add(user)
         db.flush()
 
+        return user
+
+    def find_pending_user(
+        self,
+        db: Session,
+        email: str,
+    ) -> User | None:
+        return db.scalar(
+            select(User).where(
+                User.email == email.strip().lower(),
+                User.status == "pending_verification",
+            )
+        )
+
+    def create_verification_token(
+        self,
+        db: Session,
+        user: User,
+        settings: Settings,
+    ) -> str:
+        now = utcnow()
+        db.execute(
+            update(EmailToken)
+            .where(
+                EmailToken.user_id == user.id,
+                EmailToken.purpose == "verify_email",
+                EmailToken.consumed_at.is_(None),
+            )
+            .values(consumed_at=now)
+        )
+        token = generate_secret()
+        db.add(
+            EmailToken(
+                user_id=user.id,
+                purpose="verify_email",
+                token_hash=token_digest(token),
+                expires_at=now + timedelta(
+                    hours=settings.verification_hours
+                ),
+            )
+        )
+        db.flush()
+        return token
+
+    def verify_email(
+        self,
+        db: Session,
+        raw_token: str,
+    ) -> User:
+        now = utcnow()
+        entry = db.scalar(
+            select(EmailToken).where(
+                EmailToken.token_hash == token_digest(raw_token),
+                EmailToken.purpose == "verify_email",
+            )
+        )
+        if (
+            entry is None
+            or entry.consumed_at is not None
+            or entry.expires_at <= now
+        ):
+            raise ServiceError(
+                "invalid",
+                "Token de confirmação inválido, expirado ou já utilizado.",
+            )
+
+        claim = db.execute(
+            update(EmailToken)
+            .where(
+                EmailToken.id == entry.id,
+                EmailToken.consumed_at.is_(None),
+                EmailToken.expires_at > now,
+            )
+            .values(consumed_at=now)
+        )
+        if claim.rowcount != 1:
+            raise ServiceError(
+                "invalid",
+                "Token de confirmação já utilizado.",
+            )
+
+        user = db.get(User, entry.user_id)
+        if user is None or user.status != "pending_verification":
+            raise ServiceError(
+                "invalid",
+                "A conta não está aguardando confirmação.",
+            )
+
+        user.status = "active"
+        user.is_active = True
+        user.verified_at = now
+        db.flush()
+        return user
+
+    def set_role(
+        self,
+        db: Session,
+        user_id: str,
+        role: str,
+    ) -> User:
+        if role not in {"student", "teacher", "admin"}:
+            raise ServiceError(
+                "invalid",
+                "Papel inválido.",
+            )
+
+        user = db.get(User, user_id)
+        if user is None:
+            raise ServiceError(
+                "not_found",
+                "Usuário não encontrado.",
+            )
+        if user.role != role:
+            user.role = role
+            user.token_version += 1
+            active_sessions = list(
+                db.scalars(
+                    select(AuthSession.id).where(
+                        AuthSession.user_id == user.id,
+                        AuthSession.revoked_at.is_(None),
+                    )
+                )
+            )
+            db.execute(
+                update(AuthSession)
+                .where(AuthSession.id.in_(active_sessions))
+                .values(revoked_at=utcnow())
+            )
+            db.execute(
+                update(RefreshToken)
+                .where(RefreshToken.session_id.in_(active_sessions))
+                .values(revoked_at=utcnow())
+            )
+        db.flush()
+        return user
+
+    def set_status(
+        self,
+        db: Session,
+        user_id: str,
+        status: str,
+    ) -> User:
+        if status not in {"active", "suspended", "disabled"}:
+            raise ServiceError("invalid", "Status inválido.")
+        user = db.get(User, user_id)
+        if user is None:
+            raise ServiceError(
+                "not_found",
+                "Usuário não encontrado.",
+            )
+        if status == "active" and user.verified_at is None:
+            raise ServiceError(
+                "conflict",
+                "A conta precisa confirmar o e-mail antes da ativação.",
+            )
+        if user.status != status:
+            user.status = status
+            user.is_active = status == "active"
+            user.token_version += 1
+            session_ids = list(
+                db.scalars(
+                    select(AuthSession.id).where(
+                        AuthSession.user_id == user.id,
+                        AuthSession.revoked_at.is_(None),
+                    )
+                )
+            )
+            revoked_at = utcnow()
+            db.execute(
+                update(AuthSession)
+                .where(AuthSession.id.in_(session_ids))
+                .values(revoked_at=revoked_at)
+            )
+            db.execute(
+                update(RefreshToken)
+                .where(RefreshToken.session_id.in_(session_ids))
+                .values(revoked_at=revoked_at)
+            )
+        db.flush()
         return user
 
     def authenticate(
@@ -71,6 +254,7 @@ class IdentityService:
         if (
             user is None
             or not user.is_active
+            or user.status != "active"
             or not verify_password(
                 user.password_hash, password
             )
@@ -87,12 +271,13 @@ class IdentityService:
         db: Session,
         email: str,
         settings: Settings,
-    ) -> tuple[str, str] | None:
+    ) -> tuple[str, str, str] | None:
 
         user = db.scalar(
             select(User).where(
                 User.email == email.strip().lower(),
                 User.is_active.is_(True),
+                User.status == "active",
             )
         )
 
@@ -124,7 +309,7 @@ class IdentityService:
 
         db.flush()
 
-        return user.email, raw
+        return user.email, raw, user.id
 
     def reset_password(
         self,
@@ -180,6 +365,7 @@ class IdentityService:
         user.password_hash = hash_password(
             new_password
         )
+        user.token_version += 1
 
         db.execute(
             update(PasswordReset)
@@ -198,6 +384,17 @@ class IdentityService:
             )
             .values(revoked_at=now)
         )
+        db.execute(
+            update(RefreshToken)
+            .where(
+                RefreshToken.session_id.in_(
+                    select(AuthSession.id).where(
+                        AuthSession.user_id == user.id
+                    )
+                )
+            )
+            .values(revoked_at=now)
+        )
 
         db.flush()
 
@@ -207,7 +404,7 @@ class IdentityService:
         *roles: str,
     ) -> None:
 
-        if not user.is_active:
+        if not user.is_active or user.status != "active":
             raise ServiceError(
                 "unauthorized",
                 "Conta desativada.",
@@ -227,7 +424,7 @@ class IdentityService:
         allow_admin: bool = False,
     ) -> None:
 
-        if not user.is_active:
+        if not user.is_active or user.status != "active":
             raise ServiceError(
                 "unauthorized",
                 "Conta desativada.",

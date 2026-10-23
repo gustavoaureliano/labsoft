@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 from contextlib import contextmanager
 from typing import Callable
 
@@ -10,24 +8,27 @@ from fastapi import (
     Depends,
     File,
     HTTPException,
+    Request,
+    Response,
     UploadFile,
 )
 
 from fastapi.responses import FileResponse
 
 from fastapi.security import (
-    OAuth2PasswordBearer,
-    OAuth2PasswordRequestForm,
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
 )
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import Settings
-from .models import User
+from .models import AuditEvent, AuthSession, User
 
 from .schemas import (
     LoginIn,
+    EmailVerificationIn,
     MediaOut,
     NotificationOut,
     PasswordRecoveryIn,
@@ -36,25 +37,28 @@ from .schemas import (
     ProfileUpdateIn,
     RegisterIn,
     StatusOut,
+    SessionOut,
     TeacherApplicationIn,
     TeacherApplicationOut,
     TokenOut,
+    UserRoleUpdateIn,
+    UserStatusUpdateIn,
     UserOut,
 )
 
 from .services import (
     EmailSender,
+    EmailOutboxService,
     IdentityService,
     MediaService,
     NotificationService,
     ProfileService,
+    RateLimitService,
     ServiceError,
     SessionService,
     TeacherApplicationService,
 )
 
-
-logger = logging.getLogger(__name__)
 
 _HTTP_CODES = {
     "invalid": 400,
@@ -64,7 +68,87 @@ _HTTP_CODES = {
     "conflict": 409,
     "too_large": 413,
     "unavailable": 503,
+    "rate_limited": 429,
 }
+
+
+def _require_allowed_origin(
+    request: Request,
+    settings: Settings,
+) -> None:
+    origin = request.headers.get("origin")
+    api_origin = (
+        f"{request.url.scheme}://{request.url.netloc}"
+    )
+    allowed_origins = {
+        settings.frontend_origin.rstrip("/"),
+        api_origin,
+    }
+    if origin not in allowed_origins:
+        raise HTTPException(
+            status_code=403,
+            detail="Origem não autorizada.",
+        )
+
+
+def _check_rate_limit(
+    db: Session,
+    request: Request,
+    scope: str,
+    identity: str,
+    limit: int,
+    window_seconds: int,
+) -> None:
+    remote_ip = (
+        request.client.host
+        if request.client is not None
+        else "unknown"
+    )
+    limiter = RateLimitService()
+    ip_allowed = limiter.consume(
+        db,
+        f"{scope}:ip:{remote_ip}",
+        limit,
+        window_seconds,
+    )
+    identity_allowed = limiter.consume(
+        db,
+        f"{scope}:identity:{identity.strip().lower()}",
+        limit,
+        window_seconds,
+    )
+    db.commit()
+    if not ip_allowed or not identity_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Limite de tentativas excedido. Tente novamente mais tarde.",
+            headers={"Retry-After": str(window_seconds)},
+        )
+
+
+def _record_audit(
+    db: Session,
+    request: Request,
+    event: str,
+    outcome: str,
+    actor_id: str | None = None,
+    subject_id: str | None = None,
+    details: dict | None = None,
+) -> None:
+    db.add(
+        AuditEvent(
+            actor_id=actor_id,
+            subject_id=subject_id,
+            event=event,
+            outcome=outcome,
+            request_id=getattr(
+                request.state,
+                "request_id",
+                None,
+            ),
+            details=details or {},
+        )
+    )
 
 
 @contextmanager
@@ -89,10 +173,7 @@ class AuthDependencies:
     ):
         self.get_db = get_db
         self.settings = settings or Settings.from_env()
-        self.bearer = OAuth2PasswordBearer(
-            tokenUrl="/api/v1/auth/token",
-            auto_error=False
-        )
+        self.bearer = HTTPBearer(auto_error=False)
         self.sessions = SessionService()
 
     def user(self) -> Callable:
@@ -103,10 +184,12 @@ class AuthDependencies:
 
         def resolve(
             db: Session = Depends(get_db),
-            token: str | None = Depends(bearer),
+            credentials: HTTPAuthorizationCredentials | None = Depends(
+                bearer
+            ),
         ) -> User:
 
-            if token is None:
+            if credentials is None:
                 raise HTTPException(
                     status_code=401,
                     detail="Autenticação obrigatória.",
@@ -115,7 +198,7 @@ class AuthDependencies:
             with translate_service_error():
                 return self.sessions.authenticate(
                     db,
-                    token,
+                    credentials.credentials,
                     settings,
                 )
 
@@ -164,6 +247,7 @@ def create_router(
         settings,
         email_sender,
     )
+    email_outbox = EmailOutboxService(settings)
 
     media_service = MediaService(settings)
     teacher_apps = TeacherApplicationService()
@@ -182,10 +266,20 @@ def create_router(
     )
     def register(
         body: RegisterIn,
+        request: Request,
         db: Session = Depends(get_db),
     ):
+        _check_rate_limit(
+            db,
+            request,
+            "register",
+            str(body.email),
+            5,
+            600,
+        )
         try:
             with translate_service_error():
+                notifications.check_email_available()
                 user = identity.register(
                     db, body
                 )
@@ -194,6 +288,25 @@ def create_router(
                     db,
                     user,
                     body.display_name,
+                )
+                token = identity.create_verification_token(
+                    db,
+                    user,
+                    settings,
+                )
+                email_outbox.enqueue(
+                    db,
+                    user.id,
+                    user.email,
+                    "verify_email",
+                    token,
+                )
+                _record_audit(
+                    db,
+                    request,
+                    "user.registered",
+                    "pending_verification",
+                    subject_id=user.id,
                 )
 
             db.commit()
@@ -219,60 +332,192 @@ def create_router(
     )
     def login(
         body: LoginIn,
+        request: Request,
+        response: Response,
         db: Session = Depends(get_db),
     ):
-        with translate_service_error():
+        _check_rate_limit(
+            db,
+            request,
+            "login",
+            str(body.email),
+            10,
+            900,
+        )
+        try:
             user = identity.authenticate(
                 db,
                 str(body.email),
                 body.password,
             )
+        except ServiceError as exc:
+            _record_audit(
+                db,
+                request,
+                "auth.login",
+                "failure",
+            )
+            db.commit()
+            raise HTTPException(
+                status_code=401,
+                detail="Credenciais inválidas.",
+            ) from exc
 
-        token = sessions.create(
+        session_tokens = sessions.create(
             db,
             user,
             settings,
         )
+        _record_audit(
+            db,
+            request,
+            "auth.login",
+            "success",
+            actor_id=user.id,
+            subject_id=user.id,
+        )
 
         db.commit()
+        response.set_cookie(
+            key="aprovaai_refresh",
+            value=session_tokens.refresh_token,
+            max_age=settings.refresh_token_days * 24 * 60 * 60,
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+            path="/api/v1/auth",
+        )
+        response.headers["Cache-Control"] = "no-store"
 
         return TokenOut(
-            access_token=token,
-            expires_in_seconds=(
-                settings.session_hours * 3600
-            ),
+            access_token=session_tokens.access_token,
+            expires_in_seconds=session_tokens.expires_in_seconds,
             user=UserOut.model_validate(user),
         )
 
-    @router.post(
-        "/auth/token",
-        response_model=TokenOut,
-        include_in_schema=False,
-    )
-    def swagger_token(
-        form: OAuth2PasswordRequestForm = Depends(),
+    @router.post("/auth/verify-email", response_model=StatusOut)
+    def verify_email(
+        body: EmailVerificationIn,
+        request: Request,
         db: Session = Depends(get_db),
     ):
+        _check_rate_limit(
+            db,
+            request,
+            "verify-email",
+            body.token,
+            10,
+            3600,
+        )
         with translate_service_error():
-            user = identity.authenticate(
+            user = identity.verify_email(
                 db,
-                form.username,
-                form.password,
+                body.token,
             )
 
-        token = sessions.create(
+        _record_audit(
             db,
-            user,
-            settings,
+            request,
+            "user.email.verified",
+            "success",
+            actor_id=user.id,
+            subject_id=user.id,
+        )
+        db.commit()
+        return StatusOut(
+            message="E-mail confirmado. Sua conta está ativa."
         )
 
+    @router.post(
+        "/auth/resend-verification",
+        response_model=StatusOut,
+        status_code=202,
+    )
+    def resend_verification(
+        body: PasswordRecoveryIn,
+        request: Request,
+        db: Session = Depends(get_db),
+    ):
+        _check_rate_limit(
+            db,
+            request,
+            "resend-verification",
+            str(body.email),
+            3,
+            3600,
+        )
+        with translate_service_error():
+            user = identity.find_pending_user(
+                db,
+                str(body.email),
+            )
+            if user is not None:
+                token = identity.create_verification_token(
+                    db,
+                    user,
+                    settings,
+                )
+                email_outbox.enqueue(
+                    db,
+                    user.id,
+                    user.email,
+                    "verify_email",
+                    token,
+                )
         db.commit()
+        return StatusOut(
+            message=(
+                "Se a conta estiver pendente, "
+                "um novo e-mail será enviado."
+            )
+        )
 
+    @router.post("/auth/refresh", response_model=TokenOut)
+    def refresh_session(
+        request: Request,
+        response: Response,
+        db: Session = Depends(get_db),
+    ):
+        _require_allowed_origin(request, settings)
+        _check_rate_limit(
+            db,
+            request,
+            "refresh",
+            request.cookies.get("aprovaai_refresh", "missing"),
+            30,
+            60,
+        )
+        raw_refresh_token = request.cookies.get("aprovaai_refresh")
+        if not raw_refresh_token:
+            raise HTTPException(
+                status_code=401,
+                detail="Refresh token ausente.",
+            )
+        with translate_service_error():
+            session_tokens = sessions.refresh(
+                db,
+                raw_refresh_token,
+                settings,
+            )
+            session = db.get(
+                AuthSession,
+                session_tokens.session_id,
+            )
+            user = db.get(User, session.user_id)
+        db.commit()
+        response.set_cookie(
+            key="aprovaai_refresh",
+            value=session_tokens.refresh_token,
+            max_age=settings.refresh_token_days * 24 * 60 * 60,
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+            path="/api/v1/auth",
+        )
+        response.headers["Cache-Control"] = "no-store"
         return TokenOut(
-            access_token=token,
-            expires_in_seconds=(
-                settings.session_hours * 3600
-            ),
+            access_token=session_tokens.access_token,
+            expires_in_seconds=session_tokens.expires_in_seconds,
             user=UserOut.model_validate(user),
         )
 
@@ -283,26 +528,116 @@ def create_router(
         response_model=StatusOut,
     )
     def logout(
-        token: str | None = Depends(auth.bearer),
+        request: Request,
+        response: Response,
+        credentials: HTTPAuthorizationCredentials | None = Depends(
+            auth.bearer
+        ),
         db: Session = Depends(get_db),
     ):
-        if token is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Autenticação obrigatória.",
-            )
+        if credentials is not None:
+            with translate_service_error():
+                sessions.revoke(
+                    db,
+                    credentials.credentials,
+                    settings,
+                )
+        else:
+            _require_allowed_origin(request, settings)
+            refresh_token = request.cookies.get("aprovaai_refresh")
+            if not refresh_token:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Autenticação obrigatória.",
+                )
+            with translate_service_error():
+                sessions.revoke_by_refresh_token(
+                    db,
+                    refresh_token,
+                )
 
-        with translate_service_error():
-            sessions.revoke(
-                db,
-                token,
-            )
-
+        _record_audit(
+            db,
+            request,
+            "auth.logout",
+            "success",
+        )
         db.commit()
+        response.delete_cookie(
+            key="aprovaai_refresh",
+            path="/api/v1/auth",
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+        )
+        response.delete_cookie(
+            key="aprovaai_admin_docs",
+            path="/",
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+        )
 
         return StatusOut(
             message="Sessão encerrada."
         )
+
+    @router.get("/auth/sessions", response_model=list[SessionOut])
+    def list_sessions(
+        user: User = Depends(current_user),
+        db: Session = Depends(get_db),
+    ):
+        return [
+            SessionOut.model_validate(session)
+            for session in sessions.list_for_user(db, user.id)
+        ]
+
+    @router.delete("/auth/sessions/{session_id}", response_model=StatusOut)
+    def revoke_session(
+        session_id: str,
+        user: User = Depends(current_user),
+        db: Session = Depends(get_db),
+    ):
+        owned_session = next(
+            (
+                item
+                for item in sessions.list_for_user(db, user.id)
+                if item.id == session_id
+            ),
+            None,
+        )
+        if owned_session is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Sessão não encontrada.",
+            )
+        sessions.revoke_session(db, session_id)
+        db.commit()
+        return StatusOut(message="Sessão revogada.")
+
+    @router.post("/auth/logout-all", response_model=StatusOut)
+    def logout_all(
+        response: Response,
+        user: User = Depends(current_user),
+        db: Session = Depends(get_db),
+    ):
+        sessions.revoke_all(db, user.id)
+        db.commit()
+        response.delete_cookie(
+            key="aprovaai_refresh",
+            path="/api/v1/auth",
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+        )
+        response.delete_cookie(
+            key="aprovaai_admin_docs",
+            path="/",
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+        )
+        return StatusOut(message="Todas as sessões foram encerradas.")
 
     @router.get(
         "/auth/me",
@@ -313,8 +648,71 @@ def create_router(
     ):
         return user
 
+    @router.patch(
+        "/admin/users/{user_id}/role",
+        response_model=UserOut,
+    )
+    def update_user_role(
+        user_id: str,
+        body: UserRoleUpdateIn,
+        request: Request,
+        actor: User = Depends(auth.roles("admin")),
+        db: Session = Depends(get_db),
+    ):
+        with translate_service_error():
+            user = identity.set_role(
+                db,
+                user_id,
+                body.role,
+            )
+        _record_audit(
+            db,
+            request,
+            "user.role.changed",
+            "success",
+            actor_id=actor.id,
+            subject_id=user.id,
+            details={"role": user.role},
+        )
+        db.commit()
+        return user
+
+    @router.patch(
+        "/admin/users/{user_id}/status",
+        response_model=UserOut,
+    )
+    def update_user_status(
+        user_id: str,
+        body: UserStatusUpdateIn,
+        request: Request,
+        actor: User = Depends(auth.roles("admin")),
+        db: Session = Depends(get_db),
+    ):
+        with translate_service_error():
+            user = identity.set_status(
+                db,
+                user_id,
+                body.status,
+            )
+        _record_audit(
+            db,
+            request,
+            "user.status.changed",
+            "success",
+            actor_id=actor.id,
+            subject_id=user.id,
+            details={"status": user.status},
+        )
+        db.commit()
+        return user
+
     # F04 - SOLICITAR RECUPERACAO
 
+    @router.post(
+        "/auth/forgot-password",
+        response_model=StatusOut,
+        status_code=202,
+    )
     @router.post(
         "/auth/password-recovery/request",
         response_model=StatusOut,
@@ -322,8 +720,17 @@ def create_router(
     )
     def request_recovery(
         body: PasswordRecoveryIn,
+        request: Request,
         db: Session = Depends(get_db),
     ):
+        _check_rate_limit(
+            db,
+            request,
+            "forgot-password",
+            str(body.email),
+            3,
+            3600,
+        )
         with translate_service_error():
             notifications.check_email_available()
 
@@ -333,28 +740,16 @@ def create_router(
                 settings,
             )
 
-        db.commit()
-
         if result:
             email, token = result
-
-            try:
-                notifications.send_recovery(
-                    email, token
-                )
-
-            except Exception as exc:
-                logger.exception(
-                    "Falha ao enviar e-mail de recuperação"
-                )
-
-                raise HTTPException(
-                    status_code=503,
-                    detail=(
-                        "Não foi possível enviar o "
-                        "e-mail de recuperação."
-                    ),
-                ) from exc
+            email_outbox.enqueue(
+                db,
+                result[2],
+                email,
+                "password_reset",
+                token,
+            )
+        db.commit()
 
         return StatusOut(
             message=(
@@ -365,6 +760,10 @@ def create_router(
 
     # F04 - CONFIRMAR NOVA SENHA
 
+    @router.post(
+        "/auth/reset-password",
+        response_model=StatusOut,
+    )
     @router.post(
         "/auth/password-recovery/confirm",
         response_model=StatusOut,

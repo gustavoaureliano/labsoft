@@ -2,8 +2,11 @@ from alembic import context
 
 from app.database import Base, engine
 from app.media.models import Media
+from app.identity_access import models as identity_models
 
 target_metadata = Base.metadata
+
+assert identity_models.Base is Base
 
 
 def run_migrations_offline() -> None:

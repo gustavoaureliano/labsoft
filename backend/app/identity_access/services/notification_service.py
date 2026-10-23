@@ -4,7 +4,8 @@ import smtplib
 
 from email.message import EmailMessage
 from typing import Protocol
-from urllib.parse import quote
+
+import httpx
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -78,6 +79,61 @@ class SMTPEmailSender:
             client.send_message(message)
 
 
+class BrevoEmailSender:
+
+    def __init__(
+        self,
+        settings: Settings,
+    ):
+        self.settings = settings
+
+    def send(
+        self,
+        to: str,
+        subject: str,
+        body: str,
+    ) -> None:
+        settings = self.settings
+        if (
+            not settings.brevo_api_key
+            or not settings.brevo_sender_email
+        ):
+            raise ServiceError(
+                "unavailable",
+                "Brevo não está configurado.",
+            )
+
+        response = httpx.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "api-key": settings.brevo_api_key,
+                "accept": "application/json",
+            },
+            json={
+                "sender": {
+                    "name": settings.brevo_sender_name,
+                    "email": settings.brevo_sender_email,
+                },
+                "to": [{"email": to}],
+                "subject": subject,
+                "textContent": body,
+            },
+            timeout=10,
+        )
+        if response.is_error:
+            raise RuntimeError(
+                f"Brevo returned HTTP {response.status_code}."
+            )
+
+
+def configured_email_sender(
+    settings: Settings,
+) -> EmailSender:
+    if settings.brevo_api_key and settings.brevo_sender_email:
+        return BrevoEmailSender(settings)
+    return SMTPEmailSender(settings)
+
+
 class NotificationService:
 
     def __init__(
@@ -87,57 +143,27 @@ class NotificationService:
     ):
         self.settings = settings
         self.email_sender = (
-            email_sender or SMTPEmailSender(settings)
+            email_sender or configured_email_sender(settings)
         )
 
     def check_email_available(self) -> None:
-
-        if (
-            isinstance(
-                self.email_sender,
-                SMTPEmailSender,
-            )
-            and (
-                not self.settings.smtp_host
-                or not self.settings.smtp_from
-            )
+        if isinstance(self.email_sender, SMTPEmailSender) and (
+            not self.settings.smtp_host or not self.settings.smtp_from
         ):
             raise ServiceError(
                 "unavailable",
                 "Recuperação por e-mail indisponível: "
-                "configure SMTP.",
+                "configure Brevo ou SMTP.",
             )
-
-    def send_recovery(
-        self,
-        email: str,
-        token: str,
-    ) -> None:
-
-        reset_url = (
-            self.settings.password_reset_url
-            .split("#", 1)[0]
-        )
-
-        link = (
-            reset_url
-            + "#token="
-            + quote(token, safe="")
-        )
-
-        self.email_sender.send(
-            email,
-            "AprovaAí - recuperação de acesso",
-            (
-                "Para redefinir sua senha, "
-                "abra este link em até "
-                f"{self.settings.reset_minutes} "
-                "minutos:\n"
-                f"{link}\n"
-                "Se você não solicitou a recuperação, "
-                "ignore a mensagem."
-            ),
-        )
+        if isinstance(self.email_sender, BrevoEmailSender) and (
+            not self.settings.brevo_api_key
+            or not self.settings.brevo_sender_email
+        ):
+            raise ServiceError(
+                "unavailable",
+                "Recuperação por e-mail indisponível: "
+                "configure Brevo ou SMTP.",
+            )
 
     def add(
         self,
