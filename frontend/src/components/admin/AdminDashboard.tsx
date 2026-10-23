@@ -1,62 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch, type ApiAdminDashboard } from "@/lib/engagementApi";
 import { AdminShell } from "./AdminShell";
 import styles from "./AdminDashboard.module.css";
 
 type AccessPeriod = "monthly" | "annual";
 
-const accessData: Record<AccessPeriod, { label: string; count: number }[]> = {
-  monthly: [
-    { label: "Semana 1", count: 5460 },
-    { label: "Semana 2", count: 6320 },
-    { label: "Semana 3", count: 7180 },
-    { label: "Semana 4", count: 7560 },
-  ],
-  annual: [
-    { label: "Jan", count: 14200 },
-    { label: "Fev", count: 15800 },
-    { label: "Mar", count: 17300 },
-    { label: "Abr", count: 16900 },
-    { label: "Mai", count: 19100 },
-    { label: "Jun", count: 20700 },
-    { label: "Jul", count: 22400 },
-    { label: "Ago", count: 23100 },
-    { label: "Set", count: 26520 },
-    { label: "Out", count: 28100 },
-    { label: "Nov", count: 30200 },
-    { label: "Dez", count: 32700 },
-  ],
-};
-
-const metrics = [
-  {
-    label: "Faturamento mensal",
-    value: "R$ 84.500",
-    trend: "+12,4%",
-    note: "em relação ao mês anterior",
-  },
-  {
-    label: "Professores cadastrados",
-    value: "36",
-    trend: "+4",
-    note: "novos professores neste mês",
-  },
-  {
-    label: "Alunos cadastrados",
-    value: "2.480",
-    trend: "+8,7%",
-    note: "crescimento no período",
-  },
-];
-
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 
 export function AdminDashboard() {
   const [period, setPeriod] = useState<AccessPeriod>("monthly");
-  const accesses = accessData[period];
-  const totalAccesses = accesses.reduce((total, item) => total + item.count, 0);
-  const maximum = Math.max(...accesses.map((item) => item.count));
+  const [apiData, setApiData] = useState<ApiAdminDashboard | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<ApiAdminDashboard>(`/api/analytics/admin-dashboard?period=${period}`)
+      .then((data) => {
+        if (active) setApiData(data);
+      })
+      .catch(() => {
+        if (active) setApiData(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [period]);
+
+  const accesses = apiData ? apiData.access_series : [];
+  const totalAccesses = apiData ? apiData.total_accesses_in_period : 0;
+  const maximum = Math.max(...accesses.map((item) => item.count), 1);
+
+  const metrics = [
+    {
+      label: "Faturamento mensal",
+      value: "R$ 84.500",
+      trend: "+12,4%",
+      note: "em relação ao mês anterior",
+    },
+    {
+      label: "Professores cadastrados",
+      value: apiData ? numberFormatter.format(apiData.total_teachers) : "...",
+      trend: "+4",
+      note: "novos professores neste mês",
+    },
+    {
+      label: "Alunos cadastrados",
+      value: apiData ? numberFormatter.format(apiData.total_students) : "...",
+      trend: "+8,7%",
+      note: "crescimento no período",
+    },
+  ];
 
   return (
     <AdminShell activePage="overview" topbarTitle="Performance do negócio">
@@ -67,7 +61,7 @@ export function AdminDashboard() {
             <h1>Visão geral do negócio</h1>
             <p>Acompanhe os principais indicadores da plataforma.</p>
           </div>
-          <span className={styles.demoBadge}>Dados ilustrativos</span>
+          <span className={styles.demoBadge}>Dados da API</span>
         </header>
 
         <section className={styles.metrics} aria-label="Indicadores principais do negócio">
@@ -106,7 +100,7 @@ export function AdminDashboard() {
             <ol
               className={styles.chartBars}
               style={{
-                gridTemplateColumns: `repeat(${accesses.length}, minmax(54px, 1fr))`,
+                gridTemplateColumns: `repeat(${Math.max(accesses.length, 1)}, minmax(54px, 1fr))`,
                 minWidth: period === "annual" ? "760px" : "420px",
               }}
               aria-label={period === "monthly" ? "Acessos nas últimas quatro semanas" : "Acessos nos últimos doze meses"}
