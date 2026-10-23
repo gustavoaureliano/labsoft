@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { blankTeacherCourse, initialTeacherCourses, teacherCoursesKey, type TeacherCourse } from "@/data/teacherCourses";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { DemoFileField } from "./DemoFileField";
-import { LessonEditor } from "./LessonEditor";
 import { DemoLessonDrafts } from "./DemoLessonDrafts";
 import styles from "./CourseEditor.module.css";
 
@@ -49,7 +48,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
   return (
     <div className={styles.editor}>
       <header className={styles.heading}>
-        <div><span>Editor de cursos</span><h1>{isNew ? "Criar curso" : "Editar curso"}</h1><p>Organize as informações e o conteúdo antes de publicar.</p></div>
+        <div><span>Editor de cursos</span><h1>{isNew ? "Criar curso" : "Editar informações do curso"}</h1><p>Organize a apresentação e os materiais do curso.</p></div>
         <Link href="/professor/cursos">Cancelar e voltar</Link>
       </header>
 
@@ -65,7 +64,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
         </div>
       </section>
 
-      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <LessonEditor courseId={initialCourse.id} />}
+      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <section className={styles.card}><div className={styles.sectionHeading}><div><h2>2. Conteúdo das aulas</h2><p>Edite vídeos, imagens e a sequência das aulas em um espaço próprio.</p></div><Link className={styles.primary} href={`/professor/cursos/${initialCourse.id}/aulas`}>Gerenciar aulas</Link></div></section>}
 
       <section className={styles.card} aria-labelledby="materials-title">
         <div className={styles.sectionHeading}><div><h2 id="materials-title">3. Materiais complementares</h2><p>Envie PDFs, documentos, apresentações ou arquivos compactados.</p></div><DemoFileField accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" inputLabel="Enviar material" onSelect={addMaterial} /></div>

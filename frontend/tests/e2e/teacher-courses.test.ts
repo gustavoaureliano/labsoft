@@ -17,8 +17,11 @@ test("o professor consulta aulas reais e mantém a criação demonstrativa de cu
     const cards = await driver.findElements(By.css("article"));
     assert.ok(cards.length >= 3);
     await driver.wait(async () => /Física para o ENEM: Mecânica[\s\S]*6\.000 alunos · 2 aulas/.test(await driver.findElement(By.css("main")).getText()), 10000);
-    await driver.findElement(By.xpath('//button[normalize-space()="Aulas"]')).click();
-    assert.match(await driver.findElement(By.css('section[aria-label="Aulas de Introdução à Física Quântica"]')).getText(), /Introdução/);
+    await driver.findElement(By.css('a[href="/professor/cursos/fisica-quantica/aulas"]')).click();
+    await driver.wait(until.elementLocated(By.css('ol[aria-label="Aulas do curso"]')), 10000);
+    assert.match(await driver.findElement(By.css('ol[aria-label="Aulas do curso"]')).getText(), /Introdução/);
+    await driver.findElement(By.linkText("← Voltar aos cursos")).click();
+    await driver.wait(until.elementLocated(By.linkText("+ Novo curso")), 10000);
     await driver.findElement(By.css("select")).sendKeys("Título");
     await driver.findElement(By.linkText("+ Novo curso")).click();
     await driver.wait(until.urlContains("/professor/cursos/novo"), 10000);
