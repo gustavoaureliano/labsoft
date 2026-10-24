@@ -53,6 +53,6 @@ export function displayLessons(lessons: Lesson[], activeId?: string): EnrolledLe
     id: lesson.id, number: String(lesson.position).padStart(2, "0"), title: lesson.title,
     description: lesson.description, thumbnail: lesson.thumbnail_url,
     duration: lesson.duration_seconds ? `${Math.ceil(lesson.duration_seconds / 60)} min` : "Em preparação",
-    status: lesson.completed ? "Concluída" : lesson.id === activeId ? "Aula atual" : "Próxima aula",
+    status: lesson.playable === false ? "Indisponível" : lesson.completed ? "Concluída" : lesson.id === activeId ? "Aula atual" : "Próxima aula",
   }));
 }

@@ -3,6 +3,8 @@ from uuid import UUID
 import pytest
 
 from app.media.models import Media
+from app.integrations import DemoIntegrations, get_current_user
+from app.main import app
 
 
 @pytest.fixture
@@ -71,3 +73,23 @@ def test_missing_file(playback_context):
         record = session.get(Media, UUID(media["id"]))
         (root / record.storage_key).unlink()
     assert client.get(f"/api/learning/lessons/{lesson['id']}/playback").status_code == 404
+
+
+def test_unavailable_video_keeps_authorized_course_context(playback_context):
+    client, sessions, root, lesson = playback_context
+    media, _ = attach_video(client, lesson)
+    with sessions() as session:
+        record = session.get(Media, UUID(media["id"]))
+        (root / record.storage_key).unlink()
+
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["aluno-demo"]
+    assert client.get(f"/api/learning/lessons/{lesson['id']}/playback").status_code == 404
+    course = client.get("/api/learning/courses/fisica-quantica").json()
+    item = next(item for item in course["lessons"] if item["id"] == lesson["id"])
+    assert item["title"] == lesson["title"]
+    assert item["description"] == lesson["description"]
+    assert item["playable"] is False
+
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["aluno-demo-2"]
+    assert client.get(f"/api/learning/lessons/{lesson['id']}/playback").status_code == 403
+    assert all(course["id"] != "fisica-quantica" for course in client.get("/api/learning/courses").json())

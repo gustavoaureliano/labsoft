@@ -8,6 +8,9 @@
 .eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .layout { align-items: start; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 300px; }
 .mainColumn { display: grid; gap: 20px; min-width: 0; }
+.unavailablePlayer { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 12px; justify-content: center; padding: 24px; text-align: center; }
+.unavailablePlayer strong { color: var(--primary); font-size: 20px; }
+.unavailablePlayer p, .unavailablePlayer span { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0; }
 .lessonNavigation { display: flex; gap: 12px; justify-content: space-between; }
 .lessonNavigation a { color: var(--primary); font-size: 13px; font-weight: 700; }
 .lessonNavigation a:hover { text-decoration: underline; text-underline-offset: 3px; }
