@@ -12,7 +12,7 @@ test("o aluno encontra a continuação na home e consulta seus cursos reais", as
     await driver.wait(until.elementLocated(By.id("course-content-title")), 10000);
     assert.ok((await driver.findElements(By.css('section[aria-labelledby="course-content-title"] li'))).length >= 2);
     await driver.get(`${baseUrl}/meus-cursos`);
-    await driver.wait(until.elementLocated(By.linkText("Introdução à Física Quântica")), 10000);
-    assert.ok(await driver.findElement(By.linkText("Física para o ENEM: Mecânica")).isDisplayed());
+    await driver.wait(until.elementLocated(By.css('a[aria-label$=": Introdução à Física Quântica"]')), 10000);
+    assert.ok(await driver.findElement(By.css('a[aria-label$=": Física para o ENEM: Mecânica"]')).isDisplayed());
   });
 });

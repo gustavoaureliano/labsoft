@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
-import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useApi, displayLessons, lessonLink, type Course } from "@/lib/api/learning";
 import { resolveLessons } from "@/lib/api/library";
@@ -40,23 +39,34 @@ export default function MeusCursos() {
           <p>Acompanhe seu progresso e continue de onde parou.</p>
         </header>
 
-        <section aria-labelledby="in-progress-title">
-          <h2 id="in-progress-title">Em andamento</h2>
+        <section className={styles.courseSection} aria-labelledby="in-progress-title">
+          <h2 id="in-progress-title">Seus cursos</h2>
           {courseError && <p role="alert">{courseError}</p>}
           {!courses && !courseError && <p role="status">Carregando cursos...</p>}
           {courses?.length === 0 && <p>Nenhum curso com acesso disponível.</p>}
-          {courses?.map(course => <article className={styles.course} key={course.id}>
-            <div className={styles.courseVisual}><Image alt={`Capa do curso ${course.title}`} fill sizes="(max-width: 750px) 100vw, 40vw" src={course.image} /></div>
+          <div className={styles.courseGrid}>
+          {courses?.map(course => {
+            const started = course.progress > 0 || course.lessons.some(lesson => (lesson.position_seconds ?? 0) > 0 || lesson.completed);
+            const state = course.completed ? "Concluído" : started ? "Em andamento" : "Não iniciado";
+            const action = course.completed ? "Revisar curso" : started ? "Continuar curso" : "Começar curso";
+            return <article className={styles.course} key={course.id}>
+            <Link className={styles.courseLink} href={course.continue_lesson ? lessonLink(course.continue_lesson.id) : `/meus-cursos/${course.id}`} aria-label={`${course.continue_lesson ? action : "Ver curso"}: ${course.title}`}>
+            <div className={styles.courseVisual}><Image alt="" fill sizes="(max-width: 750px) 100vw, (max-width: 1320px) 45vw, 350px" src={course.image} /></div>
             <div className={styles.courseContent}>
-              <span className={styles.eyebrow}>{course.total_lessons} aulas · {course.completed ? "Concluído" : "Em andamento"}</span>
-              <h3><Link href={`/meus-cursos/${course.id}`}>{course.title}</Link></h3>
+              <div className={styles.courseMeta}><span>{course.total_lessons} aulas</span><span className={styles.courseStatus} data-state={course.completed ? "completed" : started ? "started" : "new"}>{state}</span></div>
+              <h3>{course.title}</h3>
               <p>{course.teacher}</p>
+              <div className={styles.courseFooter}>
               <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{course.progress}%</strong></div>
               <ProgressBar value={course.progress} />
-              <p className={styles.nextLesson}>{course.continue_lesson ? `Próxima aula: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
-              <div className={styles.courseActions}>{course.continue_lesson && <PrimaryLink className={styles.primaryButton} href={lessonLink(course.continue_lesson.id)}>Continuar curso</PrimaryLink>}<Link href={`/meus-cursos/${course.id}`}>Ver todas as aulas</Link></div>
+              <p className={styles.nextLesson}>{course.continue_lesson ? course.completed ? "Curso concluído. Reveja as aulas quando quiser." : `${started ? "Continue em" : "Comece por"}: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
+              <span className={styles.courseAction}>{course.continue_lesson ? action : "Ver curso"} →</span>
+              </div>
             </div>
-          </article>)}
+            </Link>
+          </article>;
+          })}
+          </div>
         </section>
 
         {access.subscription?.plan === "complete" && access.subscription.status === "active" && <section aria-labelledby="new-access-title">
