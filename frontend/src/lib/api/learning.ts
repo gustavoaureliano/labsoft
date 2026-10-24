@@ -9,6 +9,7 @@ export type Lesson = {
 export type Playback = Lesson & { content_url: string; media_id: string; position_seconds: number; completed: boolean };
 export type Course = {
   id: string; title: string; owner_id: string; image: string; teacher: string;
+  access_status: "active" | "expired" | "blocked";
   lessons: Lesson[]; sections: {title: string; lesson_ids: string[]}[];
   progress: number; completed: boolean; total_lessons: number; continue_lesson: Lesson | null;
 };

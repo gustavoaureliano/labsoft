@@ -19,11 +19,16 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
   let accessDescription = course.access === "free" ? "Adicione este curso à sua área de estudos." : "Compre somente este curso ou escolha a assinatura completa.";
   let action: { href: string; label: string } | null = { href: course.access === "free" ? `/checkout?curso=${course.id}&tipo=curso` : `/planos?curso=${course.id}`, label: course.access === "free" ? "Adicionar aos meus cursos" : "Escolher acesso" };
 
-  if (accessibleCourse) {
+  if (accessibleCourse?.access_status === "active") {
     accessLabel = accessibleCourse.completed ? "Curso concluído" : "Curso disponível";
     accessValue = `${accessibleCourse.progress}% concluído`;
     accessDescription = "Seu acesso está disponível na área de estudos.";
     action = { href: `/meus-cursos/${course.id}`, label: "Continuar curso" };
+  } else if (accessibleCourse?.access_status === "expired" || accessibleCourse?.access_status === "blocked") {
+    accessLabel = accessibleCourse.access_status === "expired" ? "Acesso expirado" : "Acesso bloqueado";
+    accessValue = "Aula indisponível";
+    accessDescription = "Entre em contato com o suporte para verificar sua situação de acesso.";
+    action = null;
   } else if (!learning.data && !learning.error) {
     accessLabel = "Verificando acesso";
     accessValue = "Aguarde";

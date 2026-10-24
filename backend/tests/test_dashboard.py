@@ -36,3 +36,18 @@ def test_optional_service_failure_does_not_hide_panel(upload_context):
     assert response.status_code == 200
     assert response.json()["current_course"] is None
     assert response.json()["recommendations"] == []
+
+
+def test_expired_and_blocked_courses_have_no_playback_details(upload_context):
+    client, _, _ = upload_context
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["aluno-acesso-demo"]
+    courses = {course["id"]: course for course in client.get("/api/learning/courses").json()}
+    assert {key: course["access_status"] for key, course in courses.items()} == {
+        "fisica-quantica": "expired", "fisica-enem-mecanica": "active", "biologia-celular": "blocked",
+    }
+    for key in ("fisica-quantica", "biologia-celular"):
+        assert courses[key]["lessons"] == []
+        assert courses[key]["continue_lesson"] is None
+        assert client.get(f"/api/learning/courses/{key}").status_code == 403
+    assert client.get("/api/learning/dashboard").json()["courses"][0]["id"] == "fisica-enem-mecanica"
+    assert len(client.get("/api/learning/dashboard").json()["courses"]) == 1

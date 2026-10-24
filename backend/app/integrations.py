@@ -6,7 +6,7 @@ or authentication backend. Replace get_integrations when those modules exist.
 
 import os
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, Request
@@ -34,6 +34,7 @@ class Integrations(Protocol):
     def course(self, course_id: str) -> Course | None: ...
     def courses(self) -> list[Course]: ...
     def has_access(self, student_id: str, course_id: str) -> bool: ...
+    def access_status(self, student_id: str, course_id: str) -> Literal["active", "expired", "blocked", "none"]: ...
     def recommendations(self, student_id: str) -> list[Course]: ...
     def notifications(self, user_id: str) -> list[dict[str, str]]: ...
     def notify_certificate(self, user_id: str, certificate_id: str) -> None: ...
@@ -43,6 +44,7 @@ class DemoIntegrations:
     users = {
         "aluno-demo": User("aluno-demo", "student", "Bob Silva"),
         "aluno-demo-2": User("aluno-demo-2", "student", "Ana Souza"),
+        "aluno-acesso-demo": User("aluno-acesso-demo", "student", "Aluno com acessos variados"),
         "professor-demo": User("professor-demo", "teacher", "Prof. Fulano da Silva"),
         "professor-demo-2": User("professor-demo-2", "teacher", "Profa. Clara Mendonça"),
     }
@@ -64,6 +66,7 @@ class DemoIntegrations:
         ("aluno-demo", "fisica-quantica"),
         ("aluno-demo", "fisica-enem-mecanica"),
         ("aluno-demo-2", "fisica-enem-mecanica"),
+        ("aluno-acesso-demo", "fisica-enem-mecanica"),
     }
 
     def user(self, user_id: str) -> User | None:
@@ -77,6 +80,13 @@ class DemoIntegrations:
 
     def has_access(self, student_id: str, course_id: str) -> bool:
         return (student_id, course_id) in self.grants
+
+    def access_status(self, student_id: str, course_id: str) -> Literal["active", "expired", "blocked", "none"]:
+        if self.has_access(student_id, course_id):
+            return "active"
+        if student_id == "aluno-acesso-demo":
+            return {"fisica-quantica": "expired", "biologia-celular": "blocked"}.get(course_id, "none")
+        return "none"
 
     def recommendations(self, student_id: str) -> list[Course]:
         return [self.catalog["biologia-celular"]] if student_id == "aluno-demo" else []

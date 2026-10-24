@@ -46,21 +46,24 @@ export default function MeusCursos() {
           {courses?.length === 0 && <p>Nenhum curso com acesso disponível.</p>}
           <div className={styles.courseGrid}>
           {courses?.map(course => {
+            const unavailable = course.access_status === "expired" || course.access_status === "blocked";
             const started = course.progress > 0 || course.lessons.some(lesson => (lesson.position_seconds ?? 0) > 0 || lesson.completed);
-            const state = course.completed ? "Concluído" : started ? "Em andamento" : "Não iniciado";
-            const action = course.completed ? "Revisar curso" : started ? "Continuar curso" : "Começar curso";
+            const state = course.access_status === "expired" ? "Acesso expirado" : course.access_status === "blocked" ? "Acesso bloqueado" : course.completed ? "Concluído" : started ? "Em andamento" : "Não iniciado";
+            const action = unavailable ? "Ver detalhes do acesso" : course.completed ? "Revisar curso" : started ? "Continuar curso" : "Começar curso";
             return <article className={styles.course} key={course.id}>
-            <Link className={styles.courseLink} href={course.continue_lesson ? lessonLink(course.continue_lesson.id) : `/meus-cursos/${course.id}`} aria-label={`${course.continue_lesson ? action : "Ver curso"}: ${course.title}`}>
+            <Link className={styles.courseLink} href={unavailable ? `/cursos/${course.id}` : course.continue_lesson ? lessonLink(course.continue_lesson.id) : `/meus-cursos/${course.id}`} aria-label={`${unavailable || course.continue_lesson ? action : "Ver curso"}: ${course.title}`}>
             <div className={styles.courseVisual}><Image alt="" fill sizes="(max-width: 750px) 100vw, (max-width: 1320px) 45vw, 350px" src={course.image} /></div>
             <div className={styles.courseContent}>
-              <div className={styles.courseMeta}><span>{course.total_lessons} aulas</span><span className={styles.courseStatus} data-state={course.completed ? "completed" : started ? "started" : "new"}>{state}</span></div>
+              <div className={styles.courseMeta}><span>{unavailable ? "Acesso ao curso" : `${course.total_lessons} aulas`}</span><span className={styles.courseStatus} data-state={unavailable ? course.access_status : course.completed ? "completed" : started ? "started" : "new"}>{state}</span></div>
               <h3>{course.title}</h3>
               <p>{course.teacher}</p>
               <div className={styles.courseFooter}>
-              <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{course.progress}%</strong></div>
-              <ProgressBar value={course.progress} />
-              <p className={styles.nextLesson}>{course.continue_lesson ? course.completed ? "Curso concluído. Reveja as aulas quando quiser." : `${started ? "Continue em" : "Comece por"}: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
-              <span className={styles.courseAction}>{course.continue_lesson ? action : "Ver curso"} →</span>
+              {unavailable ? <p className={styles.nextLesson}>Não é possível assistir às aulas enquanto o acesso estiver {course.access_status === "expired" ? "expirado" : "bloqueado"}.</p> : <>
+                <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{course.progress}%</strong></div>
+                <ProgressBar value={course.progress} />
+                <p className={styles.nextLesson}>{course.continue_lesson ? course.completed ? "Curso concluído. Reveja as aulas quando quiser." : `${started ? "Continue em" : "Comece por"}: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
+              </>}
+              <span className={styles.courseAction}>{unavailable || course.continue_lesson ? action : "Ver curso"} →</span>
               </div>
             </div>
             </Link>

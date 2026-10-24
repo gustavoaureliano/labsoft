@@ -153,6 +153,8 @@ A aula é concluída ao informar pelo menos 90% da duração. Isso não comprova
 
 `GET /api/learning/courses` lista cursos acessíveis (ou cursos próprios para o professor). `GET /api/learning/courses/{id}` inclui aulas, seção padrão, estado de reprodução, thumbnails, progresso e aula para continuar. `GET /api/learning/dashboard` retorna os cursos, curso atual e recomendações/avisos dos contratos externos (a recomendação demo é uma amostra fixa e os avisos são vazios). Falhas nesses contratos opcionais não impedem a Home. Cursos sem aulas não estão concluídos. Cursos inacessíveis não são apresentados como reproduzíveis.
 
+O contrato de acesso também distingue `active`, `expired` e `blocked` em Meus Cursos. Os dois últimos aparecem somente com dados públicos do curso, sem lista de aulas, posição ou vídeo; acesso direto à página interna e ao arquivo permanece negado. Para testar os três estados sem implementar matrículas, use a identidade `aluno-acesso-demo`: Mecânica ativa, Física Quântica expirada e Biologia bloqueada. A Home lista apenas cursos ativos. Esses estados são simulados pelo adaptador, não pelo módulo de pagamentos/matrículas dos colegas.
+
 ## Gerenciar aulas
 
 - `PATCH /api/learning/lessons/{id}` altera título/descrição.

@@ -49,7 +49,7 @@ def course_detail(session: Session, user: User, course: Course) -> dict:
         next((lesson for lesson in lessons if lesson["playable"]), None),
     )
     return {
-        **asdict(course), "lessons": lessons,
+        **asdict(course), "access_status": "active", "lessons": lessons,
         "sections": [{"title": "Aulas do curso", "lesson_ids": list(by_id)}],
         "completed_lessons": completed, "total_lessons": len(lessons),
         "progress": round(100 * completed / len(lessons)) if lessons else 0,
@@ -60,14 +60,25 @@ def course_detail(session: Session, user: User, course: Course) -> dict:
 
 
 def learning_courses(session: Session, user: User, integrations: Integrations) -> list[dict]:
-    return [course_detail(session, user, course) for course in integrations.courses() if (
-        (user.role == "teacher" and course.owner_id == user.id)
-        or (user.role == "student" and course.published and integrations.has_access(user.id, course.id))
-    )]
+    courses = []
+    for course in integrations.courses():
+        if user.role == "teacher" and course.owner_id == user.id:
+            courses.append(course_detail(session, user, course))
+        elif user.role == "student" and course.published:
+            access = integrations.access_status(user.id, course.id)
+            if access == "active":
+                courses.append(course_detail(session, user, course))
+            elif access in {"expired", "blocked"}:
+                courses.append({
+                    **asdict(course), "access_status": access, "lessons": [], "sections": [],
+                    "total_lessons": 0, "completed_lessons": 0, "progress": 0,
+                    "completed": False, "continue_lesson": None, "last_studied_at": None,
+                })
+    return courses
 
 
 def dashboard(session: Session, user: User, integrations: Integrations) -> dict:
-    courses = learning_courses(session, user, integrations)
+    courses = [course for course in learning_courses(session, user, integrations) if course["access_status"] == "active"]
     recent = sorted((course for course in courses if course["last_studied_at"] and course["continue_lesson"]), key=lambda c: c["last_studied_at"], reverse=True)
     current = recent[0] if recent else next((course for course in courses if course["continue_lesson"]), None)
     recommendations, notifications = [], []
