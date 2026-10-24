@@ -42,6 +42,9 @@ def test_full_showcase_reset_and_browser_data(upload_context, tmp_path):
     assert current["id"] == "fisica-enem-mecanica"
     assert current["continue_lesson"]["id"] == "leis-newton"
     assert current["progress"] == 58
+    mechanics = next(course for course in courses if course["id"] == "fisica-enem-mecanica")
+    assert [section["title"] for section in mechanics["sections"]] == ["Cinemática", "Dinâmica e energia"]
+    assert mechanics["sections"][0]["lesson_ids"] == [lesson["id"] for lesson in mechanics["lessons"][:6]]
     assert client.get("/api/learning/lessons/leis-newton/playback").json()["position_seconds"] == pytest.approx(6, abs=0.2)
     assert next(course for course in courses if course["id"] == "redacao-nota-mil")["completed"]
     app.dependency_overrides[get_current_user] = lambda: ShowcaseIntegrations.users["aluno-demo-2"]

@@ -14,6 +14,23 @@ from app.media.storage import get_video_path
 logger = logging.getLogger(__name__)
 
 
+def course_sections(course: Course, lessons: list[dict]) -> list[dict]:
+    if not course.sections:
+        return [{"title": "Aulas do curso", "lesson_ids": [lesson["id"] for lesson in lessons]}]
+    sections = []
+    assigned = set()
+    for section in course.sections:
+        ids = set(section.lesson_ids) - assigned
+        present = [lesson["id"] for lesson in lessons if lesson["id"] in ids]
+        if present:
+            sections.append({"title": section.title, "lesson_ids": present})
+            assigned.update(present)
+    remaining = [lesson["id"] for lesson in lessons if lesson["id"] not in assigned]
+    if remaining:
+        sections.append({"title": "Outras aulas", "lesson_ids": remaining})
+    return sections
+
+
 def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course) -> dict:
     media = session.get(Media, lesson.media_id) if lesson.media_id else None
     playable = media is not None and media.status == "available"
@@ -50,7 +67,7 @@ def course_detail(session: Session, user: User, course: Course) -> dict:
     )
     return {
         **asdict(course), "access_status": "active", "lessons": lessons,
-        "sections": [{"title": "Aulas do curso", "lesson_ids": list(by_id)}],
+        "sections": course_sections(course, lessons),
         "completed_lessons": completed, "total_lessons": len(lessons),
         "progress": round(100 * completed / len(lessons)) if lessons else 0,
         "completed": bool(lessons) and completed == len(lessons),

@@ -1,4 +1,6 @@
-from app.integrations import DemoIntegrations, get_current_user, get_integrations
+from dataclasses import replace
+
+from app.integrations import CourseSection, DemoIntegrations, get_current_user, get_integrations
 from app.main import app
 from tests.test_lessons import create_lesson, upload
 
@@ -51,3 +53,37 @@ def test_expired_and_blocked_courses_have_no_playback_details(upload_context):
         assert client.get(f"/api/learning/courses/{key}").status_code == 403
     assert client.get("/api/learning/dashboard").json()["courses"][0]["id"] == "fisica-enem-mecanica"
     assert len(client.get("/api/learning/dashboard").json()["courses"]) == 1
+
+
+def test_course_sections_follow_lesson_order_and_keep_new_lessons(upload_context):
+    client, _, _ = upload_context
+    from tests.test_lessons import create_lesson
+
+    first = create_lesson(client, 1)
+    second = create_lesson(client, 2)
+    extra = create_lesson(client, 3)
+
+    class Grouped(DemoIntegrations):
+        def course(self, course_id):
+            course = super().course(course_id)
+            return replace(course, sections=(
+                CourseSection("Fundamentos", (second["id"], first["id"])),
+            )) if course and course_id == "fisica-quantica" else course
+
+    app.dependency_overrides[get_integrations] = Grouped
+    grouped = client.get("/api/learning/courses/fisica-quantica").json()
+    assert grouped["sections"] == [
+        {"title": "Fundamentos", "lesson_ids": [first["id"], second["id"]]},
+        {"title": "Outras aulas", "lesson_ids": [extra["id"]]},
+    ]
+    assert [item["id"] for item in grouped["lessons"]] == [first["id"], second["id"], extra["id"]]
+
+    class WithoutSections(Grouped):
+        def course(self, course_id):
+            course = super().course(course_id)
+            return replace(course, sections=()) if course else None
+
+    app.dependency_overrides[get_integrations] = WithoutSections
+    assert client.get("/api/learning/courses/fisica-quantica").json()["sections"] == [
+        {"title": "Aulas do curso", "lesson_ids": [first["id"], second["id"], extra["id"]]},
+    ]

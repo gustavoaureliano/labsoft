@@ -20,6 +20,12 @@ class User:
 
 
 @dataclass(frozen=True)
+class CourseSection:
+    title: str
+    lesson_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Course:
     id: str
     title: str
@@ -27,6 +33,7 @@ class Course:
     image: str
     teacher: str
     published: bool = True
+    sections: tuple[CourseSection, ...] = ()
 
 
 class Integrations(Protocol):
@@ -52,10 +59,12 @@ class DemoIntegrations:
         "fisica-quantica": Course(
             "fisica-quantica", "Introdução à Física Quântica", "professor-demo",
             "/images/courses/fisica-quantica.webp", "Prof. Fulano da Silva",
+            sections=(CourseSection("Fundamentos", ("demo-quantica-introducao", "demo-quantica-radiacao")),),
         ),
         "fisica-enem-mecanica": Course(
             "fisica-enem-mecanica", "Física para o ENEM: Mecânica", "professor-demo",
             "/images/courses/fisica-mecanica.webp", "Prof. Fulano da Silva",
+            sections=(CourseSection("Cinemática", ("demo-mecanica-vetores", "demo-mecanica-movimento")),),
         ),
         "biologia-celular": Course(
             "biologia-celular", "Biologia Celular", "professor-demo-2",

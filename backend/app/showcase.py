@@ -1,6 +1,8 @@
 """Full browser-demo catalog. No persistence or real enrollment implementation."""
 
-from app.integrations import Course, DemoIntegrations, User
+from dataclasses import replace
+
+from app.integrations import Course, CourseSection, DemoIntegrations, User
 
 MECHANICS = [
     ("grandezas-vetores", "Grandezas e vetores"),
@@ -38,6 +40,29 @@ for course_id, (count, topics) in TOPICS.items():
     ]
 
 
+MODULES = {
+    "fisica-enem-mecanica": (("Cinemática", 6), ("Dinâmica e energia", 6)),
+    "fisica-quantica": (("Fundamentos", 3),),
+    "biologia-celular": (("Estrutura celular", 3), ("Processos celulares", 3)),
+    "estatistica-essencial": (("Leitura de dados", 2), ("Prática", 3)),
+    "redacao-nota-mil": (("Planejamento", 3), ("Escrita", 3)),
+    "quimica-organica": (("Funções orgânicas", 3), ("Reações", 3)),
+    "historia-brasil": (("Brasil colonial", 3), ("Brasil contemporâneo", 3)),
+}
+
+
+def showcase_sections(course_id: str) -> tuple[CourseSection, ...]:
+    lessons = LESSONS[course_id]
+    sections = []
+    position = 0
+    for title, count in MODULES[course_id]:
+        sections.append(CourseSection(title, tuple(id for id, _ in lessons[position:position + count])))
+        position += count
+    if position < len(lessons):
+        sections.append(CourseSection("Prática e revisão", tuple(id for id, _ in lessons[position:])))
+    return tuple(sections)
+
+
 class ShowcaseIntegrations(DemoIntegrations):
     users = {
         **DemoIntegrations.users,
@@ -55,6 +80,7 @@ class ShowcaseIntegrations(DemoIntegrations):
         "historia-brasil": Course("historia-brasil", "História do Brasil em perspectiva", "professor-historia", "/images/courses/historia-brasil.webp", "Prof. André Nascimento"),
         "termodinamica": Course("termodinamica", "Termodinâmica Avançada", "professor-demo", "/teacher-thermo.png", "Prof. Fulano da Silva", published=False),
     }
+    catalog = {id: replace(course, sections=showcase_sections(id)) if id in MODULES else course for id, course in catalog.items()}
 
     def has_access(self, student_id: str, course_id: str) -> bool:
         course = self.course(course_id)
