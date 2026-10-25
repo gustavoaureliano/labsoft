@@ -33,6 +33,12 @@ def test_certificate_eligibility_snapshot_ownership_and_pdf(upload_context):
     assert certificate["student_name"] in text
     assert certificate["course_title"] in text
     assert certificate["verification_code"] in text
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["professor-demo"]
+    replacement = upload(client)
+    assert client.patch(base + "/media", json={"media_id": replacement}).status_code == 200
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["aluno-demo"]
+    assert client.get("/api/learning/courses/fisica-quantica").json()["completed"] is False
+    assert client.get(f"/api/learning/certificates/{certificate['id']}").json()["id"] == certificate["id"]
     class Changed(DemoIntegrations):
         def course(self, course_id):
             course = super().course(course_id)

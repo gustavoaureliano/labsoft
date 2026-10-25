@@ -45,3 +45,15 @@ test("aula sem vídeo mantém contexto, mas não o expõe a aluno sem acesso", {
     assert.equal(removed.status, 204);
   }
 });
+
+test("falha de reprodução mantém a aula sem oferecer retry de progresso", { skip: process.env.E2E_BACKEND !== "true" }, async () => {
+  await withBrowser(async (driver) => {
+    await driver.get(`${baseUrl}/videoaula?aula=demo-quantica-introducao`);
+    const video = await driver.wait(until.elementLocated(By.css("video")), 10000);
+    await driver.executeScript("arguments[0].dispatchEvent(new Event('error'))", video);
+    await driver.wait(until.elementLocated(By.xpath('//*[@role="alert"]/*[contains(., "Não foi possível reproduzir este vídeo")]')), 10000);
+    assert.equal((await driver.findElements(By.css("video"))).length, 0);
+    assert.equal((await driver.findElements(By.xpath('//button[normalize-space()="Tentar salvar novamente"]'))).length, 0);
+    assert.ok(await driver.findElement(By.linkText("Próxima aula →")).isDisplayed());
+  });
+});

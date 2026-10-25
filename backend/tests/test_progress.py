@@ -36,3 +36,23 @@ def test_resume_completion_rewind_and_media_replacement(upload_context):
     data = client.get(base + "/playback").json()
     assert data["position_seconds"] == 0 and not data["completed"]
     assert client.patch(base + "/progress", json={"media_id": media_id, "position_seconds": 1}).status_code == 409
+
+
+def test_completion_threshold_and_course_progress(upload_context):
+    client, _, _ = upload_context
+    lesson = create_lesson(client)
+    media_id = upload(client)
+    base = f"/api/learning/lessons/{lesson['id']}"
+    assert client.patch(base + "/media", json={"media_id": media_id}).status_code == 200
+    app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["aluno-demo"]
+
+    def save(position):
+        return client.patch(base + "/progress", json={"media_id": media_id, "position_seconds": position})
+
+    assert save(10.79).json()["completed"] is False
+    assert client.get("/api/learning/courses/fisica-quantica").json()["progress"] == 0
+    assert save(10.8).json()["completed"] is True  # 90% de 12 segundos
+    assert client.get("/api/learning/courses/fisica-quantica").json()["completed"] is True
+    assert save(12.01).status_code == 400
+    assert save(1).json()["completed"] is True
+    assert client.get(base + "/playback").json()["position_seconds"] == 1
