@@ -11,7 +11,7 @@ export type Course = {
   id: string; title: string; owner_id: string; image: string; teacher: string;
   access_status: "active" | "expired" | "blocked";
   lessons: Lesson[]; sections: {title: string; lesson_ids: string[]}[];
-  progress: number; completed: boolean; total_lessons: number; continue_lesson: Lesson | null;
+  progress: number; completed: boolean; total_lessons: number; completed_lessons: number; continue_lesson: Lesson | null;
 };
 export type Dashboard = { courses: Course[]; current_course: Course | null; recommendations: Course[]; notifications: {title?: string; message?: string}[] };
 

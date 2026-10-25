@@ -16,10 +16,10 @@ test("o aluno conclui o curso e emite um certificado verificável com PDF", {ski
       await driver.wait(async () => driver.executeAsyncScript<boolean>(`const id = arguments[0], done = arguments[arguments.length - 1]; fetch('/api/learning/lessons/' + id + '/playback').then(r => r.json()).then(r => done(r.completed));`, id), 10000);
     }
     await driver.get(`${baseUrl}/certificados`);
-    const course = await driver.wait(until.elementLocated(By.xpath("//article[.//h2[normalize-space()='Física para o ENEM: Mecânica']]")), 10000);
-    const buttons = await course.findElements(By.xpath(".//button[normalize-space()='Emitir certificado']"));
+    const course = await driver.wait(until.elementLocated(By.xpath("//article[.//h3[normalize-space()='Física para o ENEM: Mecânica']]")), 10000);
+    const buttons = await course.findElements(By.css('button[aria-label="Emitir certificado de Física para o ENEM: Mecânica"]'));
     if (buttons.length) await buttons[0].click();
-    const link = await driver.wait(until.elementLocated(By.xpath("//article[.//h2[normalize-space()='Física para o ENEM: Mecânica']]//a[contains(., 'Ver certificado')]")), 10000);
+    const link = await driver.wait(until.elementLocated(By.xpath("//article[.//h3[normalize-space()='Física para o ENEM: Mecânica']]//a[contains(., 'Ver certificado')]")), 10000);
     await link.click();
     const pdfLink = await driver.wait(until.elementLocated(By.linkText("Baixar PDF")), 10000);
     const pdfUrl = await pdfLink.getAttribute("href");

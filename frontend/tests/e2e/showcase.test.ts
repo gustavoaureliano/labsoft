@@ -22,7 +22,7 @@ test("o cenário completo mostra sete cursos e retoma a aula de Mecânica", {ski
     await access.click();
     await driver.wait(async () => (await driver.findElements(By.css('section[aria-labelledby="course-content-title"] li'))).length === 35, 10000);
     await driver.get(`${baseUrl}/certificados`);
-    const completed = await driver.wait(until.elementLocated(By.xpath("//article[.//h2[normalize-space()='Redação nota mil: da tese à conclusão']]")), 10000);
-    assert.ok(await completed.findElement(By.xpath(".//button[normalize-space()='Emitir certificado']")).isDisplayed());
+    const completed = await driver.wait(until.elementLocated(By.xpath("//article[.//h3[normalize-space()='Redação nota mil: da tese à conclusão']]")), 10000);
+    assert.ok(await completed.findElement(By.css('button[aria-label="Emitir certificado de Redação nota mil: da tese à conclusão"]')).isDisplayed());
   });
 });

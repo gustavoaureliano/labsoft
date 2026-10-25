@@ -5,7 +5,35 @@ import Link from "next/link";
 import { api, useApi, type Course } from "@/lib/api/learning";
 import styles from "@/app/certificados/page.module.css";
 
-type Certificate = {id: string; course_id: string; course_title: string; student_name: string; verification_code: string; issued_at: string; lesson_count: number};
+type Certificate = {id: string; course_id: string; course_title: string; student_name: string; verification_code: string; issued_at: string; lesson_count: number; workload_seconds: number};
+
+function CertificateCard({ item }: { item: Certificate }) {
+  return <article className={styles.card}>
+    <Link className={styles.cardLink} href={`/certificados/${item.id}`} aria-label={`Ver certificado de ${item.course_title}`}>
+      <span className={styles.status}>Emitido</span>
+      <h3>{item.course_title}</h3>
+      <p>Concedido a {item.student_name} em {new Date(item.issued_at).toLocaleDateString("pt-BR")}</p>
+      <span className={styles.cardAction}>Ver certificado →</span>
+    </Link>
+  </article>;
+}
+
+function CourseCertificateCard({ course, busy, onIssue }: { course: Course; busy: boolean; onIssue: (id: string) => void }) {
+  const restricted = course.access_status !== "active";
+  const href = restricted ? `/cursos/${course.id}` : `/meus-cursos/${course.id}`;
+  const status = restricted ? course.access_status === "expired" ? "Acesso expirado" : "Acesso bloqueado" : course.completed ? "Pronto para emitir" : `Em andamento · ${course.progress}%`;
+  const description = restricted ? "Aulas indisponíveis enquanto o acesso estiver restrito." : course.completed ? `${course.total_lessons} aulas concluídas` : `${course.completed_lessons} de ${course.total_lessons} aulas concluídas`;
+  const action = restricted ? "Ver detalhes do acesso →" : course.completed ? "Emitir certificado →" : "Continuar estudando →";
+
+  return <article className={styles.card}>
+    <span className={styles.status}>{status}</span>
+    <h3>{course.title}</h3>
+    <p>{description}</p>
+    <span className={styles.cardAction}>{action}</span>
+    {course.completed && !restricted ? <button className={styles.cardButton} type="button" disabled={busy} aria-label={`Emitir certificado de ${course.title}`} onClick={() => onIssue(course.id)} />
+      : <Link className={styles.cardOverlay} href={href} aria-label={`${restricted ? "Ver detalhes do acesso a" : "Continuar"} ${course.title}`} />}
+  </article>;
+}
 
 export function Certificates() {
   const [version, setVersion] = useState(0);
@@ -21,13 +49,24 @@ export function Certificates() {
     finally {setBusy(null);}
   }
   const error = courses.error || certificates.error;
+  const issued = certificates.data ?? [];
+  const pending = courses.data?.filter(course => !issued.some(item => item.course_id === course.id)) ?? [];
+  const ready = pending.filter(course => course.access_status === "active" && course.completed);
+  const studying = pending.filter(course => course.access_status === "active" && !course.completed);
+  const restricted = pending.filter(course => course.access_status !== "active");
   return <div><h1>Certificados</h1><p>Acompanhe suas conclusões e consulte os documentos emitidos.</p>
-    {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {error && <p role="alert">{error}</p>}{notice && <p role={notice === "Certificado emitido." ? "status" : "alert"}>{notice}</p>}
     {!certificates.data && !error && <p>Carregando certificados...</p>}
-    <div className={styles.grid}>
-      {certificates.data?.map(item => <article className={styles.card} key={item.id}><span className={styles.status}>Emitido</span><h2>{item.course_title}</h2><p>Concedido a {item.student_name}</p><Link href={`/certificados/${item.id}`}>Ver certificado →</Link></article>)}
-      {courses.data?.filter(course => !certificates.data?.some(item => item.course_id === course.id)).map(course => <article className={styles.card} key={course.id}><span className={styles.status}>{course.completed ? "Concluído" : `Em andamento · ${course.progress}%`}</span><h2>{course.title}</h2>{course.completed ? <button type="button" disabled={busy !== null} onClick={() => void issue(course.id)}>Emitir certificado</button> : <Link href={`/meus-cursos/${course.id}`}>Continuar estudando →</Link>}</article>)}
-    </div>
+    {certificates.data && <section className={styles.group} aria-labelledby="issued-title"><h2 id="issued-title">Emitidos</h2>
+      {issued.length ? <div className={styles.grid}>{issued.map(item => <CertificateCard key={item.id} item={item} />)}</div> : <p>Você ainda não emitiu certificados.</p>}
+    </section>}
+    {courses.data && certificates.data && <>
+      <section className={styles.group} aria-labelledby="ready-title"><h2 id="ready-title">Prontos para emitir</h2>
+        {ready.length ? <div className={styles.grid}>{ready.map(course => <CourseCertificateCard key={course.id} course={course} busy={busy !== null} onIssue={issue} />)}</div> : <p>Nenhum curso concluído aguardando emissão.</p>}
+      </section>
+      {studying.length > 0 && <section className={styles.group} aria-labelledby="studying-title"><h2 id="studying-title">Em andamento</h2><div className={styles.grid}>{studying.map(course => <CourseCertificateCard key={course.id} course={course} busy={false} onIssue={issue} />)}</div></section>}
+      {restricted.length > 0 && <section className={styles.group} aria-labelledby="restricted-title"><h2 id="restricted-title">Acesso indisponível</h2><div className={styles.grid}>{restricted.map(course => <CourseCertificateCard key={course.id} course={course} busy={false} onIssue={issue} />)}</div></section>}
+    </>}
   </div>;
 }
 
