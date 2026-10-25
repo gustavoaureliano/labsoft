@@ -1,12 +1,17 @@
 import logging
 from io import BytesIO
+from html import escape
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict
 from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from typing import Annotated
@@ -74,19 +79,79 @@ def certificate_pdf(certificate: Certificate) -> bytes:
     pdf = canvas.Canvas(buffer, pagesize=landscape(A4))
     width, height = landscape(A4)
     pdf.setTitle("Certificado de conclusão — AprovaAí")
-    pdf.setFont("Helvetica-Bold", 26)
-    pdf.drawCentredString(width / 2, height - 100, "AprovaAí — Certificado de conclusão")
-    lines = [certificate.student_name, "concluiu o curso", certificate.course_title,
-             f"{certificate.lesson_count} aulas · {certificate.workload_seconds / 60:.1f} minutos",
-             f"Emitido em {certificate.issued_at:%d/%m/%Y}",
-             f"Verificação: {certificate.verification_code}",
-             "Emissão local de desenvolvimento — sem assinatura digital qualificada"]
-    for index, line in enumerate(lines):
-        size = 18 if index < 3 else 11
-        while pdf.stringWidth(line, "Helvetica", size) > width - 80 and size > 7:
-            size -= 1
-        pdf.setFont("Helvetica", size)
-        pdf.drawCentredString(width / 2, height - 160 - index * 38, line)
+    primary = colors.HexColor("#075A76")
+    ink = colors.HexColor("#20343C")
+    muted = colors.HexColor("#536D79")
+    pdf.setFillColor(colors.HexColor("#F5F8FA"))
+    pdf.rect(0, 0, width, height, stroke=0, fill=1)
+    pdf.setStrokeColor(colors.HexColor("#BDD4DE"))
+    pdf.roundRect(24, 24, width - 48, height - 48, 9, stroke=1, fill=0)
+
+    pdf.setFillColor(primary)
+    pdf.roundRect(24, height - 146, width - 48, 122, 9, stroke=0, fill=1)
+    pdf.rect(24, height - 146, width - 48, 14, stroke=0, fill=1)
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(48, height - 62, "AprovaAí")
+    pdf.setFont("Helvetica", 10)
+    pdf.drawRightString(width - 48, height - 60, "EMISSÃO LOCAL DE DESENVOLVIMENTO")
+    pdf.setFont("Helvetica-Bold", 27)
+    pdf.drawCentredString(width / 2, height - 119, "Certificado de conclusão")
+
+    def centered_text(value: str, top: float, max_height: float, start_size: int, color: colors.Color) -> None:
+        available_width = width - 110
+        for size in range(start_size, 9, -1):
+            style = ParagraphStyle("certificate-text", fontName="Helvetica-Bold", fontSize=size,
+                                   leading=size * 1.18, alignment=TA_CENTER, textColor=color)
+            paragraph = Paragraph(escape(value), style)
+            _, paragraph_height = paragraph.wrap(available_width, max_height)
+            if paragraph_height <= max_height or size == 10:
+                paragraph.drawOn(pdf, 55, top - paragraph_height)
+                return
+
+    pdf.setFillColor(muted)
+    pdf.setFont("Helvetica", 12)
+    pdf.drawCentredString(width / 2, height - 173, "Registramos que")
+    centered_text(certificate.student_name, height - 182, 52, 24, ink)
+    pdf.setFillColor(muted)
+    pdf.setFont("Helvetica", 12)
+    pdf.drawCentredString(width / 2, height - 260, "concluiu o curso")
+    centered_text(certificate.course_title, height - 269, 52, 21, primary)
+
+    total_seconds = round(certificate.workload_seconds)
+    hours, remaining = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remaining, 60)
+    duration = f"{hours} h {minutes} min" if hours else f"{minutes} min"
+    if seconds:
+        duration += f" {seconds} s"
+    details = (
+        ("AULAS NA EMISSÃO", str(certificate.lesson_count)),
+        ("DURAÇÃO DOS VÍDEOS", duration),
+        ("EMITIDO EM", f"{certificate.issued_at:%d/%m/%Y}"),
+    )
+    card_width = (width - 120) / 3
+    for index, (label, value) in enumerate(details):
+        x = 48 + index * (card_width + 12)
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.HexColor("#D5E3E9"))
+        pdf.roundRect(x, 150, card_width, 67, 6, stroke=1, fill=1)
+        pdf.setFillColor(muted)
+        pdf.setFont("Helvetica-Bold", 9)
+        pdf.drawString(x + 14, 192, label)
+        pdf.setFillColor(ink)
+        pdf.setFont("Helvetica-Bold", 15)
+        pdf.drawString(x + 14, 168, value)
+
+    pdf.setFillColor(muted)
+    pdf.setFont("Helvetica", 10)
+    pdf.drawCentredString(width / 2, 119, "Código de verificação")
+    pdf.setFillColor(primary)
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawCentredString(width / 2, 101, certificate.verification_code)
+    pdf.setFillColor(muted)
+    pdf.setFont("Helvetica", 9)
+    pdf.drawCentredString(width / 2, 67, "Este registro é de desenvolvimento e não constitui assinatura digital qualificada.")
+    pdf.drawCentredString(width / 2, 53, "A duração representa os vídeos do curso na emissão, não horas assistidas.")
     pdf.showPage()
     pdf.save()
     return buffer.getvalue()

@@ -1,8 +1,11 @@
 from dataclasses import replace
+from datetime import datetime, timezone
 from io import BytesIO
 from pypdf import PdfReader
 
 from app.integrations import DemoIntegrations, get_current_user, get_integrations
+from app.learning.certificates import certificate_pdf
+from app.learning.models import Certificate
 from app.main import app
 from tests.test_lessons import create_lesson, upload
 
@@ -33,6 +36,8 @@ def test_certificate_eligibility_snapshot_ownership_and_pdf(upload_context):
     assert certificate["student_name"] in text
     assert certificate["course_title"] in text
     assert certificate["verification_code"] in text
+    assert "DURAÇÃO DOS VÍDEOS" in text
+    assert "não horas assistidas" in text
     app.dependency_overrides[get_current_user] = lambda: DemoIntegrations.users["professor-demo"]
     replacement = upload(client)
     assert client.patch(base + "/media", json={"media_id": replacement}).status_code == 200
@@ -66,3 +71,23 @@ def test_notification_failure_does_not_duplicate_certificate(upload_context):
     first = client.post(url)
     assert first.status_code == 200
     assert client.post(url).json()["id"] == first.json()["id"]
+
+
+def test_certificate_pdf_keeps_long_names_and_snapshot_readable():
+    record = Certificate(
+        student_id="aluno-demo", course_id="curso-demo",
+        student_name="Maria " + "da Silva " * 18,
+        course_title="Curso de revisão " + "para vestibulares " * 15,
+        lesson_count=42, workload_seconds=7265,
+        issued_at=datetime(2026, 10, 25, tzinfo=timezone.utc),
+        verification_code="f" * 32,
+    )
+    reader = PdfReader(BytesIO(certificate_pdf(record)))
+    assert len(reader.pages) == 1
+    page = reader.pages[0]
+    assert float(page.mediabox.width) > float(page.mediabox.height)
+    text = page.extract_text()
+    assert "Maria" in text and "Curso de revisão" in text
+    assert "42" in text and "2 h 1 min 5 s" in text
+    assert "25/10/2026" in text and record.verification_code in text
+    assert "não constitui assinatura digital qualificada" in text

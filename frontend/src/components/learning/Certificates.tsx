@@ -9,9 +9,11 @@ type Certificate = {id: string; course_id: string; course_title: string; student
 type PublicCertificate = Pick<Certificate, "student_name" | "course_title" | "issued_at" | "verification_code">;
 
 function durationLabel(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const remaining = Math.round(seconds % 60);
-  return `${minutes} min${remaining ? ` ${remaining} s` : ""}`;
+  const total = Math.round(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor(total % 3600 / 60);
+  const remaining = total % 60;
+  return `${hours ? `${hours} h ` : ""}${minutes} min${remaining ? ` ${remaining} s` : ""}`;
 }
 
 function CertificateCard({ item }: { item: Certificate }) {
