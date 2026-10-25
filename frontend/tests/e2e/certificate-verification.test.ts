@@ -9,7 +9,10 @@ test("visitante consulta o código pelo formulário público sem login", { skip:
   const certificates = await response.json();
   await withBrowser(async driver => {
     await driver.get(baseUrl);
-    await driver.findElement(By.linkText("Verificar certificado")).click();
+    const verifyLink = await driver.findElement(By.css('footer a[href="/certificados/verificar"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'})", verifyLink);
+    await driver.wait(async () => driver.executeScript<boolean>("const rect=arguments[0].getBoundingClientRect(); return rect.top >= 0 && rect.bottom <= innerHeight", verifyLink), 10000);
+    await verifyLink.click();
     await driver.wait(until.urlIs(`${baseUrl}/certificados/verificar`), 10000);
     const input = await driver.findElement(By.id("certificate-code"));
     await input.sendKeys("abc");

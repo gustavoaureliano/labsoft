@@ -24,7 +24,6 @@ function LandingPage() {
       <header className={styles.header}>
         <div className={styles.brand}><Logo /></div>
         <nav className={styles.accountLinks} aria-label="Acesso à conta">
-          <Link href="/certificados/verificar">Verificar certificado</Link>
           <Link href="/login">Entrar</Link>
           <Link className={styles.primaryLink} href="/cadastro">Criar conta</Link>
         </nav>
@@ -60,7 +59,7 @@ function LandingPage() {
         </section>
       </main>
 
-      <footer className={styles.footer}>AprovaAí · Protótipo de uma plataforma de estudos</footer>
+      <footer className={styles.footer}><span>AprovaAí · Protótipo de uma plataforma de estudos</span><Link href="/certificados/verificar">Verificar certificado</Link></footer>
     </div>
   );
 }
