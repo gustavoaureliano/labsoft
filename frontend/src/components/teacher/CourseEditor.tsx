@@ -7,6 +7,7 @@ import { blankTeacherCourse, initialTeacherCourses, teacherCoursesKey, type Teac
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { DemoFileField } from "./DemoFileField";
 import { DemoLessonDrafts } from "./DemoLessonDrafts";
+import { courseLessonsHref } from "./lessonLinks";
 import styles from "./CourseEditor.module.css";
 
 export function CourseEditor({ courseId }: { courseId?: string }) {
@@ -64,7 +65,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
         </div>
       </section>
 
-      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <section className={styles.card}><div className={styles.sectionHeading}><div><h2>2. Conteúdo das aulas</h2><p>Edite vídeos, imagens e a sequência das aulas em um espaço próprio.</p></div><Link className={styles.primary} href={`/professor/cursos/${initialCourse.id}/aulas`}>Gerenciar aulas</Link></div></section>}
+      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <section className={styles.card}><div className={styles.sectionHeading}><div><h2>2. Conteúdo das aulas</h2><p>Edite vídeos, imagens e a sequência das aulas em um espaço próprio.</p></div><Link className={styles.primary} href={courseLessonsHref(initialCourse.id, "course-editor")}>Gerenciar aulas</Link></div></section>}
 
       <section className={styles.card} aria-labelledby="materials-title">
         <div className={styles.sectionHeading}><div><h2 id="materials-title">3. Materiais complementares</h2><p>Envie PDFs, documentos, apresentações ou arquivos compactados.</p></div><DemoFileField accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" inputLabel="Enviar material" onSelect={addMaterial} /></div>

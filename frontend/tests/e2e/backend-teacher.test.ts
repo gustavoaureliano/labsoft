@@ -104,3 +104,36 @@ test("as rotas de aulas respeitam o curso e o layout móvel", {skip: process.env
     assert.equal((await driver.findElements(By.xpath("//button[normalize-space()='+ Adicionar aula']"))).length, 0);
   }, "teacher");
 });
+
+test("voltar da gestão de aulas respeita a origem mesmo após editar ou visualizar uma aula", {skip: process.env.E2E_BACKEND !== "true"}, async () => {
+  await withBrowser(async driver => {
+    const courseId = "fisica-quantica";
+    const courseEditor = `${baseUrl}/professor/cursos/${courseId}/editar`;
+    const lessonsUrl = `${baseUrl}/professor/cursos/${courseId}/aulas`;
+
+    await driver.get(courseEditor);
+    await click(driver, By.linkText("Gerenciar aulas"));
+    await driver.wait(until.urlContains("origem=course-editor"), 10000);
+    await click(driver, By.linkText("Editar aula"));
+    await driver.wait(until.urlContains("/aulas/"), 10000);
+    assert.match(await driver.getCurrentUrl(), /origem=course-editor/);
+    await click(driver, By.linkText("← Voltar às aulas"));
+    await driver.wait(until.urlContains("origem=course-editor"), 10000);
+    await click(driver, By.linkText("← Voltar à edição do curso"));
+    await driver.wait(until.urlIs(courseEditor), 10000);
+
+    await click(driver, By.linkText("Gerenciar aulas"));
+    await click(driver, By.linkText("Prévia"));
+    await driver.wait(until.urlContains("modo=previa"), 10000);
+    assert.match(await driver.getCurrentUrl(), /origem=course-editor/);
+    await click(driver, By.linkText("← Voltar às aulas"));
+    await click(driver, By.linkText("← Voltar à edição do curso"));
+    await driver.wait(until.urlIs(courseEditor), 10000);
+
+    await driver.get(`${baseUrl}/professor/cursos`);
+    await click(driver, By.linkText("Gerenciar aulas"));
+    await driver.wait(until.urlIs(lessonsUrl), 10000);
+    await click(driver, By.linkText("← Voltar aos cursos"));
+    await driver.wait(until.urlIs(`${baseUrl}/professor/cursos`), 10000);
+  }, "teacher");
+});

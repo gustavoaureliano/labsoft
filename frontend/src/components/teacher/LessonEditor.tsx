@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, jsonRequest, useApi, type Course, type Lesson, type Playback } from "@/lib/api/learning";
 import { VideoPlayer } from "@/components/learning/VideoPlayer";
-import { courseLessonsHref, durationLabel } from "./lessonLinks";
+import { courseLessonsHref, durationLabel, type LessonNavigationOrigin } from "./lessonLinks";
 import { LessonImage } from "./LessonImage";
 import styles from "./TeacherLessons.module.css";
 
@@ -27,16 +27,16 @@ function LessonPreview({ lesson, poster, title, description }: { lesson: Lesson;
   return <section className={styles.preview} aria-label="Prévia da aula"><VideoPlayer key={data.media_id} lesson={data} preview poster={poster} /><div className={styles.card}><h2>{title || "Aula sem título"}</h2><p>{description || "Adicione uma descrição para apresentar esta aula."}</p></div></section>;
 }
 
-export function LessonEditor({ courseId, lessonId, initialPreview = false }: { courseId: string; lessonId: string; initialPreview?: boolean }) {
+export function LessonEditor({ courseId, lessonId, initialPreview = false, origin }: { courseId: string; lessonId: string; initialPreview?: boolean; origin?: LessonNavigationOrigin }) {
   const { data, error } = useApi<Course>(`/api/learning/courses/${encodeURIComponent(courseId)}`);
-  if (error) return <div className={styles.page}><Link className={styles.back} href={courseLessonsHref(courseId)}>← Voltar às aulas</Link><p role="alert" className={styles.error}>{error}</p></div>;
+  if (error) return <div className={styles.page}><Link className={styles.back} href={courseLessonsHref(courseId, origin)}>← Voltar às aulas</Link><p role="alert" className={styles.error}>{error}</p></div>;
   if (!data) return <p role="status">Carregando aula...</p>;
   const lesson = data.lessons.find(item => item.id === lessonId);
-  if (!lesson) return <div className={styles.page}><h1>Aula não encontrada neste curso</h1><Link className={styles.back} href={courseLessonsHref(courseId)}>Voltar às aulas</Link></div>;
-  return <LessonForm key={lesson.id} course={data} initialLesson={lesson} initialPreview={initialPreview} />;
+  if (!lesson) return <div className={styles.page}><h1>Aula não encontrada neste curso</h1><Link className={styles.back} href={courseLessonsHref(courseId, origin)}>Voltar às aulas</Link></div>;
+  return <LessonForm key={lesson.id} course={data} initialLesson={lesson} initialPreview={initialPreview} origin={origin} />;
 }
 
-function LessonForm({ course, initialLesson, initialPreview }: { course: Course; initialLesson: Lesson; initialPreview: boolean }) {
+function LessonForm({ course, initialLesson, initialPreview, origin }: { course: Course; initialLesson: Lesson; initialPreview: boolean; origin?: LessonNavigationOrigin }) {
   const [lesson, setLesson] = useState(initialLesson);
   const [title, setTitle] = useState(initialLesson.title);
   const [description, setDescription] = useState(initialLesson.description);
@@ -104,12 +104,12 @@ function LessonForm({ course, initialLesson, initialPreview }: { course: Course;
     if (!window.confirm("Excluir esta aula? O vídeo será preservado no armazenamento.")) return;
     await run("Excluindo aula...", async () => {
       await api(base, { method: "DELETE" });
-      router.replace(courseLessonsHref(course.id));
+      router.replace(courseLessonsHref(course.id, origin));
     });
   }
 
   return <div className={styles.page}>
-    <Link className={styles.back} href={courseLessonsHref(course.id)} onClick={back}>← Voltar às aulas</Link>
+    <Link className={styles.back} href={courseLessonsHref(course.id, origin)} onClick={back}>← Voltar às aulas</Link>
     <header className={styles.heading}><div><span className={styles.eyebrow}>{course.title} · Aula {String(lesson.position).padStart(2, "0")}</span><h1>{lesson.title}</h1><p>Prepare o conteúdo e confira como a aula será apresentada.</p></div><span className={styles.status}>{lesson.media_id ? "Vídeo associado" : "Sem vídeo"}</span></header>
     <nav className={styles.switcher} aria-label="Modo do editor"><button type="button" aria-pressed={!preview} onClick={() => setPreview(false)}>Editar</button><button type="button" aria-pressed={preview} onClick={() => setPreview(true)}>Prévia</button></nav>
     {busy && <p role="status" className={styles.notice}>{busy}</p>}
@@ -128,7 +128,7 @@ function LessonForm({ course, initialLesson, initialPreview }: { course: Course;
         <section className={styles.card} aria-labelledby="lesson-thumbnail-title"><h2 id="lesson-thumbnail-title">Imagem de apresentação</h2><p className={styles.muted}>{lesson.thumbnail_id ? thumbnail.data?.original_filename ?? "Imagem personalizada" : "Usando a imagem do curso"}</p><div className={styles.thumbnail}><LessonImage source={poster} fallback={course.image} alt="Imagem de apresentação da aula" sizes="240px" /></div><div className={styles.actions}><FilePicker label="Trocar imagem" accept="image/png,image/jpeg" disabled={Boolean(busy)} onSelect={file => void upload(file, true)} />{lesson.thumbnail_id && <button type="button" className={styles.textButton} disabled={Boolean(busy)} onClick={() => void detach(true)}>Usar imagem padrão</button>}</div><p className={styles.muted}>JPEG ou PNG · Até 5 MiB</p>{thumbnail.error && <p role="alert">{thumbnail.error}</p>}</section>
       </div>
       <p className={styles.muted}>Arquivos são atualizados assim que o envio termina. O título e a descrição só mudam ao salvar as informações.</p>
-      <div className={styles.footer}><span className={styles.muted}>{dirty ? "Você tem alterações de texto não salvas." : "Informações salvas."}</span><div className={styles.actions}><Link className={styles.secondary} href={courseLessonsHref(course.id)} onClick={back}>Voltar às aulas</Link><button className={styles.primary} type="submit" form="lesson-information" disabled={Boolean(busy) || !title.trim() || !dirty}>Salvar informações</button></div></div>
+      <div className={styles.footer}><span className={styles.muted}>{dirty ? "Você tem alterações de texto não salvas." : "Informações salvas."}</span><div className={styles.actions}><Link className={styles.secondary} href={courseLessonsHref(course.id, origin)} onClick={back}>Voltar às aulas</Link><button className={styles.primary} type="submit" form="lesson-information" disabled={Boolean(busy) || !title.trim() || !dirty}>Salvar informações</button></div></div>
       <div className={styles.dangerZone}><span className={styles.muted}>Excluir a aula não apaga o arquivo de vídeo.</span><button type="button" className={styles.danger} disabled={Boolean(busy)} onClick={() => void removeLesson()}>Excluir aula</button></div>
     </>}
   </div>;

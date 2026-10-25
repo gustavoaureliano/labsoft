@@ -1,9 +1,16 @@
-export function courseLessonsHref(courseId: string) {
-  return `/professor/cursos/${encodeURIComponent(courseId)}/aulas`;
+export type LessonNavigationOrigin = "course-editor";
+
+export function courseLessonsHref(courseId: string, origin?: LessonNavigationOrigin) {
+  const path = `/professor/cursos/${encodeURIComponent(courseId)}/aulas`;
+  return origin ? `${path}?origem=${origin}` : path;
 }
 
-export function editLessonHref(courseId: string, lessonId: string) {
-  return `${courseLessonsHref(courseId)}/${encodeURIComponent(lessonId)}/editar`;
+export function editLessonHref(courseId: string, lessonId: string, origin?: LessonNavigationOrigin, preview = false) {
+  const path = `${courseLessonsHref(courseId)}/${encodeURIComponent(lessonId)}/editar`;
+  const query = new URLSearchParams();
+  if (origin) query.set("origem", origin);
+  if (preview) query.set("modo", "previa");
+  return query.size ? `${path}?${query}` : path;
 }
 
 export function durationLabel(seconds?: number | null) {
