@@ -3,7 +3,7 @@
 .back:hover { text-decoration: underline; text-underline-offset: 3px; }
 .eyebrow { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .hero { align-items: stretch; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 320px; }
-.hero > div, .hero aside, .content { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 28px; }
+.hero > div, .hero aside, .content, .materials { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 28px; }
 .hero h1 { color: var(--primary); font-size: 34px; margin: 9px 0 12px; }
 .hero p { color: var(--muted); line-height: 1.55; margin: 0 0 16px; }
 .hero small { color: var(--text); font-size: 13px; font-weight: 700; }
@@ -20,4 +20,11 @@
 .heading p { color: var(--muted); font-size: 13px; margin: 0; }
 .module { display: grid; gap: 11px; }
 .module h3 { font-size: 17px; margin: 0; }
-@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } .hero > div, .hero aside, .content { padding: 22px; } }
+.materials { display: grid; gap: 18px; }
+.materialList { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.materialList li { border: 1px solid var(--border); border-radius: 6px; padding: 16px; }
+.materialList span { color: var(--primary); font-size: 12px; font-weight: 700; }
+.materialList h3 { font-size: 16px; margin: 6px 0; }
+.materialList p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+.materials > a { color: var(--primary); font-size: 13px; font-weight: 700; justify-self: start; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } .hero > div, .hero aside, .content, .materials { padding: 22px; } }

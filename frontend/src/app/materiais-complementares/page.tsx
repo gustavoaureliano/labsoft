@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { catalogCourses, complementaryMaterials, materialTypes } from "@/data/catalog";
 import styles from "./page.module.css";
 
-export default function MateriaisComplementares() {
-  const [selectedCourse, setSelectedCourse] = useState("Todos");
+export default function MateriaisComplementares({searchParams}: PageProps<"/materiais-complementares">) {
+  const {curso} = use(searchParams);
+  const initialCourse = typeof curso === "string" && catalogCourses.some(course => course.id === curso) ? curso : "Todos";
+  return <MaterialsLibrary key={initialCourse} initialCourse={initialCourse} />;
+}
+
+function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
+  const [selectedCourse, setSelectedCourse] = useState(initialCourse);
   const [selectedType, setSelectedType] = useState("Todos");
   const filteredMaterials = complementaryMaterials.filter((material) =>
     (selectedCourse === "Todos" || material.courseId === selectedCourse)
@@ -18,7 +24,7 @@ export default function MateriaisComplementares() {
     groups[material.courseTitle].push(material);
     return groups;
   }, {});
-  const courseOptions = catalogCourses.filter((course) => complementaryMaterials.some((material) => material.courseId === course.id));
+  const courseOptions = catalogCourses;
 
   return (
     <AppShell activePage="materials">
@@ -27,6 +33,7 @@ export default function MateriaisComplementares() {
           <span>Continue aprendendo</span>
           <h1>Materiais complementares</h1>
           <p>Resumos, exercícios e revisões para acompanhar seus cursos.</p>
+          <p>Materiais ilustrativos nesta demonstração; os arquivos não estão disponíveis para download.</p>
         </header>
 
         <section className={styles.library} aria-label="Filtros de materiais">

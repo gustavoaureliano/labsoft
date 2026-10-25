@@ -115,8 +115,8 @@ export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { d
         {activeTab === "Materiais" && (
           <div>
             <h2>Materiais complementares</h2>
-            <p>Encontre resumos e exercícios para continuar estudando.</p>
-            <Link className={styles.materialLink} href="/materiais-complementares">Explorar materiais →</Link>
+            <p>Consulte os materiais demonstrativos do curso. Eles não estão vinculados especificamente a esta aula nem disponíveis para download nesta versão.</p>
+            <Link className={styles.materialLink} href={`/materiais-complementares?curso=${encodeURIComponent(courseId)}`}>Ver materiais deste curso →</Link>
           </div>
         )}
       </div>
