@@ -1,7 +1,30 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { By, until } from "selenium-webdriver";
+import { By, Key, until } from "selenium-webdriver";
 import { baseUrl, setDemoRoleForTest, withBrowser } from "./browser.ts";
+
+test("visitante consulta o código pelo formulário público sem login", { skip: process.env.E2E_BACKEND !== "true" }, async () => {
+  const response = await fetch(`${baseUrl}/api/learning/certificates`, { headers: { "X-Demo-User": "aluno-demo" } });
+  assert.equal(response.status, 200);
+  const certificates = await response.json();
+  await withBrowser(async driver => {
+    await driver.get(baseUrl);
+    await driver.findElement(By.linkText("Verificar certificado")).click();
+    await driver.wait(until.urlIs(`${baseUrl}/certificados/verificar`), 10000);
+    const input = await driver.findElement(By.id("certificate-code"));
+    await input.sendKeys("abc");
+    await driver.findElement(By.css('button[type="submit"]')).click();
+    assert.match(await driver.findElement(By.css('[role="alert"]')).getText(), /32 caracteres/);
+    assert.equal(await driver.getCurrentUrl(), `${baseUrl}/certificados/verificar`);
+
+    const code = certificates[0]?.verification_code ?? "f".repeat(32);
+    await input.sendKeys(Key.CONTROL, "a", Key.NULL, code.toUpperCase());
+    await driver.findElement(By.css('button[type="submit"]')).click();
+    await driver.wait(until.urlIs(`${baseUrl}/certificados/verificar/${code}`), 10000);
+    await driver.wait(until.elementLocated(By.xpath(`//h1[normalize-space()="${certificates.length ? "Registro de emissão encontrado" : "Certificado não encontrado"}"]`)), 10000);
+    assert.equal((await driver.findElements(By.css('a[href*="/download"]'))).length, 0);
+  }, null);
+});
 
 test("a verificação pública é legível, mas o PDF permanece privado", { skip: process.env.E2E_BACKEND !== "true" }, async () => {
   const response = await fetch(`${baseUrl}/api/learning/certificates`, { headers: { "X-Demo-User": "aluno-demo" } });

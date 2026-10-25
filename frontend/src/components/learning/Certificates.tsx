@@ -63,7 +63,7 @@ export function Certificates() {
   const ready = pending.filter(course => course.access_status === "active" && course.completed);
   const studying = pending.filter(course => course.access_status === "active" && !course.completed);
   const restricted = pending.filter(course => course.access_status !== "active");
-  return <div><h1>Certificados</h1><p>Acompanhe suas conclusões e consulte os documentos emitidos.</p>
+  return <div><h1>Certificados</h1><p>Acompanhe suas conclusões e consulte os documentos emitidos. <Link className={styles.verifyLink} href="/certificados/verificar">Verificar certificado por código →</Link></p>
     {error && <p role="alert">{error}</p>}{notice && <p role={notice === "Certificado emitido." ? "status" : "alert"}>{notice}</p>}
     {!certificates.data && !error && <p>Carregando certificados...</p>}
     {certificates.data && <section className={styles.group} aria-labelledby="issued-title"><h2 id="issued-title">Emitidos</h2>

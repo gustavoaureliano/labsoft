@@ -1,4 +1,5 @@
 .group { margin-top: 32px; }
+.verifyLink { color: var(--primary); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .group h2 { color: var(--primary); font-size: 22px; margin: 0 0 16px; }
 .group > p { color: var(--muted); font-size: 14px; }
 .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -40,6 +41,15 @@
 .secondaryAction { color: var(--primary); }
 .secondaryAction:hover, .secondaryAction:focus-visible { background: var(--primary-light); }
 .verification { margin: 24px auto; max-width: 780px; }
+.verificationForm { display: grid; gap: 12px; margin-top: 28px; }
+.verificationForm label { color: var(--text); font-size: 14px; font-weight: 700; }
+.verificationForm input { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 15px; min-height: 44px; padding: 10px 12px; width: 100%; }
+.verificationForm input:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.verificationForm input[aria-invalid="true"] { border-color: #a42a2a; }
+.verificationForm p[role="alert"] { color: #a42a2a; font-size: 13px; margin: 0; }
+.verificationForm button { background: var(--primary); border: 0; border-radius: 5px; color: white; cursor: pointer; font-size: 14px; font-weight: 700; justify-self: start; min-height: 44px; padding: 10px 18px; }
+.verificationForm button:not(:disabled):hover, .verificationForm button:not(:disabled):focus-visible { background: #064b63; box-shadow: var(--action-shadow); }
+.verificationForm button:disabled { cursor: not-allowed; opacity: .55; }
 .verification .metadata { grid-template-columns: 1fr 1fr; }
 .verification .backLink { display: inline-block; margin-top: 28px; }
 @media (max-width: 750px) { .grid, .metadata, .verification .metadata { grid-template-columns: 1fr; } .certificate, .verification { padding: 32px 20px; } }
