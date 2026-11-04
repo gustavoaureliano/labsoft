@@ -1,0 +1,3 @@
+.unavailable { align-items: center; aspect-ratio: 16 / 9; background: var(--primary-light); border: 1px solid var(--border); border-radius: 8px; color: var(--primary); display: flex; flex-direction: column; gap: 12px; justify-content: center; padding: 24px; text-align: center; }
+.unavailable strong { font-size: 20px; }
+.unavailable p, .unavailable span { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0; }
