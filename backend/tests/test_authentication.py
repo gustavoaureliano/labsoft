@@ -22,8 +22,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.identity_access.config import Settings
-from app.identity_access.models import (
+from app.services.identity_access.config import Settings
+from app.services.identity_access.models import (
     AuditEvent,
     AuthSession,
     EmailToken,
@@ -38,8 +38,8 @@ from app.identity_access.models import (
     EmailOutbox,
     User,
 )
-from app.identity_access.security import hash_password
-from app.identity_access.services import (
+from app.services.identity_access.security import hash_password
+from app.services.identity_access.services import (
     EmailOutboxService,
     IdentityService,
     RateLimitService,

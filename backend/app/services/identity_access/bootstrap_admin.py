@@ -6,15 +6,15 @@ import sys
 from sqlalchemy import select
 
 from app.database import SessionLocal
-from app.identity_access.models import Profile, User, utcnow
-from app.identity_access.security import hash_password
-from app.identity_access.schemas import RegisterIn
+from app.services.identity_access.models import Profile, User, utcnow
+from app.services.identity_access.security import hash_password
+from app.services.identity_access.schemas import RegisterIn
 
 
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit(
-            "Usage: python -m app.identity_access.bootstrap_admin EMAIL"
+            "Usage: python -m app.services.identity_access.bootstrap_admin EMAIL"
         )
 
     email = sys.argv[1].strip().lower()

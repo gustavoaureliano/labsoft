@@ -61,9 +61,9 @@ a { color:#125d80; text-decoration:none; }
 <p>O projeto chama essa área de serviço de identidade. Hoje ela está implementada como módulos de uma mesma API, com persistência compartilhada. Ao longo da leitura, “serviço” significa a classe responsável por uma regra de negócio, e não necessariamente um microsserviço implantado de forma independente.</p>
 <div class="cover-meta"><b>Edição de leitura • 1.0</b><br>22 páginas • fundamentos, fluxos, referência de rotas e operação<br>Base de referência: revisão 4ba38ee9 e alterações locais do workspace.</div>
 </section><section class="sheet" id="p2"><div class="eyebrow">APROVAAÍ / GUIA DE IMPLEMENTAÇÃO</div><h1>Roteiro de leitura</h1><p class="subtitle">Comece pelo fluxo completo; depois consulte os detalhes do token.</p><div class="toc"><a href="#p3"><span>Arquitetura: onde cada responsabilidade fica</span><b>03</b></a><a href="#p4"><span>Banco, sessões de banco e entidades</span><b>04</b></a><a href="#p5"><span>Cadastro, senhas e confirmação de e-mail</span><b>05</b></a><a href="#p6"><span>Login e criação de uma sessão</span><b>06</b></a><a href="#p7"><span>JWT: estrutura, assinatura e leitura</span><b>07</b></a><a href="#p8"><span>Campos do JWT emitido pelo projeto</span><b>08</b></a><a href="#p9"><span>Como uma requisição é autenticada</span><b>09</b></a><a href="#p10"><span>Autorização por papel e por proprietário</span><b>10</b></a><a href="#p11"><span>Refresh token: renovação e reutilização</span><b>11</b></a><a href="#p12"><span>Logout e invalidação imediata de acesso</span><b>12</b></a><a href="#p13"><span>Recuperação e redefinição de senha</span><b>13</b></a><a href="#p14"><span>Fila de e-mail e worker</span><b>14</b></a><a href="#p15"><span>Frontend, cookies e restauração de sessão</span><b>15</b></a><a href="#p16"><span>Swagger e acesso administrativo</span><b>16</b></a><a href="#p17"><span>Referência: rotas de autenticação e administração</span><b>17</b></a><a href="#p18"><span>Referência: perfis, documentos e notificações</span><b>18</b></a><a href="#p19"><span>Configuração e execução local</span><b>19</b></a><a href="#p20"><span>Proteções, limites e respostas HTTP</span><b>20</b></a><a href="#p21"><span>Testes, diagnóstico e limites da implementação</span><b>21</b></a><a href="#p22"><span>Glossário, código-fonte e referências</span><b>22</b></a></div><aside><b>Duas perguntas diferentes</b><p>Autenticação responde “quem está fazendo a requisição?”. Autorização responde “essa pessoa pode executar esta ação sobre este recurso?”. Um login bem-sucedido não concede acesso automático a todas as rotas.</p></aside><p class="small">Os tempos apresentados são os valores padrão de <code>Settings</code>. Variáveis de ambiente podem alterá-los. A documentação técnica anterior em LaTeX contém propostas mais amplas; este guia se limita ao comportamento efetivamente implementado.</p></section><section class="sheet" id="p3"><div class="eyebrow">APROVAAÍ / GUIA DE IMPLEMENTAÇÃO</div><h1>1. Arquitetura atual</h1><p class="subtitle">Uma API, serviços de negócio e um worker que compartilha a persistência.</p>
-<div class="diagram"><div>Navegador / Next.js<small>formulários • memória • cookies</small></div><strong>↓ HTTP / JSON</strong><div>FastAPI — app/main.py<small>rotas • dependências • cabeçalhos</small></div><strong>↓ chamadas Python</strong><div>identity_access/services<small>identidade • sessões • perfis • e-mail • permissões</small></div><strong>↓ SQLAlchemy</strong><div>PostgreSQL<small>usuários • sessões • tokens • auditoria</small></div></div>
+<div class="diagram"><div>Navegador / Next.js<small>formulários • memória • cookies</small></div><strong>↓ HTTP / JSON</strong><div>FastAPI — app/main.py<small>rotas • dependências • cabeçalhos</small></div><strong>↓ chamadas Python</strong><div>services/identity_access/services<small>identidade • sessões • perfis • e-mail • permissões</small></div><strong>↓ SQLAlchemy</strong><div>PostgreSQL<small>usuários • sessões • tokens • auditoria</small></div></div>
 <h2>Como o código se distribui</h2>
-<p><code>main.py</code> cria o aplicativo, configura o CORS e registra as rotas. A função <code>create_router()</code> concentra as rotas transferidas de <code>identity_access/api.py</code>, usando o prefixo <code>/api/v1</code>. O arquivo <code>api.py</code> mantém dependências e auxiliares HTTP.</p>
+<p><code>main.py</code> cria o aplicativo, configura o CORS e registra as rotas. A função <code>create_router()</code> concentra as rotas transferidas de <code>services/identity_access/api.py</code>, usando o prefixo <code>/api/v1</code>. O arquivo <code>api.py</code> mantém dependências e auxiliares HTTP.</p>
 <p><code>IdentityService</code> trata cadastro, credenciais, confirmação, recuperação, papéis e status. <code>SessionService</code> cria e valida sessões, renova tokens e revoga acessos. Os demais serviços cuidam de perfis, arquivos, notificações, candidaturas e limitação de tentativas.</p>
 <h2>O worker é um processo separado</h2>
 <p><code>email_worker.py</code> lê a fila no mesmo banco e chama Brevo ou SMTP. Separar esse processamento evita fazer o usuário esperar pela entrega de e-mail na requisição de cadastro.</p>
@@ -187,7 +187,7 @@ Content-Type: application/json
 <h2>Escolha do provedor</h2>
 <p>Se chave e remetente Brevo estiverem configurados, a implementação usa a API da Brevo. Caso contrário, escolhe SMTP. O cadastro e a recuperação consultam a disponibilidade de configuração e podem retornar 503 antes de gerar um fluxo incompleto.</p>
 <pre>cd backend
-uv run --env-file .env python -m app.identity_access.email_worker</pre>
+uv run --env-file .env python -m app.services.identity_access.email_worker</pre>
 <p>Quando não encontra trabalho, o loop espera dois segundos por padrão. O worker usa <code>SessionLocal</code>, portanto acessa o mesmo banco configurado para a aplicação.</p>
 <aside><b>Limite importante de entrega</b><p>Há rastreamento e novas tentativas, mas não uma garantia de envio exatamente uma vez. Se o provedor aceitar o e-mail e o processo falhar antes de confirmar o estado no banco, a mensagem pode ser reenviada. A coluna idempotency_key existe, mas não é enviada como mecanismo de deduplicação ao provedor no código atual.</p></aside><p class="source">Base no código: [C12] EmailOutboxService; [C13] NotificationService e provedores; email_worker.py</p></section><section class="sheet" id="p15"><div class="eyebrow">APROVAAÍ / GUIA DE IMPLEMENTAÇÃO</div><h1>13. Frontend, cookies e sessão</h1><p class="subtitle">O que fica em memória, o que fica no navegador e o que a API verifica.</p>
 <p><code>frontend/src/lib/apiClient.ts</code> usa <code>NEXT_PUBLIC_API_URL</code> para decidir se a integração está configurada. O JWT de acesso é mantido em uma variável do módulo JavaScript, não no localStorage. As requisições usam <code>credentials: "include"</code> para permitir o envio dos cookies aplicáveis.</p>
@@ -209,7 +209,7 @@ uv run --env-file .env python -m app.identity_access.email_worker</pre>
 <p>O login administrativo exige uma origem válida. A página do formulário agora usa <code>Referrer-Policy: same-origin</code>, preservando o contexto necessário ao POST de mesma origem no navegador. As demais respostas continuam usando no-referrer. A proteção não passou a aceitar Origin ausente, null ou arbitrário.</p>
 <h2>Criação inicial do administrador</h2>
 <pre>cd backend
-uv run --env-file .env python -m app.identity_access.bootstrap_admin admin@exemplo.com</pre>
+uv run --env-file .env python -m app.services.identity_access.bootstrap_admin admin@exemplo.com</pre>
 <p>O comando solicita nome e senha e só cria o administrador inicial se não existir nenhum. O cadastro normal não cria administradores. Para alterar papéis depois disso, a API dispõe de uma rota administrativa.</p>
 <aside><b>Diagnóstico rápido</b><p>Um 401 normalmente pede uma credencial válida. Um 403 pode significar papel insuficiente, origem não autorizada ou sessão administrativa não aceita. Leia o campo detail da resposta para distinguir os casos. Acesso sem sessão a /docs redireciona ao formulário.</p></aside><p class="source">Base no código: [C2] admin_docs_login(), _admin_docs_user(), admin_swagger_docs(), middleware; bootstrap_admin.py</p></section><section class="sheet" id="p17"><div class="eyebrow">APROVAAÍ / GUIA DE IMPLEMENTAÇÃO</div><h1>15. Rotas de identidade</h1><p class="subtitle">Os caminhos da tabela recebem o prefixo /api/v1.</p><table class="routes"><thead><tr><th>Método e caminho</th><th>Acesso / resultado principal</th></tr></thead><tbody><tr><td><code>POST /auth/register</code></td><td>Público; cadastro de aluno pendente. 201.</td></tr><tr><td><code>POST /auth/login</code></td><td>Público; valida credenciais e cria sessão. 200.</td></tr><tr><td><code>POST /auth/verify-email</code></td><td>Público; consome código válido e ativa a conta. 200.</td></tr><tr><td><code>POST /auth/resend-verification</code></td><td>Público; reenvio para conta pendente, resposta genérica. 202.</td></tr><tr><td><code>POST /auth/refresh</code></td><td>Cookie de refresh e origem permitida; rotaciona credenciais. 200.</td></tr><tr><td><code>POST /auth/logout</code></td><td>Bearer ou cookie com origem permitida; revoga a sessão. 200.</td></tr><tr><td><code>GET /auth/sessions</code></td><td>Bearer; lista sessões do próprio usuário. 200.</td></tr><tr><td><code>DELETE /auth/sessions/{session_id}</code></td><td>Bearer; revoga uma sessão do próprio usuário. 200.</td></tr><tr><td><code>POST /auth/logout-all</code></td><td>Bearer; revoga as sessões do próprio usuário. 200.</td></tr><tr><td><code>GET /auth/me</code></td><td>Bearer; retorna a identidade atual do banco. 200.</td></tr><tr><td><code>POST /auth/forgot-password</code><br><code>POST /auth/password-recovery/request</code></td><td>Públicos; aliases para solicitar redefinição, resposta genérica. 202.</td></tr><tr><td><code>POST /auth/reset-password</code><br><code>POST /auth/password-recovery/confirm</code></td><td>Públicos; aliases que exigem código válido e nova senha. 200.</td></tr><tr><td><code>GET /auth/test/teacher</code></td><td>Bearer e papel teacher; teste de autorização. 200.</td></tr><tr><td><code>PATCH /admin/users/{user_id}/role</code></td><td>Bearer e papel admin; altera papel. 200.</td></tr><tr><td><code>PATCH /admin/users/{user_id}/status</code></td><td>Bearer e papel admin; altera status. 200.</td></tr></tbody></table>
 <p><b>Público</b> significa não exigir previamente uma sessão Bearer. Ainda há validação de dados, códigos de uso específico e, quando implementado na rota, limites de tentativas. O nome “público” não elimina essas verificações.</p>
@@ -231,7 +231,7 @@ uv run --env-file .env alembic upgrade head
 uv run --env-file .env uvicorn app.main:app --reload
 
 # Outro terminal, dentro de backend/
-uv run --env-file .env python -m app.identity_access.email_worker
+uv run --env-file .env python -m app.services.identity_access.email_worker
 
 # Terminal do frontend, dentro de frontend/
 npm run dev</pre>
@@ -263,21 +263,21 @@ npm run dev</pre>
 <div class="reference-list">
 <p><b>[C1]</b> <code>backend/app/database.py</code> e <code>dbbase.py</code>: engine, sessões SQLAlchemy e base declarativa.</p>
 <p><b>[C2]</b> <code>backend/app/main.py</code>: create_router, endpoints, middleware, CORS e Swagger.</p>
-<p><b>[C3]</b> <code>identity_access/services/identity_service.py</code>: identidade, credenciais e permissões.</p>
-<p><b>[C4]</b> <code>identity_access/services/session_service.py</code>: sessões, emissão, refresh e revogação.</p>
-<p><b>[C5]</b> <code>identity_access/models.py</code>: entidades e restrições de persistência.</p>
-<p><b>[C6]</b> <code>identity_access/schemas.py</code>: contratos de entrada e saída.</p>
-<p><b>[C7]</b> <code>identity_access/api.py</code>: dependências, origem, limites e tradução de erros.</p>
-<p><b>[C8]</b> <code>identity_access/security.py</code>: hashes, segredos, assinatura e validação JWT.</p>
-<p><b>[C9]</b> <code>identity_access/config.py</code>: padrões e variáveis de ambiente.</p>
-<p><b>[C10]</b> <code>identity_access/services/{profile,media,teacher_application}_service.py</code>.</p>
+<p><b>[C3]</b> <code>services/identity_access/services/identity_service.py</code>: identidade, credenciais e permissões.</p>
+<p><b>[C4]</b> <code>services/identity_access/services/session_service.py</code>: sessões, emissão, refresh e revogação.</p>
+<p><b>[C5]</b> <code>services/identity_access/models.py</code>: entidades e restrições de persistência.</p>
+<p><b>[C6]</b> <code>services/identity_access/schemas.py</code>: contratos de entrada e saída.</p>
+<p><b>[C7]</b> <code>services/identity_access/api.py</code>: dependências, origem, limites e tradução de erros.</p>
+<p><b>[C8]</b> <code>services/identity_access/security.py</code>: hashes, segredos, assinatura e validação JWT.</p>
+<p><b>[C9]</b> <code>services/identity_access/config.py</code>: padrões e variáveis de ambiente.</p>
+<p><b>[C10]</b> <code>services/identity_access/services/{profile,media,teacher_application}_service.py</code>.</p>
 <p><b>[C11]</b> <code>frontend/src/lib/apiClient.ts</code> e <code>components/access/ApiSessionSync.tsx</code>.</p>
-<p><b>[C12]</b> <code>identity_access/services/email_outbox_service.py</code> e <code>email_worker.py</code>.</p>
-<p><b>[C13]</b> <code>identity_access/services/notification_service.py</code>: avisos, SMTP e Brevo.</p>
-<p><b>[C14]</b> <code>identity_access/services/rate_limit_service.py</code>: limites persistentes.</p>
+<p><b>[C12]</b> <code>services/identity_access/services/email_outbox_service.py</code> e <code>email_worker.py</code>.</p>
+<p><b>[C13]</b> <code>services/identity_access/services/notification_service.py</code>: avisos, SMTP e Brevo.</p>
+<p><b>[C14]</b> <code>services/identity_access/services/rate_limit_service.py</code>: limites persistentes.</p>
 <p><b>[C15]</b> <code>backend/tests/test_authentication.py</code>: cenários automatizados.</p>
 </div>
-<p class="small">Os caminhos identity_access/ são relativos a backend/app/. O caminho components/access/ é relativo a frontend/src/.</p>
+<p class="small">Os caminhos services/identity_access/ são relativos a backend/app/. O caminho components/access/ é relativo a frontend/src/.</p>
 <h2>Referências conceituais oficiais</h2>
 <div class="reference-list">
 <p><b>[R1]</b> <a href="https://www.rfc-editor.org/rfc/rfc7519">RFC 7519 — JSON Web Token (JWT)</a>: formato e terminologia das claims.</p>

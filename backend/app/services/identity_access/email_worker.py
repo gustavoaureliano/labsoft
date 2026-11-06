@@ -1,9 +1,9 @@
 from app.database import SessionLocal
-from app.identity_access.config import Settings
-from app.identity_access.services.email_outbox_service import (
+from app.services.identity_access.config import Settings
+from app.services.identity_access.services.email_outbox_service import (
     EmailOutboxService,
 )
-from app.identity_access.services.notification_service import (
+from app.services.identity_access.services.notification_service import (
     configured_email_sender,
 )
 

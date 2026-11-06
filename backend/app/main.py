@@ -21,16 +21,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_session as get_db
-from app.identity_access import Settings
-from app.identity_access.api import (
+from app.services.identity_access import Settings
+from app.services.identity_access.api import (
     AuthDependencies,
     _check_rate_limit,
     _record_audit,
     _require_allowed_origin,
     translate_service_error,
 )
-from app.identity_access.models import AuditEvent, AuthSession, User
-from app.identity_access.schemas import (
+from app.services.identity_access.models import AuditEvent, AuthSession, User
+from app.services.identity_access.schemas import (
     LoginIn,
     EmailVerificationIn,
     MediaOut,
@@ -49,7 +49,7 @@ from app.identity_access.schemas import (
     UserStatusUpdateIn,
     UserOut,
 )
-from app.identity_access.services import (
+from app.services.identity_access.services import (
     EmailSender,
     EmailOutboxService,
     IdentityService,
@@ -62,7 +62,7 @@ from app.identity_access.services import (
 )
 
 
-# INÍCIO DAS ROTAS TRANSFERIDAS DE identity_access/api.py.
+# INÍCIO DAS ROTAS TRANSFERIDAS DE services/identity_access/api.py.
 # Centralizadas temporariamente na main.py para reorganização posterior.
 def create_router(
     get_db: Callable,
@@ -847,7 +847,7 @@ def create_router(
     return router
 
 
-# FIM DAS ROTAS TRANSFERIDAS DE identity_access/api.py.
+# FIM DAS ROTAS TRANSFERIDAS DE services/identity_access/api.py.
 
 settings = Settings.from_env()
 app = FastAPI(

@@ -4,6 +4,13 @@ API em FastAPI. O fluxo de identidade segue a especificação do microsserviço:
 JWT Ed25519 de curta duração, refresh token opaco em cookie HttpOnly,
 confirmação de e-mail, recuperação de senha, RBAC, rate limiting e auditoria.
 
+## Organização dos serviços
+
+Os serviços de negócio ficam em `app/services/`, organizados por domínio.
+O domínio de autenticação e autorização está em `app/services/identity_access/`,
+com seus modelos, esquemas, configuração e serviços internos. As rotas HTTP
+continuam declaradas em `app/main.py`.
+
 ## Requisitos
 
 - Python 3.12 ou superior
@@ -77,7 +84,7 @@ Crie o primeiro administrador (a senha é solicitada sem eco e não vai para o
 histórico do shell):
 
 ```bash
-uv run --env-file .env python -m app.identity_access.bootstrap_admin admin@exemplo.com
+uv run --env-file .env python -m app.services.identity_access.bootstrap_admin admin@exemplo.com
 ```
 
 O comando só cria o administrador inicial se ainda não houver um. Para
@@ -115,7 +122,7 @@ O worker entrega mensagens persistidas na outbox e tenta novamente em caso de
 falha. Execute-o em um processo separado, mantendo-o ativo junto à API:
 
 ```bash
-uv run --env-file .env python -m app.identity_access.email_worker
+uv run --env-file .env python -m app.services.identity_access.email_worker
 ```
 
 Confirmação de e-mail expira em 24 horas por padrão; links de redefinição de

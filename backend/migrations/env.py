@@ -2,7 +2,7 @@ from alembic import context
 
 from app.database import Base, engine
 from app.media.models import Media
-from app.identity_access import models as identity_models
+from app.services.identity_access import models as identity_models
 
 target_metadata = Base.metadata
 
