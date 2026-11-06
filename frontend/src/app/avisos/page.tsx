@@ -25,11 +25,7 @@ export default function AvisosPage() {
     if (!isApiConfigured) return;
 
     let active = true;
-    Promise.resolve()
-      .then(() => {
-        if (!hasApiSession()) throw new Error("Entre com sua conta para consultar os avisos.");
-        return fetchNotifications();
-      })
+    fetchNotifications()
       .then((items) => {
         if (active) setNotifications(items);
       })

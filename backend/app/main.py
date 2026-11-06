@@ -884,7 +884,12 @@ async def apply_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request.state.request_id
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "no-referrer"
+    # O formulário administrativo precisa preservar a origem no POST do navegador.
+    response.headers["Referrer-Policy"] = (
+        "same-origin"
+        if request.method == "GET" and request.url.path == "/admin/login"
+        else "no-referrer"
+    )
     response.headers["X-Frame-Options"] = "DENY"
     if request.url.path.startswith("/api/v1/") or request.url.path in {
         "/docs",
@@ -916,7 +921,7 @@ def admin_docs_login_page() -> HTMLResponse:
         """,
         headers={
             "Cache-Control": "no-store",
-            "Referrer-Policy": "no-referrer",
+            "Referrer-Policy": "same-origin",
             "X-Content-Type-Options": "nosniff",
         },
     )

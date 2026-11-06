@@ -1197,7 +1197,7 @@ def test_admin_docs_login_rejects_invalid_credentials_and_non_admin(api, full_ap
     assert api.db.query(AuditEvent).filter_by(event="admin_docs.login", outcome="failure").count() == 1
 
 
-@pytest.mark.parametrize("origin", [None, "https://untrusted.example"])
+@pytest.mark.parametrize("origin", [None, "null", "https://untrusted.example"])
 def test_admin_docs_login_requires_allowed_origin(api, full_app_client, origin):
     user, _, _ = api.account("admin")
     response = full_app_client.post("/admin/login", headers={} if origin is None else {"Origin": origin},
@@ -1241,7 +1241,8 @@ def test_security_headers_and_cache_control_on_real_app(full_app_client):
         assert response.headers["cache-control"] == "no-store"
         assert response.headers["x-content-type-options"] == "nosniff"
         assert response.headers["x-frame-options"] == "DENY"
-        assert response.headers["referrer-policy"] == "no-referrer"
+        expected_policy = "same-origin" if path == "/admin/login" else "no-referrer"
+        assert response.headers["referrer-policy"] == expected_policy
         assert response.headers["x-request-id"]
 
 

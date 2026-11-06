@@ -53,7 +53,7 @@ essa variável, os fluxos demonstrativos locais continuam disponíveis. Configur
 
 Abra `/` sem perfil demo para ver a landing, com cursos de exemplo e links para entrar ou criar conta. Depois de entrar como aluno, `/` mostra a Home de estudos. Professor e administrador são direcionados às suas áreas em `/professor/cursos` e `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
 
-O papel escolhido fica em um cookie de demonstração, usado para mostrar o menu e a área correspondentes. Esse cookie pode ser alterado pelo navegador e **não é uma autenticação segura**. Os demais dados demonstrativos continuam no armazenamento local do navegador.
+Sem a API, o papel escolhido fica em um cookie de demonstração, usado para mostrar o menu e a área correspondentes. Esse cookie pode ser alterado pelo navegador e **não é uma autenticação segura**. Com a API configurada, o login usa o usuário e o papel retornados pelo banco; ao abrir a aplicação, a sessão é restaurada e validada por `/api/v1/auth/me`. O cookie de papel continua servindo apenas à navegação da interface. A autorização efetiva de operações e dados privados é verificada pela API a partir da sessão e do papel atual no banco. Os demais dados demonstrativos continuam no armazenamento local do navegador.
 
 Para acompanhar o navegador, use `npm run test:e2e:visual`. Os testes serão executados um de cada vez, com pausas de 1,5 segundo. Use `E2E_SLOW_MS` para definir outro intervalo em milissegundos.
 

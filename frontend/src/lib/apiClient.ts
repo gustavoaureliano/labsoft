@@ -20,6 +20,16 @@ export type ApiNotification = {
   read_at: string | null;
 };
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
 let accessToken: string | null = null;
 let refreshInFlight: Promise<boolean> | null = null;
@@ -101,7 +111,7 @@ async function request<T>(
     const payload = await response.json().catch(() => null) as { detail?: unknown } | null;
     const detail = payload?.detail;
     const message = typeof detail === "string" ? detail : `Falha na API (${response.status}).`;
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
   return response.json() as Promise<T>;
@@ -114,6 +124,10 @@ export async function loginWithApi(email: string, password: string) {
   });
   accessToken = result.access_token;
   return result.user;
+}
+
+export function getCurrentUserFromApi() {
+  return request<ApiUser>("/api/v1/auth/me");
 }
 
 export function registerWithApi(
