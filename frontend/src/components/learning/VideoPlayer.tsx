@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, jsonRequest, type Playback } from "@/lib/api/learning";
+import { itemIdFor, sendHeartbeat } from "@/lib/api/commerce";
 import styles from "./VideoPlayer.module.css";
 
 export function VideoPlayer({lesson, preview = false, poster}: {lesson: Playback; preview?: boolean; poster?: string}) {
@@ -18,6 +19,17 @@ export function VideoPlayer({lesson, preview = false, poster}: {lesson: Playback
     mounted.current = true;
     return () => { mounted.current = false; pending.current = null; };
   }, []);
+
+  // Metering heartbeat every 10s while the video is actually playing.
+  useEffect(() => {
+    const itemId = itemIdFor(lesson.course_id);
+    if (preview || itemId === undefined) return;
+    const timer = setInterval(() => {
+      const element = video.current;
+      if (element && !element.paused && !element.ended) sendHeartbeat(itemId, element.currentTime);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [lesson.course_id, preview]);
 
   async function savePosition(force = false) {
     const element = video.current;
