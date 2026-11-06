@@ -23,7 +23,7 @@ export function DemoSessionMenu({ role }: { role: DemoRole }) {
   async function endSession(destination: string) {
     setError("");
     try {
-      await logoutFromApi();
+      if (isApiConfigured) await logoutFromApi();
       clearDemoRole();
       try { window.localStorage.removeItem(demoAccountKey); } catch { /* The demo still exits without storage. */ }
       router.replace(destination);

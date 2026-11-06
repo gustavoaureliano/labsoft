@@ -12,3 +12,39 @@ next-env.d.ts
 __pycache__/
 *.py[cod]
 private_uploads/
+
+
+# ==========================================
+# Python - Cache
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+
+# ==========================================
+# Node.js / React / TypeScript - Cache
+# ==========================================
+.npm/
+.yarn/cache/
+.pnpm-store/
+.cache/
+.parcel-cache/
+.next/cache/
+.nuxt/
+.turbo/
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# ==========================================
+# Ferramentas - Cache
+# ==========================================
+.tox/
+.nox/
+.pytype/
+.pyright/
