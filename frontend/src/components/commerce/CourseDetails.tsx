@@ -4,14 +4,20 @@ import Link from "next/link";
 import type { CatalogCourse } from "@/data/catalog";
 import { formatPrice } from "@/data/catalog";
 import { enrolledCourse } from "@/data/courses";
-import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
+import { useEffect, useState } from "react";
+import { checkAccess, itemIdFor } from "@/lib/api/commerce";
 import styles from "./Commerce.module.css";
 
 export function CourseDetails({ course }: { course: CatalogCourse }) {
-  const [access, , ready] = useDemoStorage(accessDemoKey, initialAccessDemo);
+  const [hasDemoAccess, setHasAccess] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const itemId = itemIdFor(course.id);
+    (itemId === undefined ? Promise.resolve(false) : checkAccess(itemId))
+      .catch(() => false)
+      .then((allowed) => { setHasAccess(allowed); setReady(true); });
+  }, [course.id]);
   const isEnrolled = course.id === enrolledCourse.id;
-  const hasDemoAccess = access.courseIds.includes(course.id) || (access.subscription?.status === "active" && access.subscription.plan === "complete");
 
   let accessLabel = course.access === "free" ? "Acesso gratuito" : "Acesso ao curso";
   let accessValue = course.access === "free" ? "Gratuito" : formatPrice(course.price);
@@ -26,12 +32,12 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
   } else if (!ready) {
     accessLabel = "Verificando acesso";
     accessValue = "Aguarde";
-    accessDescription = "Consultando os acessos salvos neste navegador.";
+    accessDescription = "Consultando o serviço de acesso.";
     action = null;
   } else if (hasDemoAccess) {
     accessLabel = "Curso adquirido";
     accessValue = "Acesso confirmado";
-    accessDescription = "A compra demonstrativa já foi concluída neste navegador.";
+    accessDescription = "Seu acesso a este curso está ativo.";
     action = { href: "/meus-cursos", label: "Voltar para Meus Cursos" };
   }
 

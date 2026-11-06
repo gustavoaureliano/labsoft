@@ -8,7 +8,7 @@ import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { currentLesson, enrolledCourse, lessonHref, lessonsFromIds } from "@/data/courses";
-import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
+import { useAccess } from "@/lib/api/commerce";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
@@ -16,7 +16,7 @@ import styles from "./page.module.css";
 export default function MeusCursos() {
   const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
   const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
-  const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
+  const [access] = useAccess();
   const [playlistName, setPlaylistName] = useState("");
   const historyLessons = lessonsFromIds(study.viewedLessons);
   const favoriteLessons = lessonsFromIds(study.favoriteLessons);
