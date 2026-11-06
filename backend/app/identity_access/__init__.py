@@ -1,4 +1,4 @@
-from .api import AuthDependencies, create_router
+from .api import AuthDependencies
 from .config import Settings
 from .models import Base
 
@@ -13,7 +13,6 @@ from .services import (
 
 __all__ = [
     "AuthDependencies",
-    "create_router",
     "Settings",
     "Base",
     "IdentityService",
