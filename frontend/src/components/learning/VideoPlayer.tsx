@@ -40,7 +40,7 @@ export function VideoPlayer({lesson, preview = false, poster}: {lesson: Playback
   }
 
   return <div>
-    {playbackError ? <div className={styles.unavailable} role="alert"><strong>Não foi possível reproduzir este vídeo</strong><p>{playbackError}</p><span>Você pode consultar a aula ou selecionar outra da lista.</span></div> : <video ref={video} controls preload="metadata" poster={poster} style={{width: "100%", aspectRatio: "16 / 9", background: "#10242d", borderRadius: 8}}
+    {playbackError ? <div className={styles.unavailable} role="alert"><strong>Não foi possível reproduzir este vídeo</strong><p>{playbackError}</p><span>Você pode consultar a aula ou selecionar outra da lista.</span></div> : <video ref={video} className={styles.video} controls preload="metadata" poster={poster}
       src={lesson.content_url}
       onLoadedMetadata={() => { const element = video.current; if (element && !preview) element.currentTime = Math.min(lesson.position_seconds, Math.max(0, element.duration - 0.1)); }}
       onTimeUpdate={() => void savePosition()} onPause={() => void savePosition(true)} onEnded={() => void savePosition(true)}

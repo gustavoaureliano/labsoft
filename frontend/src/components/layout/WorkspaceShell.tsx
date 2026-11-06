@@ -28,6 +28,7 @@ export function WorkspaceShell({
   navigation,
   role,
   showNotifications = false,
+  videoPage = false,
 }: {
   children: ReactNode;
   contentWidth?: "default" | "wide";
@@ -37,13 +38,14 @@ export function WorkspaceShell({
   navigation: NavigationItem[];
   role: DemoRole;
   showNotifications?: boolean;
+  videoPage?: boolean;
 }) {
   const { animate, collapsed, toggle } = useWorkspaceSidebar();
   const navigationId = `${role}-navigation`;
   const navigationLabel = role === "student" ? "Navegação principal" : role === "teacher" ? "Navegação do professor" : "Navegação administrativa";
 
   return (
-    <div className={`${styles.shell} ${header.type === "search" ? styles.searchHeader : ""} ${collapsed ? styles.collapsed : ""} ${animate ? styles.canAnimate : ""}`}>
+    <div className={`${styles.shell} ${header.type === "search" ? styles.searchHeader : ""} ${collapsed ? styles.collapsed : ""} ${animate ? styles.canAnimate : ""} ${videoPage ? styles.videoPage : ""}`}>
       <header className={styles.topbar}>
         <div className={styles.brandGroup}>
           <button className={styles.toggle} type="button" onClick={toggle} aria-controls={navigationId} aria-expanded={!collapsed} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} title={collapsed ? "Expandir menu" : "Recolher menu"}>

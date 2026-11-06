@@ -5,7 +5,7 @@ export default async function VideoAula({ searchParams }: PageProps<"/videoaula"
   const query = await searchParams;
 
   return (
-    <AppShell activePage="courses">
+    <AppShell activePage="courses" videoPage>
       <VideoLessonExperience
         lessonId={typeof query.aula === "string" ? query.aula : undefined}
         origin={typeof query.origem === "string" ? query.origem : undefined}
