@@ -18,7 +18,7 @@ class CourseRepository:
     def get(self, course_id: UUID, *, published_only: bool = False) -> Course | None:
         query = select(Course).where(Course.id == course_id)
         if published_only:
-            query = query.where(Course.status == "published")
+            query = query.where(Course.status == "published", Course.moderation_status == "visible")
         return self.session.scalar(query)
 
     def add(self, course: Course) -> Course:
@@ -36,7 +36,7 @@ class CourseRepository:
         offset: int = 0,
         limit: int = 20,
     ) -> tuple[list[Course], int]:
-        filters = [Course.status == "published"]
+        filters = [Course.status == "published", Course.moderation_status == "visible"]
         if subject:
             filters.append(func.lower(Course.subject) == subject.lower())
         if area:
@@ -121,6 +121,7 @@ class CourseRepository:
             .join(Course, Course.id == CourseMaterial.course_id)
             .where(
                 Course.status == "published",
+                Course.moderation_status == "visible",
                 or_(
                     func.lower(CourseMaterial.title).contains(term),
                     func.lower(CourseMaterial.description).contains(term),

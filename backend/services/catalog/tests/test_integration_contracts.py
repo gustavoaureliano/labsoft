@@ -146,3 +146,32 @@ def test_signed_url_does_not_bypass_unpublication(integrated):
     assert client.post(f"/api/courses/{course['id']}/publication", json={"action":"unpublish"}).status_code == 200
     state['role'] = 'student'
     assert client.get(signed_url).status_code == 403
+
+
+def test_admin_moderation_hides_course_without_deleting_records(integrated, db_session, monkeypatch):
+    client, uid, state = integrated
+    monkeypatch.setenv('ENGAGEMENT_CATALOG_TOKEN','engagement-catalog-secret')
+    course = create(client)
+    state['lessons'] = [{"id":str(uuid4()), "title":"Aula", "position":1,"duration_seconds":12}]
+    client.post(f"/api/courses/{course['id']}/publication",json={"action":"publish"}).raise_for_status()
+    url=f"/api/courses/{course['id']}/moderation"
+    assert client.put(url,json={"decision":"hide"}).status_code==403
+    state['role']='admin'
+    assert client.put(url,json={"decision":"hide"}).status_code==403
+    client.headers['X-Service-Token']='engagement-catalog-secret'
+    hidden=client.put(url,json={"decision":"hide"})
+    assert hidden.status_code==200 and hidden.json()['moderation_status']=='hidden'
+    assert client.put(url,json={"decision":"hide"}).status_code==200
+    del client.headers['Authorization']
+    assert client.get(f"/api/courses/{course['id']}/summary").status_code==404
+    assert client.get(f"/api/courses/{course['id']}").status_code==404
+    assert all(item['id']!=course['id'] for item in client.get('/api/courses').json()['items'])
+    client.headers['Authorization']='Bearer real'
+    state['role']='teacher'
+    assert client.post(f"/api/courses/{course['id']}/publication",json={"action":"publish"}).status_code==422
+    state['role']='admin'
+    assert client.put(url,json={"decision":"keep"}).json()['moderation_status']=='visible'
+    assert client.put(url,json={"decision":"delete"}).json()['moderation_status']=='deleted'
+    assert client.put(url,json={"decision":"keep"}).status_code==409
+    db_session.expire_all()
+    assert db_session.get(Course,UUID(course['id'])).moderation_status=='deleted'

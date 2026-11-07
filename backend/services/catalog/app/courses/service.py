@@ -543,6 +543,8 @@ class PublishingService(BaseCourseService):
         self, course_id: UUID, *, action: str, teacher_id: UUID
     ) -> PublicationResponse:
         course = self._owned_course(course_id, teacher_id)
+        if action == "publish" and course.moderation_status != "visible":
+            raise CourseValidationError("Curso indisponível por decisão de moderação.")
         if action == "publish" and self.lesson_loader is not None:
             self.session.rollback()
             self._lessons(course_id)

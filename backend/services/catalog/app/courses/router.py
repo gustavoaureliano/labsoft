@@ -370,13 +370,13 @@ def download_media(
             session.info["access_token"] = access_token
         allowed = False
         for material, course in materials:
-            if course.status == "published" and material.access_level == "public":
+            if course.status == "published" and course.moderation_status == "visible" and material.access_level == "public":
                 allowed = True
                 break
-            if identity is not None and identity[1] == "teacher" and course.teacher_id == identity[0]:
+            if course.moderation_status == "visible" and identity is not None and identity[1] == "teacher" and course.teacher_id == identity[0]:
                 allowed = True
                 break
-            if course.status == "published" and identity is not None and identity[1] == "student":
+            if course.status == "published" and course.moderation_status == "visible" and identity is not None and identity[1] == "student":
                 if AccessService(session).check(course, student_id=identity[0]).allowed:
                     allowed = True
                     break

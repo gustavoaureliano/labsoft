@@ -32,6 +32,7 @@ class Course(Base):
             "status IN ('draft', 'published', 'archived')",
             name="ck_courses_status",
         ),
+        CheckConstraint("moderation_status IN ('visible', 'hidden', 'deleted')", name="ck_courses_moderation_status"),
         CheckConstraint(
             """
             (access_type = 'free' AND (price IS NULL OR price = 0))
@@ -63,6 +64,9 @@ class Course(Base):
     )
     status: Mapped[str] = mapped_column(
         String(20), default="draft", server_default="draft", nullable=False
+    )
+    moderation_status: Mapped[str] = mapped_column(
+        String(20), default="visible", server_default="visible", nullable=False
     )
     featured: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="false", nullable=False
