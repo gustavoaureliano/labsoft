@@ -131,7 +131,7 @@ class CourseMaterial(Base):
         ForeignKey("courses.id", ondelete="CASCADE"), index=True, nullable=False
     )
     lesson_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("course_lessons.id", ondelete="CASCADE"), index=True
+        index=True
     )
     media_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("media.id", ondelete="SET NULL"), index=True

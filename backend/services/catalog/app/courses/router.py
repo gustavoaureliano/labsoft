@@ -7,12 +7,14 @@ from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query
 from app.integrations import demo_mode, principal, lesson_reader, token
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.database import get_session
 from app.media.models import Media
 from app.media.storage import LocalMediaStorage
 
 from .exceptions import MediaNotFound
+from .models import Course, CourseMaterial
 from .repository import CourseRepository
 from .schemas import (
     CourseCreate,
@@ -36,6 +38,7 @@ from .schemas import (
     TeacherDashboardResponse,
 )
 from .service import (
+    AccessService,
     CatalogService,
     CourseService,
     MaterialService,
@@ -345,6 +348,7 @@ def set_course_publication(
 @router.get("/media/{media_id}/download")
 def download_media(
     media_id: UUID,
+    request: Request,
     expires: int,
     signature: str,
     session: SessionDependency,
@@ -352,6 +356,32 @@ def download_media(
     storage = LocalMediaStorage()
     if not storage.validate(media_id, expires, signature):
         raise HTTPException(status_code=403, detail="Link expirado ou inválido.")
+    if not demo_mode():
+        # A signed URL is not an entitlement: cancellation/unpublication must
+        # take effect on the next request, not only when the signature expires.
+        materials = session.execute(select(CourseMaterial, Course).join(
+            Course, CourseMaterial.course_id == Course.id
+        ).where(CourseMaterial.media_id == media_id)).all()
+        if not materials:
+            raise MediaNotFound("Mídia sem material correspondente.")
+        access_token = token(request, required=False)
+        identity = principal(request) if access_token else None
+        if access_token:
+            session.info["access_token"] = access_token
+        allowed = False
+        for material, course in materials:
+            if course.status == "published" and material.access_level == "public":
+                allowed = True
+                break
+            if identity is not None and identity[1] == "teacher" and course.teacher_id == identity[0]:
+                allowed = True
+                break
+            if course.status == "published" and identity is not None and identity[1] == "student":
+                if AccessService(session).check(course, student_id=identity[0]).allowed:
+                    allowed = True
+                    break
+        if not allowed:
+            raise HTTPException(403, "Sem acesso ao material")
     media = CourseRepository(session).get_media(media_id)
     if not media or media.status != "available":
         raise MediaNotFound("Mídia não encontrada ou indisponível.")
@@ -362,4 +392,5 @@ def download_media(
         path,
         media_type=media.content_type,
         filename=media.original_filename,
+        headers={"Cache-Control": "private, no-store", "Vary": "Cookie, Authorization"},
     )

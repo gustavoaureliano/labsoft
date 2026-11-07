@@ -20,7 +20,7 @@ from .exceptions import (
 )
 from .models import Course, CourseLesson, CourseMaterial
 from .repository import CourseRepository
-from app.integrations import demo_mode, remote
+from app.integrations import demo_mode, read_lesson_summaries, remote
 from .schemas import (
     AccessResponse,
     CourseCreate,
@@ -356,6 +356,17 @@ class TeacherCourseService(BaseCourseService):
 
 
 class MaterialService(BaseCourseService):
+    def _require_lesson(self, course_id: UUID, lesson_id: UUID | None) -> None:
+        if lesson_id is None:
+            return
+        if demo_mode():
+            if not self.repository.get_lesson(course_id, lesson_id):
+                raise LessonNotFound("Aula não encontrada neste curso.")
+        elif lesson_id not in {lesson.id for lesson in read_lesson_summaries(
+            course_id, self.session.info["access_token"]
+        )}:
+            raise LessonNotFound("Aula não encontrada neste curso.")
+
     def create(
         self, course_id: UUID, payload: MaterialCreate, *, teacher_id: UUID
     ) -> MaterialResponse:
@@ -364,8 +375,7 @@ class MaterialService(BaseCourseService):
             raise CourseValidationError(
                 "Informe exatamente uma origem: media_id ou external_url."
             )
-        if payload.lesson_id and not self.repository.get_lesson(course_id, payload.lesson_id):
-            raise LessonNotFound("Aula não encontrada neste curso.")
+        self._require_lesson(course_id, payload.lesson_id)
         if payload.media_id:
             media = self.repository.get_media(payload.media_id)
             if not media or media.status != "available":
@@ -393,8 +403,7 @@ class MaterialService(BaseCourseService):
         teacher_id: UUID,
     ) -> MaterialResponse:
         self._owned_course(course_id, teacher_id)
-        if lesson_id and not self.repository.get_lesson(course_id, lesson_id):
-            raise LessonNotFound("Aula não encontrada neste curso.")
+        self._require_lesson(course_id, lesson_id)
         self.repository.add_media(media)
         self.session.flush()
         material = CourseMaterial(
@@ -429,10 +438,8 @@ class MaterialService(BaseCourseService):
             changes["access_level"] = payload.access_level.value
         if "external_url" in changes and payload.external_url:
             changes["external_url"] = str(payload.external_url)
-        if changes.get("lesson_id") and not self.repository.get_lesson(
-            course_id, changes["lesson_id"]
-        ):
-            raise LessonNotFound("Aula não encontrada neste curso.")
+        if "lesson_id" in changes:
+            self._require_lesson(course_id, changes["lesson_id"])
         final_external_url = changes.get("external_url", material.external_url)
         if bool(material.media_id) == bool(final_external_url):
             raise CourseValidationError("Informe exatamente uma origem: media_id ou external_url.")
