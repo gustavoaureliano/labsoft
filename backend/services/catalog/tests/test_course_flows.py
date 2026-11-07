@@ -15,6 +15,34 @@ def teacher_headers(teacher_id=TEACHER_ID):
     }
 
 
+def test_restricted_material_url_is_hidden_in_listing_and_search(client):
+    course = create_course(client, access_type="paid", price="12.00")
+    add_lesson(client, course['id'])
+    source = "https://example.com/private-apostila.pdf"
+    response = client.post(f"/api/courses/{course['id']}/materials", headers=teacher_headers(),
+                           json={"title":"Apostila restrita","kind":"PDF","access_level":"enrolled","external_url":source})
+    assert response.status_code == 201
+    publish(client, course['id'])
+    listing = client.get(f"/api/courses/{course['id']}/materials")
+    search = client.get('/api/search?q=apostila')
+    assert listing.status_code == search.status_code == 200
+    assert source not in listing.text and source not in search.text
+    assert listing.json()['items'][0]['authorized'] is False
+    assert listing.json()['items'][0]['download_url'] is None
+
+
+def test_material_update_cannot_clear_its_only_source(client):
+    course = create_course(client)
+    source = "https://example.com/apostila.pdf"
+    material = client.post(f"/api/courses/{course['id']}/materials", headers=teacher_headers(),
+                           json={"title":"Apostila","kind":"PDF","external_url":source}).json()
+    response = client.patch(f"/api/courses/{course['id']}/materials/{material['id']}",
+                            headers=teacher_headers(), json={"external_url":None})
+    assert response.status_code == 422
+    preview = client.get(f"/api/courses/{course['id']}/preview", headers=teacher_headers())
+    assert preview.json()['materials'][0]['external_url'] == source
+
+
 def course_payload(title="Física para o ENEM", access_type="free", price=None):
     return {
         "title": title,

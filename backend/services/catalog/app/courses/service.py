@@ -260,7 +260,8 @@ class CatalogService(BaseCourseService):
         materials = self.repository.search_materials(term.lower(), limit=limit)
         material_items = [
             MaterialResponse.model_validate(material).model_copy(
-                update={"authorized": material.access_level == "public"}
+                update={"authorized": material.access_level == "public",
+                        "external_url": material.external_url if material.access_level == "public" else None}
             )
             for material in materials
         ]
@@ -432,6 +433,9 @@ class MaterialService(BaseCourseService):
             course_id, changes["lesson_id"]
         ):
             raise LessonNotFound("Aula não encontrada neste curso.")
+        final_external_url = changes.get("external_url", material.external_url)
+        if bool(material.media_id) == bool(final_external_url):
+            raise CourseValidationError("Informe exatamente uma origem: media_id ou external_url.")
         for field, value in changes.items():
             setattr(material, field, value)
         self.session.commit()
@@ -473,7 +477,8 @@ class MaterialService(BaseCourseService):
                     download_url = download_url_factory(material.media_id)
             items.append(
                 MaterialResponse.model_validate(material).model_copy(
-                    update={"authorized": authorized, "download_url": download_url}
+                    update={"authorized": authorized, "download_url": download_url,
+                            "external_url": material.external_url if authorized else None}
                 )
             )
         return MaterialListResponse(course_id=course_id, access=access, items=items)
