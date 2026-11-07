@@ -11,6 +11,7 @@ class LessonCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     description: str = ""
     position: int = Field(ge=1)
+    section_title: str = Field(default="Aulas do curso", min_length=1, max_length=120)
 
 
 class LessonMediaUpdate(BaseModel):
@@ -21,6 +22,7 @@ class LessonUpdate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
+    section_title: str | None = Field(default=None, min_length=1, max_length=120)
 
 
 class LessonOrder(BaseModel):
@@ -35,6 +37,7 @@ class LessonResponse(BaseModel):
     title: str
     description: str
     position: int
+    section_title: str
     moderation_status: str = "visible"
     media_id: UUID | None
     thumbnail_id: UUID | None

@@ -29,10 +29,12 @@ class CourseCreate(BaseModel):
     subject: str = Field(min_length=2, max_length=120)
     area: str = Field(default="Geral", min_length=2, max_length=120)
     summary: str = Field(min_length=10, max_length=5000)
+    audience: str = Field(default="Estudantes de vestibular", min_length=3, max_length=500)
     exams: list[str] = Field(default_factory=list, max_length=30)
     access_type: AccessType
     price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
     cover_media_id: UUID | None = None
+    cover_url: str | None = Field(default=None, pattern=r"^/[a-zA-Z0-9/_-]+\.(?:webp|png|jpg|jpeg)$", max_length=255)
 
 
 class CourseUpdate(BaseModel):
@@ -40,10 +42,12 @@ class CourseUpdate(BaseModel):
     subject: str | None = Field(default=None, min_length=2, max_length=120)
     area: str | None = Field(default=None, min_length=2, max_length=120)
     summary: str | None = Field(default=None, min_length=10, max_length=5000)
+    audience: str | None = Field(default=None, min_length=3, max_length=500)
     exams: list[str] | None = Field(default=None, max_length=30)
     access_type: AccessType | None = None
     price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
     cover_media_id: UUID | None = None
+    cover_url: str | None = Field(default=None, pattern=r"^/[a-zA-Z0-9/_-]+\.(?:webp|png|jpg|jpeg)$", max_length=255)
 
 
 class LessonCreate(BaseModel):
@@ -73,6 +77,7 @@ class LessonResponse(BaseModel):
     summary: str
     duration_minutes: int
     position: int
+    section_title: str = "Aulas do curso"
     video_media_id: UUID | None
     preview_available: bool
 
@@ -125,10 +130,12 @@ class CourseResponse(BaseModel):
     subject: str
     area: str
     summary: str
+    audience: str
     exams: list[str]
     access_type: str
     price: Decimal | None
     cover_media_id: UUID | None
+    cover_url: str | None
     status: str
     featured: bool
     published_at: datetime | None

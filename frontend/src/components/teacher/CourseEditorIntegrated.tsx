@@ -23,7 +23,7 @@ function previewToEditor(preview: ApiCoursePreview): TeacherCourse {
     price: Number(preview.course.price ?? 0).toFixed(2).replace(".", ","),
     status: preview.course.status === "published" ? "Publicado" : "Rascunho",
     students: "Dados disponíveis no painel",
-    image: fallbackCover,
+    image: preview.course.cover_url ?? fallbackCover,
     lessons: preview.lessons.map((lesson) => ({
       id: lesson.id,
       title: lesson.title,

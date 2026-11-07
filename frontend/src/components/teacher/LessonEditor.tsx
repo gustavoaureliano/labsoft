@@ -40,6 +40,7 @@ function LessonForm({ course, initialLesson, initialPreview, origin }: { course:
   const [lesson, setLesson] = useState(initialLesson);
   const [title, setTitle] = useState(initialLesson.title);
   const [description, setDescription] = useState(initialLesson.description);
+  const [sectionTitle, setSectionTitle] = useState(initialLesson.section_title ?? "Aulas do curso");
   const [preview, setPreview] = useState(initialPreview);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,7 +48,7 @@ function LessonForm({ course, initialLesson, initialPreview, origin }: { course:
   const running = useRef(false);
   const router = useRouter();
   const base = `/api/learning/lessons/${lesson.id}`;
-  const dirty = title !== lesson.title || description !== lesson.description;
+  const dirty = title !== lesson.title || description !== lesson.description || sectionTitle !== (lesson.section_title ?? "Aulas do curso");
   const media = useApi<Media>(lesson.media_id ? `/api/media/${lesson.media_id}` : null);
   const thumbnail = useApi<Media>(lesson.thumbnail_id ? `/api/media/${lesson.thumbnail_id}` : null);
   const poster = lesson.thumbnail_id ? `/api/media/${lesson.thumbnail_id}/content` : course.image;
@@ -74,9 +75,9 @@ function LessonForm({ course, initialLesson, initialPreview, origin }: { course:
   function save(event: FormEvent) {
     event.preventDefault();
     void run("Salvando informações...", async () => {
-      const updated = await api<Lesson>(base, jsonRequest("PATCH", { title, description }));
+      const updated = await api<Lesson>(base, jsonRequest("PATCH", { title, description, section_title: sectionTitle }));
       setLesson(current => ({ ...current, ...updated }));
-      setTitle(updated.title); setDescription(updated.description);
+      setTitle(updated.title); setDescription(updated.description); setSectionTitle(updated.section_title ?? "Aulas do curso");
       setNotice("Informações da aula salvas.");
     });
   }
@@ -121,7 +122,7 @@ function LessonForm({ course, initialLesson, initialPreview, origin }: { course:
     </> : <>
       <form id="lesson-information" className={styles.card} onSubmit={save} aria-labelledby="lesson-info-title">
         <h2 id="lesson-info-title">Informações da aula</h2>
-        <div className={styles.form}><label className={styles.field}>Título<input name="lesson-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={255} required disabled={Boolean(busy)} /></label><label className={styles.field}>Descrição<textarea name="lesson-description" value={description} onChange={event => setDescription(event.target.value)} rows={4} disabled={Boolean(busy)} placeholder="O que o aluno vai aprender nesta aula?" /></label></div>
+        <div className={styles.form}><label className={styles.field}>Título<input name="lesson-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={255} required disabled={Boolean(busy)} /></label><label className={styles.field}>Módulo<input name="section-title" value={sectionTitle} onChange={event => setSectionTitle(event.target.value)} maxLength={120} required disabled={Boolean(busy)} /></label><label className={styles.field}>Descrição<textarea name="lesson-description" value={description} onChange={event => setDescription(event.target.value)} rows={4} disabled={Boolean(busy)} placeholder="O que o aluno vai aprender nesta aula?" /></label></div>
       </form>
       <div className={styles.mediaGrid}>
         <section className={styles.card} aria-labelledby="lesson-video-title"><h2 id="lesson-video-title">Vídeo</h2><p className={styles.muted}>MP4 ou WebM · Até 100 MiB</p><div className={styles.fileInfo}><strong>{lesson.media_id ? media.data?.original_filename ?? "Vídeo associado" : "Nenhum vídeo enviado"}</strong><small>{lesson.media_id ? durationLabel(media.data?.duration_seconds ?? lesson.duration_seconds) : "Selecione o arquivo da sua aula."}</small>{media.error && <small role="alert">{media.error}</small>}</div><div className={styles.actions}><FilePicker label={lesson.media_id ? "Trocar vídeo" : "Enviar vídeo"} accept="video/mp4,video/webm" disabled={Boolean(busy)} onSelect={file => void upload(file, false)} />{lesson.media_id && <button className={styles.textButton} type="button" disabled={Boolean(busy)} onClick={() => void detach(false)}>Remover vídeo</button>}</div></section>

@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 def course_sections(course: Course, lessons: list[dict]) -> list[dict]:
     if not course.sections:
-        return [{"title": "Aulas do curso", "lesson_ids": [lesson["id"] for lesson in lessons]}]
+        sections = {}
+        for lesson in lessons:
+            sections.setdefault(lesson["section_title"], []).append(lesson["id"])
+        return [{"title": title, "lesson_ids": ids} for title, ids in sections.items()]
     sections = []
     assigned = set()
     for section in course.sections:
@@ -45,6 +48,7 @@ def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course)
         "id": lesson.id, "course_id": lesson.course_id, "title": lesson.title,
         "moderation_status": lesson.moderation_status,
         "description": lesson.description, "position": lesson.position,
+        "section_title": lesson.section_title,
         "media_id": str(lesson.media_id) if lesson.media_id else None,
         "thumbnail_id": str(lesson.thumbnail_id) if lesson.thumbnail_id else None,
         "thumbnail_url": thumbnail_url, "duration_seconds": media.duration_seconds if media else None,

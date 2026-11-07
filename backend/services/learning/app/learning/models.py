@@ -19,6 +19,7 @@ class Lesson(Base):
     course_id: Mapped[str] = mapped_column(String(255), index=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, default="")
+    section_title: Mapped[str] = mapped_column(String(120), default="Aulas do curso", server_default="Aulas do curso")
     moderation_status: Mapped[str] = mapped_column(String(20), default="visible", server_default="visible")
     position: Mapped[int]
     media_id: Mapped[UUID | None] = mapped_column(ForeignKey("media.id"))

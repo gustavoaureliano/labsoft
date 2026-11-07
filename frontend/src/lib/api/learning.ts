@@ -4,6 +4,7 @@ import { ApiError, request } from "@/lib/apiClient";
 
 export type Lesson = {
   id: string; course_id: string; title: string; description: string; position: number;
+  section_title?: string;
   media_id: string | null; thumbnail_id?: string | null; thumbnail_url?: string;
   moderation_status?: "visible" | "hidden" | "deleted";
   duration_seconds?: number | null; playable?: boolean; position_seconds?: number; completed?: boolean;

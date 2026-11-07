@@ -57,10 +57,18 @@ def test_publication_and_preview_use_remote_lessons(integrated, db_session):
     course = create(client)
     url = f"/api/courses/{course['id']}/publication"
     assert client.post(url, json={"action": "publish"}).status_code == 422
-    state['lessons'] = [{"id": str(uuid4()), "title": "Aula remota", "description": "Descrição remota", "position": 1, "duration_seconds": 12}]
+    state['lessons'] = [{"id": str(uuid4()), "title": "Aula remota", "description": "Descrição remota", "position": 1,
+                         "duration_seconds": 12, "section_title": "Fundamentos"}]
     preview = client.get(f"/api/courses/{course['id']}/preview")
     assert preview.status_code == 200, preview.text
     assert preview.json()['lessons'][0]['title'] == 'Aula remota'
+    assert preview.json()['lessons'][0]['section_title'] == 'Fundamentos'
+    metadata = client.patch(f"/api/courses/{course['id']}", json={
+        "cover_url": "/images/courses/fisica-quantica.webp", "audience": "Estudantes de física"})
+    assert metadata.status_code == 200, metadata.text
+    assert client.get(f"/api/courses/{course['id']}/summary").json()['cover_url'] == '/images/courses/fisica-quantica.webp'
+    assert metadata.json()['audience'] == 'Estudantes de física'
+    assert client.patch(f"/api/courses/{course['id']}", json={"cover_url":"https://example.com/fora.png"}).status_code == 422
     assert client.post(url, json={"action": "publish"}).json()['status'] == 'published'
     assert db_session.query(CourseLesson).count() == 0
 

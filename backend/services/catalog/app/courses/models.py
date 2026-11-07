@@ -56,12 +56,14 @@ class Course(Base):
         String(120), default="Geral", server_default="Geral", nullable=False
     )
     summary: Mapped[str] = mapped_column(Text, nullable=False)
+    audience: Mapped[str] = mapped_column(Text, default="Estudantes de vestibular", server_default="Estudantes de vestibular")
     exams: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     access_type: Mapped[str] = mapped_column(String(10), nullable=False)
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     cover_media_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("media.id", ondelete="SET NULL"), nullable=True
     )
+    cover_url: Mapped[str | None] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(
         String(20), default="draft", server_default="draft", nullable=False
     )

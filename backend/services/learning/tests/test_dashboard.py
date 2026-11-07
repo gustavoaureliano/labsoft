@@ -89,6 +89,27 @@ def test_course_sections_follow_lesson_order_and_keep_new_lessons(upload_context
     ]
 
 
+def test_teacher_can_rename_a_lesson_section(upload_context):
+    client, _, _ = upload_context
+    lesson = client.post("/api/learning/lessons", json={
+        "course_id": "fisica-quantica", "title": "Aula do módulo", "position": 1,
+        "section_title": "Fundamentos",
+    }).json()
+
+    class WithoutSections(DemoIntegrations):
+        def course(self, course_id):
+            course = super().course(course_id)
+            return replace(course, sections=()) if course else None
+
+    app.dependency_overrides[get_integrations] = WithoutSections
+    assert client.get("/api/learning/courses/fisica-quantica").json()["sections"] == [
+        {"title": "Fundamentos", "lesson_ids": [lesson["id"]]},
+    ]
+    updated = client.patch(f"/api/learning/lessons/{lesson['id']}", json={"section_title": "Revisão"})
+    assert updated.status_code == 200 and updated.json()["section_title"] == "Revisão"
+    assert client.get("/api/learning/courses/fisica-quantica").json()["sections"][0]["title"] == "Revisão"
+
+
 def test_home_chooses_recent_accessible_course(upload_context):
     client, _, _ = upload_context
     quantum = create_lesson(client, 1, "fisica-quantica")

@@ -8,9 +8,14 @@ export function toCatalogCourse(
   lessons: ApiLesson[] = [],
 ): CatalogCourse {
   const durationMinutes = lessons.reduce((total, lesson) => total + lesson.duration_minutes, 0);
+  const sections = new Map<string, string[]>();
+  for (const lesson of lessons) {
+    const title = lesson.section_title || "Aulas do curso";
+    sections.set(title, [...(sections.get(title) ?? []), lesson.title]);
+  }
   return {
     id: course.id,
-    image: fallbackCover,
+    image: course.cover_url ?? fallbackCover,
     subject: course.subject,
     group: course.area,
     title: course.title,
@@ -20,12 +25,10 @@ export function toCatalogCourse(
     rating: course.rating ?? 0,
     exams: course.exams,
     summary: course.summary,
-    audience: "Estudantes de vestibular",
+    audience: course.audience ?? "Estudantes de vestibular",
     access: course.access_type,
     price: Number(course.price ?? 0),
-    syllabus: lessons.length
-      ? [{ title: "Conteúdo do curso", lessons: lessons.map((lesson) => lesson.title) }]
-      : [],
+    syllabus: [...sections].map(([title, titles]) => ({ title, lessons: titles })),
   };
 }
 

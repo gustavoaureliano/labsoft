@@ -9,10 +9,12 @@ export type ApiCourse = {
   subject: string;
   area: string;
   summary: string;
+  audience?: string;
   exams: string[];
   access_type: AccessType;
   price: string | number | null;
   cover_media_id: string | null;
+  cover_url?: string | null;
   status: CourseStatus;
   featured: boolean;
   published_at: string | null;
@@ -33,6 +35,7 @@ export type ApiLesson = {
   summary: string;
   duration_minutes: number;
   position: number;
+  section_title?: string;
   video_media_id: string | null;
   preview_available: boolean;
 };

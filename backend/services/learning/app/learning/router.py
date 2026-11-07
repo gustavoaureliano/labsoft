@@ -71,7 +71,8 @@ def lesson_summaries(course_id: UUID, session: Annotated[Session, Depends(get_se
             continue
         media = media_service.get_media(session, lesson.media_id) if lesson.media_id else None
         items.append({"id": lesson.id, "title": lesson.title, "description": lesson.description if owner else "",
-                      "position": lesson.position, "duration_seconds": media.duration_seconds if media else None})
+                      "position": lesson.position, "section_title": lesson.section_title,
+                      "duration_seconds": media.duration_seconds if media else None})
     return {"course_id": course_id, "items": items}
 
 

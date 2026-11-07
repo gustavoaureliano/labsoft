@@ -21,7 +21,7 @@ class ModerationIn(BaseModel):
 def summary(course):
     return {"id": str(course.id), "teacher_id": str(course.teacher_id), "teacher_name": course.teacher_name,
             "title": course.title, "status": course.status, "access_type": course.access_type,
-            "price": str(course.price) if course.price is not None else None, "cover_url": None,
+            "price": str(course.price) if course.price is not None else None, "cover_url": course.cover_url,
             "moderation_status": course.moderation_status}
 
 

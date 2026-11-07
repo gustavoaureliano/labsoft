@@ -57,6 +57,7 @@ def read_lesson_summaries(course_id, access):
         if UUID(data["course_id"]) != course_id: raise ValueError("Wrong course")
         return [LessonResponse(id=row["id"], course_id=course_id, title=row["title"], summary=row.get("description", ""),
             position=row["position"], duration_minutes=math.ceil((row["duration_seconds"] or 0) / 60),
+            section_title=row.get("section_title", "Aulas do curso"),
             video_media_id=None, preview_available=False) for row in data["items"]]
     except (KeyError, ValueError, TypeError) as exc: raise HTTPException(503, "Resposta de aulas inválida") from exc
 
