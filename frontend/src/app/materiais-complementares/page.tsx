@@ -14,6 +14,7 @@ import styles from "./page.module.css";
 type LibraryMaterial = ComplementaryMaterial & {
   authorized: boolean;
   downloadUrl: string | null;
+  externalRestricted: boolean;
 };
 
 export default function MateriaisComplementares({searchParams}: PageProps<"/materiais-complementares">) {
@@ -54,6 +55,7 @@ function MaterialsLibrary({initialCourse, lessonId}: {initialCourse: string; les
             ...toComplementaryMaterial(material, course.title),
             authorized: material.authorized,
             downloadUrl: material.download_url,
+            externalRestricted: material.access_level === "enrolled" && Boolean(material.external_url),
           }));
         }));
         setCourseOptions(courses.map((course) => ({ id: course.id, title: course.title })));
@@ -118,6 +120,7 @@ function MaterialsLibrary({initialCourse, lessonId}: {initialCourse: string; les
                       {material.downloadUrl && material.authorized
                         ? <a className={styles.format} href={absoluteApiUrl(material.downloadUrl)} rel="noreferrer" target="_blank">Abrir {material.format}</a>
                         : <span className={styles.format}>{material.authorized ? material.format : "Matrícula necessária"}</span>}
+                      {material.authorized && material.externalRestricted && <p>Link externo: depois de aberto, o acesso ao destino não pode ser revogado pela plataforma.</p>}
                     </li>
                   ))}
                 </ul>
