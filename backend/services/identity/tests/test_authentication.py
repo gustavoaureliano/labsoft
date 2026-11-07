@@ -245,6 +245,7 @@ def test_email_verification_is_one_time_and_login_waits_for_it(
     assert registration.json()["role"] == "student"
     assert client.post(
         "/api/v1/auth/login",
+        headers={"Origin": settings.frontend_origin},
         json={
             "email": "new@example.com",
             "password": "correct horse battery 7",
@@ -269,6 +270,7 @@ def test_email_verification_is_one_time_and_login_waits_for_it(
     ).status_code == 400
     assert client.post(
         "/api/v1/auth/login",
+        headers={"Origin": settings.frontend_origin},
         json={
             "email": "new@example.com",
             "password": "correct horse battery 7",
@@ -295,6 +297,7 @@ def test_login_issues_refresh_cookie_and_refresh_rotates(
 
     login = client.post(
         "/api/v1/auth/login",
+        headers={"Origin": settings.frontend_origin},
         json={
             "email": "student@example.com",
             "password": "correct horse battery",
@@ -625,11 +628,11 @@ def test_login_rejects_wrong_password_and_inactive_accounts(api, status):
     user.status = status
     user.is_active = status == "active"
     api.db.commit()
-    response = api.client.post("/api/v1/auth/login", json={
+    response = api.client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={
         "email": user.email, "password": "wrong" if status == "active" else "correct horse battery",
     })
     assert response.status_code == 401
-    unknown = api.client.post("/api/v1/auth/login", json={"email": "unknown@example.com", "password": "wrong"})
+    unknown = api.client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={"email": "unknown@example.com", "password": "wrong"})
     assert unknown.status_code == 401
     assert response.json() == unknown.json()
     assert api.db.query(AuditEvent).filter_by(event="auth.login", outcome="failure").count() == 2
@@ -680,7 +683,7 @@ def test_password_recovery_changes_password_revokes_sessions_and_is_single_use(a
     api.client.cookies.set("aprovaai_refresh", tokens.refresh_token)
     assert api.client.post("/api/v1/auth/refresh", headers={"Origin": api.settings.frontend_origin}).status_code == 401
     for password, status in [("correct horse battery", 401), (body["new_password"], 200)]:
-        assert api.client.post("/api/v1/auth/login", json={"email": user.email, "password": password}).status_code == status
+        assert api.client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={"email": user.email, "password": password}).status_code == status
 
 
 def test_password_recovery_hides_unknown_and_inactive_accounts(api):
@@ -864,13 +867,13 @@ def test_admin_status_change_revokes_sessions_and_blocks_login(api, status):
     assert api.db.get(User, user.id).status == status
     assert not api.db.get(User, user.id).is_active
     assert api.client.get("/api/v1/auth/me", headers=headers).status_code == 401
-    assert api.client.post("/api/v1/auth/login", json={"email": user.email, "password": "correct horse battery"}).status_code == 401
+    assert api.client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={"email": user.email, "password": "correct horse battery"}).status_code == 401
     api.client.cookies.set("aprovaai_refresh", tokens.refresh_token)
     assert api.client.post("/api/v1/auth/refresh", headers={"Origin": api.settings.frontend_origin}).status_code == 401
     event = api.db.query(AuditEvent).filter_by(event="user.status.changed").one()
     assert event.subject_id == user.id and event.details == {"status": status}
     assert api.client.patch(f"/api/v1/admin/users/{user.id}/status", headers=admin_headers, json={"status": "active"}).status_code == 200
-    assert api.client.post("/api/v1/auth/login", json={"email": user.email, "password": "correct horse battery"}).status_code == 200
+    assert api.client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={"email": user.email, "password": "correct horse battery"}).status_code == 200
 
 
 @pytest.mark.parametrize("role", ["student", "teacher"])
@@ -902,7 +905,7 @@ def test_login_rate_limit_returns_429_and_retry_after(api, scope):
         address = f"192.0.2.{index + 1}" if scope == "identity" else "192.0.2.1"
         email = "unknown@example.com" if scope == "identity" else f"unknown{index}@example.com"
         with TestClient(api.client.app, client=(address, 50000)) as client:
-            response = client.post("/api/v1/auth/login", json={"email": email, "password": "wrong"})
+            response = client.post("/api/v1/auth/login", headers={"Origin": api.settings.frontend_origin}, json={"email": email, "password": "wrong"})
         assert response.status_code == (401 if index < 10 else 429)
     assert response.headers["retry-after"] == "900"
 
@@ -1252,9 +1255,80 @@ def test_secure_cookie_configuration(api):
     app = FastAPI()
     app.include_router(api.create_router(api.get_db, settings, CapturingEmailSender()))
     with TestClient(app, base_url="https://testserver") as client:
-        login = client.post("/api/v1/auth/login", json={"email": user.email, "password": "correct horse battery"})
+        login = client.post("/api/v1/auth/login", headers={"Origin": settings.frontend_origin}, json={"email": user.email, "password": "correct horse battery"})
         assert login.status_code == 200
         cookie = login.headers["set-cookie"]
         for attribute in ["Secure", "HttpOnly", "SameSite=strict", "Path=/api/v1/auth"]:
             assert attribute in cookie
-        assert client.post("/api/v1/auth/refresh", headers={"Origin": "https://testserver"}).status_code == 200
+        assert client.post("/api/v1/auth/refresh", headers={"Origin": settings.frontend_origin}).status_code == 200
+
+
+# Integration transport: cookie-authenticated native requests and writes.
+@pytest.mark.parametrize("origin", [None, "null", "https://untrusted.example", "http://testserver"])
+def test_web_login_requires_configured_origin(api, origin):
+    user, _, _ = api.account()
+    response = api.client.post("/api/v1/auth/login", json={"email": user.email, "password": "correct horse battery"},
+                               headers={} if origin is None else {"Origin": origin})
+    assert response.status_code == 403
+    assert "set-cookie" not in response.headers
+
+
+def test_access_cookie_login_refresh_and_logout(api):
+    user, _, _ = api.account()
+    origin = {"Origin": api.settings.frontend_origin}
+    login = api.client.post("/api/v1/auth/login", headers=origin,
+                            json={"email": user.email, "password": "correct horse battery"})
+    token = login.json()["access_token"]
+    header = next(h for h in login.headers.get_list("set-cookie") if h.startswith("aprovaai_access="))
+    assert "HttpOnly" in header and "Path=/api;" in header and "Max-Age=900" in header
+    assert "Domain=" not in header
+    assert api.client.get("/api/v1/auth/me").json()["id"] == user.id
+    refreshed = api.client.post("/api/v1/auth/refresh", headers=origin)
+    assert api.client.cookies.get("aprovaai_access") == refreshed.json()["access_token"] != token
+    assert api.client.post("/api/v1/auth/logout", headers=origin).status_code == 200
+    assert api.client.cookies.get("aprovaai_access") is None
+    assert api.client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
+
+
+@pytest.mark.parametrize("authorization", ["Bearer invalid", "Basic invalid", "Bearer", ""])
+def test_explicit_bad_authorization_never_uses_cookie(api, authorization):
+    _, tokens, _ = api.account()
+    api.client.cookies.set("aprovaai_access", tokens.access_token, path="/api")
+    assert api.client.get("/api/v1/auth/me", headers={"Authorization": authorization}).status_code == 401
+
+
+def test_valid_bearer_selects_identity_even_with_different_cookie(api):
+    first, tokens, _ = api.account()
+    second, _, headers = api.account()
+    api.client.cookies.set("aprovaai_access", tokens.access_token, path="/api")
+    assert api.client.get("/api/v1/auth/me").json()["id"] == first.id
+    assert api.client.get("/api/v1/auth/me", headers=headers).json()["id"] == second.id
+
+
+@pytest.mark.parametrize("origin", [None, "null", "https://untrusted.example"])
+def test_profile_cookie_write_requires_origin(api, origin):
+    _, tokens, _ = api.account()
+    api.client.cookies.set("aprovaai_access", tokens.access_token, path="/api")
+    response = api.client.patch("/api/v1/profiles/me", json={"display_name": "Changed"},
+                               headers={} if origin is None else {"Origin": origin})
+    assert response.status_code == 403
+    assert api.client.get("/api/v1/profiles/me").json()["display_name"] == "Test User"
+
+
+def test_cookie_write_and_global_logout(api):
+    _, tokens, _ = api.account()
+    api.client.cookies.set("aprovaai_access", tokens.access_token, domain="testserver.local", path="/api")
+    origin = {"Origin": api.settings.frontend_origin}
+    assert api.client.patch("/api/v1/profiles/me", json={"display_name": "Changed"}, headers=origin).status_code == 200
+    assert api.client.post("/api/v1/auth/logout-all", headers=origin).status_code == 200
+    assert api.client.cookies.get("aprovaai_access") is None
+    assert api.client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {tokens.access_token}"}).status_code == 401
+
+
+def test_invalid_web_logout_clears_stale_cookies(api):
+    api.client.cookies.set("aprovaai_access", "invalid", domain="testserver.local", path="/api")
+    api.client.cookies.set("aprovaai_refresh", "invalid", domain="testserver.local", path="/api/v1/auth")
+    response = api.client.post("/api/v1/auth/logout", headers={"Origin": api.settings.frontend_origin})
+    assert response.status_code == 401
+    assert api.client.cookies.get("aprovaai_access") is None
+    assert api.client.cookies.get("aprovaai_refresh") is None

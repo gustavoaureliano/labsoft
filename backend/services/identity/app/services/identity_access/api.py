@@ -17,6 +17,7 @@ from fastapi.security import (
 from sqlalchemy.orm import Session
 
 from .config import Settings
+from .web_session import access_credential, require_web_origin
 from .models import AuditEvent, User
 from .services import IdentityService, RateLimitService, ServiceError, SessionService
 
@@ -36,19 +37,7 @@ def _require_allowed_origin(
     request: Request,
     settings: Settings,
 ) -> None:
-    origin = request.headers.get("origin")
-    api_origin = (
-        f"{request.url.scheme}://{request.url.netloc}"
-    )
-    allowed_origins = {
-        settings.frontend_origin.rstrip("/"),
-        api_origin,
-    }
-    if origin not in allowed_origins:
-        raise HTTPException(
-            status_code=403,
-            detail="Origem não autorizada.",
-        )
+    require_web_origin(request, settings)
 
 
 def _check_rate_limit(
@@ -143,22 +132,18 @@ class AuthDependencies:
         settings = self.settings
 
         def resolve(
+            request: Request,
             db: Session = Depends(get_db),
             credentials: HTTPAuthorizationCredentials | None = Depends(
                 bearer
             ),
         ) -> User:
 
-            if credentials is None:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Autenticação obrigatória.",
-                )
-
+            token = access_credential(request, settings)
             with translate_service_error():
                 return self.sessions.authenticate(
                     db,
-                    credentials.credentials,
+                    token,
                     settings,
                 )
 

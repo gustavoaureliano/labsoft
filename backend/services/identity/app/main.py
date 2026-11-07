@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_session as get_db
 from app.services.identity_access import Settings
+from app.services.identity_access.web_session import access_credential, clear_access_cookie, set_access_cookie
 from app.services.identity_access.api import (
     AuthDependencies,
     _check_rate_limit,
@@ -172,6 +173,7 @@ def create_router(
         response: Response,
         db: Session = Depends(get_db),
     ):
+        _require_allowed_origin(request, settings)
         _check_rate_limit(
             db,
             request,
@@ -223,6 +225,7 @@ def create_router(
             samesite=settings.cookie_samesite,
             path="/api/v1/auth",
         )
+        set_access_cookie(response, session_tokens.access_token, session_tokens.expires_in_seconds, settings)
         response.headers["Cache-Control"] = "no-store"
 
         return TokenOut(
@@ -350,6 +353,7 @@ def create_router(
             samesite=settings.cookie_samesite,
             path="/api/v1/auth",
         )
+        set_access_cookie(response, session_tokens.access_token, session_tokens.expires_in_seconds, settings)
         response.headers["Cache-Control"] = "no-store"
         return TokenOut(
             access_token=session_tokens.access_token,
@@ -371,26 +375,34 @@ def create_router(
         ),
         db: Session = Depends(get_db),
     ):
-        if credentials is not None:
+        if "authorization" in request.headers:
+            token = access_credential(request, settings)
             with translate_service_error():
                 sessions.revoke(
                     db,
-                    credentials.credentials,
+                    token,
                     settings,
                 )
         else:
             _require_allowed_origin(request, settings)
             refresh_token = request.cookies.get("aprovaai_refresh")
-            if not refresh_token:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Autenticação obrigatória.",
-                )
-            with translate_service_error():
+            try:
+                if not refresh_token:
+                    raise ServiceError("unauthorized", "Autenticação obrigatória.")
                 sessions.revoke_by_refresh_token(
                     db,
                     refresh_token,
                 )
+            except ServiceError as exc:
+                if exc.code != "unauthorized":
+                    raise
+                db.rollback()
+                invalid = JSONResponse({"detail": exc.detail}, status_code=401,
+                                       headers={"Cache-Control": "no-store"})
+                clear_access_cookie(invalid, settings)
+                invalid.delete_cookie("aprovaai_refresh", path="/api/v1/auth", httponly=True,
+                                      secure=settings.cookie_secure, samesite=settings.cookie_samesite)
+                return invalid
 
         _record_audit(
             db,
@@ -414,6 +426,7 @@ def create_router(
             samesite=settings.cookie_samesite,
         )
 
+        clear_access_cookie(response, settings)
         return StatusOut(
             message="Sessão encerrada."
         )
@@ -473,6 +486,7 @@ def create_router(
             secure=settings.cookie_secure,
             samesite=settings.cookie_samesite,
         )
+        clear_access_cookie(response, settings)
         return StatusOut(message="Todas as sessões foram encerradas.")
 
     @router.get(
