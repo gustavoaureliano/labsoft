@@ -11,6 +11,14 @@ Na branch de integração, cada backend terá diretório de trabalho e ambiente 
 
 ## Requisitos
 
+### PostgreSQL de integração
+
+Em um banco novo e exclusivo de integração, um administrador executa `backend/infrastructure/learning.sql` com `psql`, fornecendo `LEARNING_MIGRATION_PASSWORD` e `LEARNING_RUNTIME_PASSWORD` pelo ambiente. Esse provisionamento inicial cria schema e permissões; não roda no startup.
+
+Na pasta do serviço, aplique `uv run --locked alembic upgrade head` com `DATABASE_URL` da role `aa_learning_migration`. Inicie a aplicação com a role `aa_learning_runtime`. As tabelas continuam sendo gerenciadas pelo Alembic; credenciais ficam fora do Git.
+
+### Frontend
+
 - Node.js 24
 - npm
 
