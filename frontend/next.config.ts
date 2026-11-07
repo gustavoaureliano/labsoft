@@ -31,11 +31,13 @@ const nextConfig: NextConfig = {
         source: `/api/${path}/:path*`, destination: `${engagement}/api/${path}/:path*`,
       })),
       { source: "/api/access", destination: `${services.access}/api/access` },
-      { source: "/api/checkout/:path*", destination: `${services.checkout}/api/checkout/:path*` },
       { source: "/api/subscriptions/:path*", destination: `${services.subscription}/api/subscriptions/:path*` },
-      { source: "/api/payments/:path*", destination: `${services.payment}/api/payments/:path*` },
-      { source: "/api/heartbeat", destination: `${services.metering}/api/heartbeat` },
-      { source: "/api/usage/:path*", destination: `${services.metering}/api/usage/:path*` },
+      ...(process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? [] : [
+        { source: "/api/checkout/:path*", destination: `${services.checkout}/api/checkout/:path*` },
+        { source: "/api/payments/:path*", destination: `${services.payment}/api/payments/:path*` },
+        { source: "/api/heartbeat", destination: `${services.metering}/api/heartbeat` },
+        { source: "/api/usage/:path*", destination: `${services.metering}/api/usage/:path*` },
+      ]),
       { source: "/api/:path*", destination: `${learning}/api/:path*` },
     ];
   },

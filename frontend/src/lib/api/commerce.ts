@@ -38,6 +38,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function purchase(
   itemId: number, priceReais: number, method: PaymentMethod, plan: "one_time" | "monthly", idempotencyKey: string,
 ): Promise<"ok" | "processing"> {
+  if (isApiConfigured) throw new Error("Compras e planos pagos ainda não estão disponíveis no modo integrado.");
   if (priceReais <= 0) { // free enrollment: no payment, just subscribe
     await api("/api/subscriptions", jsonRequest("POST", { user_id: DEMO_USER_ID, item_id: itemId }));
     return "ok";
@@ -53,12 +54,14 @@ export async function purchase(
 }
 
 export async function checkAccess(itemId: number, contentType: "video" | "resumo" = "video") {
+  if (isApiConfigured) throw new Error("Consulte o acesso por course_id canônico no modo integrado.");
   const query = new URLSearchParams({ user_id: String(DEMO_USER_ID), item_id: String(itemId), content_type: contentType });
   const result = await api<{ access: "allowed" | "denied" }>(`/api/access?${query}`);
   return result.access === "allowed";
 }
 
 export function sendHeartbeat(itemId: number, stamp: number) {
+  if (isApiConfigured) return;
   void api("/api/heartbeat", jsonRequest("POST", { user_id: DEMO_USER_ID, item_id: itemId, stamp: Math.floor(stamp) })).catch(() => {});
 }
 
@@ -96,6 +99,7 @@ export function useAccess() {
   useEffect(() => { startTransition(() => { void refresh(); }); }, [refresh]);
 
   const cancelCompletePlan = useCallback(async () => {
+    if (isApiConfigured) throw new Error("Cancelamento de planos pagos ainda não está integrado.");
     await api(`/api/subscriptions/${DEMO_USER_ID}/${COMPLETE_PLAN_ITEM}`, { method: "DELETE" });
     await refresh();
   }, [refresh]);
