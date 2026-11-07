@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, type ApiAdminDashboard } from "@/lib/engagementApi";
+import { isApiConfigured } from "@/lib/apiClient";
 import { AdminShell } from "./AdminShell";
 import styles from "./AdminDashboard.module.css";
 
@@ -12,15 +13,19 @@ const numberFormatter = new Intl.NumberFormat("pt-BR");
 export function AdminDashboard() {
   const [period, setPeriod] = useState<AccessPeriod>("monthly");
   const [apiData, setApiData] = useState<ApiAdminDashboard | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let active = true;
     apiFetch<ApiAdminDashboard>(`/api/analytics/admin-dashboard?period=${period}`)
       .then((data) => {
-        if (active) setApiData(data);
+        if (active) { setApiData(data); setLoadError(""); }
       })
       .catch(() => {
-        if (active) setApiData(null);
+        if (active) {
+          setApiData(null);
+          setLoadError("Indicadores indisponíveis: as fontes proprietárias ainda não estão integradas.");
+        }
       });
     return () => {
       active = false;
@@ -28,27 +33,27 @@ export function AdminDashboard() {
   }, [period]);
 
   const accesses = apiData ? apiData.access_series : [];
-  const totalAccesses = apiData ? apiData.total_accesses_in_period : 0;
+  const totalAccesses = apiData?.total_accesses_in_period;
   const maximum = Math.max(...accesses.map((item) => item.count), 1);
 
   const metrics = [
-    {
+    ...(!isApiConfigured ? [{
       label: "Faturamento mensal",
       value: "R$ 84.500",
       trend: "+12,4%",
       note: "em relação ao mês anterior",
-    },
+    }] : []),
     {
       label: "Professores cadastrados",
-      value: apiData ? numberFormatter.format(apiData.total_teachers) : "...",
-      trend: "+4",
-      note: "novos professores neste mês",
+      value: apiData ? numberFormatter.format(apiData.total_teachers) : "—",
+      trend: isApiConfigured ? "" : "+4",
+      note: isApiConfigured ? "fonte indisponível" : "novos professores neste mês",
     },
     {
       label: "Alunos cadastrados",
-      value: apiData ? numberFormatter.format(apiData.total_students) : "...",
-      trend: "+8,7%",
-      note: "crescimento no período",
+      value: apiData ? numberFormatter.format(apiData.total_students) : "—",
+      trend: isApiConfigured ? "" : "+8,7%",
+      note: isApiConfigured ? "fonte indisponível" : "crescimento no período",
     },
   ];
 
@@ -61,8 +66,10 @@ export function AdminDashboard() {
             <h1>Visão geral do negócio</h1>
             <p>Acompanhe os principais indicadores da plataforma.</p>
           </div>
-          <span className={styles.demoBadge}>Dados da API</span>
+          <span className={styles.demoBadge}>{isApiConfigured ? "Integração pendente" : "Demonstração"}</span>
         </header>
+        {loadError && <p role="status">{loadError}</p>}
+        {isApiConfigured && <p>Faturamento, conversão, retenção e tempo assistido não são indicadores integrados. O PSP é simulado; não há repasses docentes.</p>}
 
         <section className={styles.metrics} aria-label="Indicadores principais do negócio">
           {metrics.map((metric) => (
@@ -92,7 +99,7 @@ export function AdminDashboard() {
           </div>
 
           <div className={styles.chartSummary} aria-live="polite">
-            <strong>{numberFormatter.format(totalAccesses)}</strong>
+              <strong>{totalAccesses === undefined ? "—" : numberFormatter.format(totalAccesses)}</strong>
             <span>acessos no período</span>
           </div>
 
@@ -118,7 +125,7 @@ export function AdminDashboard() {
           </div>
         </section>
 
-        <section className={styles.healthCard} aria-labelledby="health-title">
+        {!isApiConfigured && <section className={styles.healthCard} aria-labelledby="health-title">
           <div>
             <span className={styles.eyebrow}>Saúde do negócio</span>
             <h2 id="health-title">Crescimento sustentável</h2>
@@ -129,7 +136,7 @@ export function AdminDashboard() {
             <div><dt>Receita por aluno</dt><dd>R$ 34,07</dd></div>
             <div><dt>Retenção mensal</dt><dd>91,2%</dd></div>
           </dl>
-        </section>
+        </section>}
       </div>
     </AdminShell>
   );

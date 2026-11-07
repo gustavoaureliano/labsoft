@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { findDemoCourse } from "@/data/demoCourses";
 import { apiFetch, type ApiTeacherAnalytics } from "@/lib/engagementApi";
+import { isApiConfigured } from "@/lib/apiClient";
 import { TeacherShell } from "./TeacherShell";
 import styles from "./TeacherMonetization.module.css";
 
@@ -26,6 +27,7 @@ export function TeacherMonetization() {
   const [analytics, setAnalytics] = useState<ApiTeacherAnalytics | null>(null);
 
   useEffect(() => {
+    if (isApiConfigured) return;
     let active = true;
     apiFetch<ApiTeacherAnalytics>("/api/analytics/teacher?period=30d&course_id=fisica-enem-mecanica")
       .then((data) => {
@@ -48,6 +50,12 @@ export function TeacherMonetization() {
   const avgRatingNote = analytics && analytics.total_ratings.value > 0
     ? `com ${analytics.total_ratings.value} ${analytics.total_ratings.value === 1 ? "avaliação" : "avaliações"}`
     : "com 612 avaliações";
+
+  if (isApiConfigured) return <TeacherShell><div className={styles.page}>
+    <header className={styles.heading}><div><h1>Monetização e desempenho</h1>
+      <p>Relatórios financeiros e repasses docentes ainda não estão disponíveis no modo integrado.</p></div></header>
+    <p>O PSP atual é simulado. Heartbeats não comprovam tempo assistido e não são base para repasses.</p>
+  </div></TeacherShell>;
 
   return (
     <TeacherShell>
