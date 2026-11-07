@@ -2,6 +2,10 @@
 
 Backend individual de vídeo e aprendizagem em Python com FastAPI. Inclui mídia, aulas, progresso, Home e certificados; os outros domínios usam contratos demonstrativos explícitos.
 
+## Diretório de execução na integração
+
+Esta unidade foi movida de `backend/` para `backend/services/learning/`, preservando código, dependências e migrações. Execute todos os comandos deste documento a partir de `backend/services/learning/`. As referências históricas abaixo a `backend/`, incluindo caminhos de armazenamento relativos, agora correspondem à raiz deste serviço. `STORAGE_DIR` absoluto continua suportado; nenhum arquivo ou dado antigo é movido automaticamente.
+
 ## Requisitos
 
 - Python 3.12 ou superior

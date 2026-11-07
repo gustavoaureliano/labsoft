@@ -5,7 +5,9 @@ Protótipo inicial da interface da AprovaAí.
 ## Estrutura do repositório
 
 - `frontend/`: aplicação Next.js, arquivos públicos e testes Selenium.
-- `backend/`: API em Python com FastAPI. Veja as [instruções de execução](backend/README.md).
+- `backend/services/learning/`: API de vídeo e aprendizagem em Python com FastAPI. Veja as [instruções de execução](backend/services/learning/README.md).
+
+Na branch de integração, cada backend terá diretório de trabalho e ambiente próprios. Neste primeiro incremento somente aprendizagem foi incorporada. Execute seus comandos dentro de `backend/services/learning/`; não copie banco, `.env` ou arquivos de mídia de outro ambiente automaticamente.
 
 ## Requisitos
 
@@ -53,4 +55,4 @@ O Chromium executa sem janela por padrão, inclusive nos modos sequencial e com 
 
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
-Este é um protótipo de interface. Conta, dúvidas, anotações, playlists, cursos do professor, assinatura e decisões de moderação são simuladas no navegador. O editor abre o seletor de arquivos e guarda apenas seus metadados. Não há autenticação, envio real de arquivos ou e-mail, pagamento, reprodução de vídeo ou backend.
+Vídeo e aprendizagem têm backend real: aulas, upload/inspeção de vídeo e thumbnail, reprodução, progresso e certificados. Identidade, catálogo e matrícula ainda usam adaptadores demonstrativos nesta etapa da branch. Biblioteca/interações e outras telas ainda dependem de integrações posteriores; não há autenticação real ou pagamento integrado neste incremento.
