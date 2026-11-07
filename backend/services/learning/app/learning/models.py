@@ -11,6 +11,7 @@ class Lesson(Base):
     __tablename__ = "lessons"
     __table_args__ = (
         CheckConstraint("position >= 1", name="ck_lessons_position_positive"),
+        CheckConstraint("moderation_status IN ('visible', 'hidden', 'deleted')", name="ck_lessons_moderation_status"),
         UniqueConstraint("course_id", "position", name="uq_lessons_course_position"),
     )
 
@@ -18,6 +19,7 @@ class Lesson(Base):
     course_id: Mapped[str] = mapped_column(String(255), index=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, default="")
+    moderation_status: Mapped[str] = mapped_column(String(20), default="visible", server_default="visible")
     position: Mapped[int]
     media_id: Mapped[UUID | None] = mapped_column(ForeignKey("media.id"))
     thumbnail_id: Mapped[UUID | None] = mapped_column(ForeignKey("media.id", name="fk_lessons_thumbnail"))

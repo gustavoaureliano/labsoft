@@ -33,7 +33,7 @@ def course_sections(course: Course, lessons: list[dict]) -> list[dict]:
 
 def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course) -> dict:
     media = session.get(Media, lesson.media_id) if lesson.media_id else None
-    playable = media is not None and media.status == "available"
+    playable = lesson.moderation_status == "visible" and media is not None and media.status == "available"
     if playable:
         try:
             get_video_path(media.storage_key)
@@ -43,6 +43,7 @@ def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course)
     thumbnail_url = f"/api/media/{lesson.thumbnail_id}/content" if lesson.thumbnail_id else course.image
     return {
         "id": lesson.id, "course_id": lesson.course_id, "title": lesson.title,
+        "moderation_status": lesson.moderation_status,
         "description": lesson.description, "position": lesson.position,
         "media_id": str(lesson.media_id) if lesson.media_id else None,
         "thumbnail_id": str(lesson.thumbnail_id) if lesson.thumbnail_id else None,
@@ -53,7 +54,8 @@ def lesson_summary(session: Session, lesson: Lesson, user: User, course: Course)
 
 
 def course_detail(session: Session, user: User, course: Course) -> dict:
-    lessons = [lesson_summary(session, lesson, user, course) for lesson in list_lessons(session, course.id)]
+    lessons = [lesson_summary(session, lesson, user, course) for lesson in list_lessons(session, course.id)
+               if user.role == "teacher" or lesson.moderation_status == "visible"]
     completed = sum(lesson["completed"] for lesson in lessons)
     rows = list(session.scalars(select(LessonProgress).where(
         LessonProgress.student_id == user.id,

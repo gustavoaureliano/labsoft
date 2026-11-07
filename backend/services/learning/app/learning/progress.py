@@ -18,6 +18,8 @@ def get_progress(session: Session, student_id: str, lesson: Lesson) -> ProgressR
 
 def save_progress(session: Session, student_id: str, lesson_id: str, media_id: UUID, position: float) -> ProgressResponse:
     lesson = get_lesson(session, lesson_id)
+    if lesson.moderation_status != "visible":
+        raise MediaUnavailable("Aula indisponível por decisão de moderação")
     lock_course(session, lesson.course_id)
     session.refresh(lesson)
     if lesson.media_id != media_id:

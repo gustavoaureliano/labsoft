@@ -35,6 +35,7 @@ class LessonResponse(BaseModel):
     title: str
     description: str
     position: int
+    moderation_status: str = "visible"
     media_id: UUID | None
     thumbnail_id: UUID | None
 

@@ -36,6 +36,7 @@ class Course:
     teacher: str
     published: bool = True
     sections: tuple[CourseSection, ...] = ()
+    moderation_status: str = "visible"
 
 
 class Integrations(Protocol):

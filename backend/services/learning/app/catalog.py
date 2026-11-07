@@ -17,6 +17,7 @@ class CourseLookup(BaseModel):
     teacher_name: str
     title: str
     status: Literal["draft", "published", "archived"]
+    moderation_status: Literal["visible", "hidden", "deleted"] = "visible"
     cover_url: str | None = None
 
 
@@ -64,7 +65,8 @@ class CatalogIntegrations:
     def convert(data):
         try: row = CourseLookup.model_validate(data)
         except ValueError as exc: raise HTTPException(503, "Resposta de curso inválida") from exc
-        return Course(str(row.id), row.title, str(row.teacher_id), row.cover_url or "/images/courses/fisica-quantica.webp", row.teacher_name, row.status == "published")
+        return Course(str(row.id), row.title, str(row.teacher_id), row.cover_url or "/images/courses/fisica-quantica.webp", row.teacher_name,
+                      row.status == "published" and row.moderation_status == "visible", moderation_status=row.moderation_status)
 
     def course(self, course_id):
         try: canonical = str(UUID(course_id))

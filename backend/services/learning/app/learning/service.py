@@ -97,6 +97,8 @@ def get_playback(session: Session, lesson_id: str) -> Lesson:
     lesson = session.get(Lesson, lesson_id)
     if lesson is None:
         raise LessonNotFound("Aula não encontrada")
+    if lesson.moderation_status != "visible":
+        raise MediaUnavailable("Aula indisponível por decisão de moderação")
     if lesson.media_id is None:
         raise MediaUnavailable("A aula ainda não possui vídeo")
     # Reuse media availability and storage checks rather than duplicating them.
