@@ -1,6 +1,6 @@
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+import { ApiError as SessionApiError, isApiConfigured, request } from "@/lib/apiClient";
 
-export const apiBaseUrl = (configuredApiUrl || "http://127.0.0.1:8000").replace(/\/$/, "");
+export const apiBaseUrl = "";
 
 export class ApiError extends Error {
   constructor(
@@ -12,13 +12,22 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (typeof window !== "undefined") {
+    try { return await request<T>(path, options); }
+    catch (error) {
+      if (error instanceof SessionApiError) throw new ApiError(error.status, {detail: error.message});
+      throw error;
+    }
+  }
   const headers = new Headers(options.headers);
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   if (options.body && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  // Server-rendered public catalog calls use only the configured private origin.
+  const catalogUrl = (process.env.CATALOG_URL ?? "http://127.0.0.1:18103").replace(/\/$/, "");
+  const response = await fetch(`${catalogUrl}${path}`, {
     ...options,
     headers,
     cache: options.cache ?? "no-store",
@@ -33,6 +42,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 }
 
 export function teacherHeaders(): Record<string, string> {
+  if (isApiConfigured) return {};
   return {
     "X-Teacher-Id": process.env.NEXT_PUBLIC_DEMO_TEACHER_ID
       || "11111111-1111-1111-1111-111111111111",
@@ -41,6 +51,7 @@ export function teacherHeaders(): Record<string, string> {
 }
 
 export function studentHeaders(): Record<string, string> {
+  if (isApiConfigured) return {};
   return {
     "X-Student-Id": process.env.NEXT_PUBLIC_DEMO_STUDENT_ID
       || "22222222-2222-2222-2222-222222222222",

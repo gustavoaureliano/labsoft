@@ -15,6 +15,7 @@ __pycache__/
 *.py[cod]
 backend/storage/
 backend/services/*/storage/
+backend/services/*/var/
 .pytest_cache/
 private_uploads/
 

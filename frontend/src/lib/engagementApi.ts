@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { demoAccountKey, demoRoleCookieName, type DemoAccount, type DemoRole } from "@/data/demoAccount";
 import { initialStudyDemo, type StudyDemo } from "@/data/studyDemo";
+import { ApiError as SessionApiError, isApiConfigured, request } from "@/lib/apiClient";
 
 export type ApiPlaylist = {
   id: string;
@@ -141,6 +142,7 @@ function readCookie(name: string): string | null {
 }
 
 export function resolveDemoUserHeader(): string | null {
+  if (isApiConfigured) return null;
   const directUser = readCookie("aprovaai_demo_user");
   if (directUser) return directUser;
 
@@ -174,33 +176,15 @@ export async function apiFetch<T = unknown>(
   if (demoUser && !headers.has("X-Demo-User")) {
     headers.set("X-Demo-User", demoUser);
   }
-  if (init.body && !headers.has("Content-Type")) {
+  if (typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(path, {
-    ...init,
-    headers,
-    credentials: "same-origin",
-  });
-
-  if (!res.ok) {
-    let detail = `Erro na requisição (${res.status})`;
-    try {
-      const errBody = (await res.json()) as { detail?: string };
-      if (typeof errBody?.detail === "string") {
-        detail = errBody.detail;
-      }
-    } catch {
-      // Ignore non-JSON error body
-    }
-    throw new ApiError(res.status, detail);
+  try { return await request<T>(path, {...init, headers}); }
+  catch (error) {
+    if (error instanceof SessionApiError) throw new ApiError(error.status, error.message);
+    throw error;
   }
-
-  if (res.status === 204) {
-    return undefined as T;
-  }
-  return (await res.json()) as T;
 }
 
 const LIBRARY_SYNC_EVENT = "aprovaai-library-sync";
