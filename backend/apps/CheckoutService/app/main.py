@@ -64,7 +64,7 @@ class CheckoutIn(BaseModel):
 PLAN_MONTHLY_CENTS = 4990
 
 
-def quote(body: CheckoutIn, access: str) -> int:
+def quote(body: CheckoutIn, access: str | None) -> int:
     if body.plan == "monthly":
         if body.course_id is not None:
             raise HTTPException(422, "Assinatura completa não aceita course_id")
@@ -127,8 +127,7 @@ def health() -> dict[str, str]:
 @app.get("/api/checkout/quote")
 def price_quote(request: Request, plan: Literal["one_time", "monthly"] = "one_time",
                 course_id: uuid.UUID | None = None) -> dict:
-    _, access = student(request)
-    amount = quote(CheckoutIn(plan=plan, course_id=course_id), access)
+    amount = quote(CheckoutIn(plan=plan, course_id=course_id), None)
     return {"plan": plan, "course_id": str(course_id) if course_id else None, "amount_cents": amount}
 
 
@@ -147,6 +146,22 @@ def start_checkout(
     digest = hashlib.sha256(f"{user_id}:{amount}:{_digest(body)}".encode()).hexdigest()
     c = db.scalar(select(Checkout).where(Checkout.idempotency_key == idempotency_key))
     if c is None:
+        try:
+            subscriptions = httpx.get(f"{SUBSCRIPTION_URL}/api/subscriptions/me", timeout=5,
+                                      headers={"Authorization": f"Bearer {access}"})
+            subscriptions.raise_for_status()
+            grants = subscriptions.json()
+            if grants["user_id"] != str(user_id):
+                raise HTTPException(503, "Matrículas de outro usuário")
+            if body.plan == "monthly":
+                acquired = (grants.get("complete_plan") or {}).get("status") == "active"
+            else:
+                acquired = any(item["course_id"] == str(body.course_id) and item["status"] == "active"
+                               for item in grants["items"])
+            if acquired:
+                raise HTTPException(409, "Você já possui acesso por esta compra ou matrícula")
+        except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+            raise HTTPException(503, "Não foi possível consultar aquisições existentes") from exc
         c = Checkout(idempotency_key=idempotency_key, request_hash=digest, user_id=user_id,
                      item_id=body.course_id, amount=amount, method=body.method, plan=body.plan)
         db.add(c)

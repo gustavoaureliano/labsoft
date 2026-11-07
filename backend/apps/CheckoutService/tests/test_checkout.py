@@ -26,14 +26,15 @@ def api(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "SUBSCRIPTION_URL", "http://subscription")
     users = {"alice": str(uuid4()), "bob": str(uuid4())}
     course_id = str(uuid4())
-    state = {"price": "12.50", "status": "published", "access_type": "paid", "calls": []}
+    state = {"price": "12.50", "status": "published", "access_type": "paid", "calls": [],
+             "subscriptions":{"user_id":users["alice"],"items":[],"complete_plan":None}}
     original = httpx.Client
 
     def handler(req):
-        assert req.headers["authorization"].startswith("Bearer ") and "cookie" not in req.headers
-        who = req.headers["authorization"].removeprefix("Bearer ")
-        if who not in users: return httpx.Response(401)
+        assert "cookie" not in req.headers
+        who = req.headers.get("authorization", "").removeprefix("Bearer ")
         if req.url.host == "identity":
+            if who not in users: return httpx.Response(401)
             return httpx.Response(200, json={"id": users[who], "role": "student"})
         if req.url.host == "catalog" and str(course_id) in req.url.path:
             if state.get("unavailable"): return httpx.Response(503)
@@ -53,7 +54,7 @@ def api(monkeypatch, tmp_path):
     def get(url, **kwargs):
         if url.startswith("http://subscription"):
             assert kwargs["headers"]["Authorization"] == "Bearer alice"
-            return httpx.Response(200, json={"user_id":users["alice"],"items":[]})
+            return httpx.Response(200, json=state["subscriptions"],request=httpx.Request('GET',url))
         return payment("GET", url, **kwargs)
 
     monkeypatch.setattr(main.httpx, "post", lambda url, **kwargs: payment("POST", url, **kwargs))
@@ -78,6 +79,9 @@ def test_quote_is_trusted_and_plan_price_is_authoritative(api):
     assert individual.headers["cache-control"] == "private, no-store"
     assert client.get("/api/checkout/quote", params={"plan":"monthly"}).json()["amount_cents"] == 4990
     assert client.get("/api/checkout/quote", params={"plan":"monthly","course_id":course_id}).status_code == 422
+    del client.headers['Authorization']
+    assert client.get('/api/checkout/quote',params={'plan':'monthly'}).json()['amount_cents']==4990
+    assert client.get('/api/checkout/quote',params={'course_id':course_id}).json()['amount_cents']==1250
     assert client.post("/api/checkout",headers={"Idempotency-Key":"attempt-123"},json={"course_id":course_id,"amount":1}).status_code == 422
 
 
@@ -114,6 +118,17 @@ def test_price_snapshot_is_persisted_without_user_supplied_amount(api):
         record=db.scalar(select(main.Checkout))
         assert record.amount==1250 and str(record.user_id)==users["alice"] and str(record.item_id)==course_id
     assert state['calls'][0][1]['json']['amount']==1250
+
+
+def test_new_attempt_cannot_buy_existing_course_but_original_key_can_retry(api):
+    client, engine, course_id, state, users=api
+    body={'course_id':course_id}
+    original=client.post('/api/checkout',headers={'Idempotency-Key':'original-123'},json=body)
+    assert original.status_code==200
+    state['subscriptions']['items']=[{'course_id':course_id,'status':'active','price':1250}]
+    assert client.post('/api/checkout',headers={'Idempotency-Key':'new-attempt-123'},json=body).status_code==409
+    assert client.post('/api/checkout',headers={'Idempotency-Key':'original-123'},json=body).json()['status']=='ok'
+    with Session(engine) as db:assert len(list(db.scalars(select(main.Checkout))))==1
 
 
 def test_cookie_write_requires_allowed_origin(api):

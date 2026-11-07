@@ -37,13 +37,13 @@ def credential(request: Request) -> str:
     return access
 
 
-def read(setting: str, path: str, token: str, model):
+def read(setting: str, path: str, token: str | None, model):
     base = os.getenv(setting, "").rstrip("/")
     if not base:
         raise HTTPException(503, "Dependência não configurada")
     try:
         with httpx.Client(timeout=4, follow_redirects=False, trust_env=False) as client:
-            response = client.get(base + path, headers={"Authorization": f"Bearer {token}"})
+            response = client.get(base + path, headers={"Authorization": f"Bearer {token}"} if token else {})
         if response.status_code in (401, 403, 404):
             raise HTTPException(response.status_code, "Consulta remota recusada")
         if response.status_code != 200:
