@@ -1,93 +1,81 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { TeacherShell } from "@/components/teacher/TeacherShell";
-import { questionsDemoKey, type DemoQuestion } from "@/data/questionsDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
+import { apiFetch, type ApiQuestion } from "@/lib/engagementApi";
 import styles from "./page.module.css";
 
-type Question = {
-  id: number;
-  student: string;
-  initial: string;
-  createdAt: string;
-  prompt: string;
-  course: string;
-  lesson: string;
-  answer?: string;
-};
-
-const initialQuestions: Question[] = [
-  {
-    id: 1,
-    student: "Lucas Oliveira",
-    initial: "L",
-    createdAt: "há 15 minutos",
-    prompt: "Professor, no efeito fotoelétrico, por que a energia cinética dos elétrons ejetados depende apenas da frequência da luz e não da intensidade?",
-    course: "Física Quântica",
-    lesson: "Aula 2: Dualidade Onda-Partícula",
-  },
-  {
-    id: 2,
-    student: "Beatriz Souza",
-    initial: "B",
-    createdAt: "há 2 horas",
-    prompt: "Tenho dúvidas sobre como a mitocôndria realiza a fosforilação oxidativa. A FUVEST costuma cobrar o papel da ATP sintase em detalhes?",
-    course: "Biologia Celular",
-    lesson: "Aula 4: Organelas Citoplasmáticas",
-    answer: "A ATP sintase é importante, sim: entenda como o fluxo de prótons pela enzima fornece energia para produzir ATP. A prova costuma cobrar a relação entre cadeia respiratória e quimiosmose.",
-  },
-  {
-    id: 3,
-    student: "Guilherme Lima",
-    initial: "G",
-    createdAt: "há 1 dia",
-    prompt: "Na contração muscular, qual é exatamente o papel do cálcio no retículo sarcoplasmático e como isso cai na prova paulista?",
-    course: "Biologia Celular",
-    lesson: "Aula 6: Citoesqueleto e Movimento",
-  },
-];
-
 const tabs = [
-  { id: "all", label: "Todas", count: 15 },
-  { id: "pending", label: "Pendentes", count: 4 },
-  { id: "answered", label: "Respondidas", count: 11 },
+  { id: "all", label: "Todas" },
+  { id: "pending", label: "Pendentes" },
+  { id: "answered", label: "Respondidas" },
 ] as const;
 
 type QuestionFilter = typeof tabs[number]["id"];
 
 export default function Duvidas() {
-  const [questions, setQuestions] = useState(initialQuestions);
-  const [sharedQuestions, saveSharedQuestions] = useDemoStorage<DemoQuestion[]>(questionsDemoKey, []);
+  const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [query, setQuery] = useState("");
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [expandedDiscussion, setExpandedDiscussion] = useState<number | null>(null);
-  const [counts, setCounts] = useState({ all: 15, pending: 4, answered: 11 });
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
+  const [errorNotice, setErrorNotice] = useState("");
 
-  const allQuestions = [...sharedQuestions.map((question) => ({ ...question, initial: question.student.slice(0, 1), createdAt: "agora" })), ...questions];
-  const visibleQuestions = allQuestions.filter((question) => {
+  useEffect(() => {
+    let active = true;
+    apiFetch<ApiQuestion[]>("/api/questions/teacher?status=all")
+      .then((data) => {
+        if (active) setQuestions(data);
+      })
+      .catch((err) => {
+        if (active) {
+          setErrorNotice(err instanceof Error ? `Erro ao carregar dúvidas: ${err.message}` : "Erro ao carregar dúvidas.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const visibleQuestions = questions.filter((question) => {
     const matchesFilter = filter === "all"
       || (filter === "pending" && !question.answer)
       || (filter === "answered" && Boolean(question.answer));
-    const searchableText = `${question.student} ${question.prompt} ${question.course} ${question.lesson}`.toLocaleLowerCase("pt-BR");
+    const searchableText = `${question.student_name} ${question.prompt} ${question.course_title} ${question.lesson_title}`.toLocaleLowerCase("pt-BR");
     return matchesFilter && searchableText.includes(query.toLocaleLowerCase("pt-BR"));
   });
 
-  function submitAnswer(event: FormEvent<HTMLFormElement>, questionId: number) {
+  async function submitAnswer(event: FormEvent<HTMLFormElement>, questionId: string) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const answer = String(formData.get("answer") ?? "").trim();
     if (!answer) return;
+    setErrorNotice("");
 
-    if (sharedQuestions.some((question) => question.id === questionId)) {
-      saveSharedQuestions(sharedQuestions.map((question) => question.id === questionId ? { ...question, answer } : question));
-    } else {
-      setQuestions((current) => current.map((question) => question.id === questionId ? { ...question, answer } : question));
-      setCounts((current) => ({ ...current, pending: Math.max(0, current.pending - 1), answered: current.answered + 1 }));
+    try {
+      const updated = await apiFetch<ApiQuestion>(
+        `/api/questions/${encodeURIComponent(questionId)}/answer`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ answer }),
+        }
+      );
+      setQuestions((current) =>
+        current.map((item) => (item.id === questionId ? updated : item))
+      );
+      setReplyingTo(null);
+      setExpandedDiscussion(questionId);
+    } catch (err) {
+      setErrorNotice(
+        err instanceof Error ? `Erro ao enviar resposta: ${err.message}` : "Erro ao enviar resposta."
+      );
     }
-    setReplyingTo(null);
-    setExpandedDiscussion(questionId);
+  }
+
+  function getTabCount(tabId: QuestionFilter) {
+    if (tabId === "all") return questions.length;
+    if (tabId === "pending") return questions.filter((q) => !q.answer).length;
+    return questions.filter((q) => Boolean(q.answer)).length;
   }
 
   return (
@@ -103,7 +91,7 @@ export default function Duvidas() {
                 onClick={() => setFilter(tab.id)}
                 type="button"
               >
-                {tab.label} ({counts[tab.id] + (tab.id === "all" ? sharedQuestions.length : sharedQuestions.filter((question) => Boolean(question.answer) === (tab.id === "answered")).length)})
+                {tab.label} ({getTabCount(tab.id)})
               </button>
             ))}
           </div>
@@ -120,19 +108,22 @@ export default function Duvidas() {
           </label>
         </div>
 
+        {errorNotice && <p role="status">{errorNotice}</p>}
+
         <section className={styles.questionList} aria-label="Dúvidas dos alunos" aria-live="polite">
           {visibleQuestions.map((question) => {
             const isAnswered = Boolean(question.answer);
+            const initial = question.student_name.slice(0, 1).toUpperCase();
             return (
               <article className={styles.question} key={question.id}>
-                <span className={styles.studentInitial} aria-hidden="true">{question.initial}</span>
+                <span className={styles.studentInitial} aria-hidden="true">{initial}</span>
                 <div className={styles.questionContent}>
                   <div className={styles.studentLine}>
-                    <h2>{question.student}</h2>
-                    <span>{question.createdAt}</span>
+                    <h2>{question.student_name}</h2>
+                    <span>{new Date(question.created_at).toLocaleDateString("pt-BR")}</span>
                   </div>
                   <p className={styles.prompt}>“{question.prompt}”</p>
-                  <p className={styles.lesson}>{question.course} • {question.lesson}</p>
+                  <p className={styles.lesson}>{question.course_title} • {question.lesson_title}</p>
                   {replyingTo === question.id && (
                     <form className={styles.replyForm} onSubmit={(event) => submitAnswer(event, question.id)}>
                       <label htmlFor={`answer-${question.id}`}>Sua resposta</label>

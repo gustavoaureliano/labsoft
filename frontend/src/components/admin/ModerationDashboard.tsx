@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { teacherApplicationKey, type TeacherApplication } from "@/data/demoAccount";
-import { lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
+import { apiFetch, type ApiModerationQueueItem } from "@/lib/engagementApi";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { AdminShell } from "./AdminShell";
 import styles from "./ModerationDashboard.module.css";
@@ -79,8 +79,26 @@ const reportedContent = [
 export function ModerationDashboard() {
   const [teachers, setTeachers] = useState(initialTeachers);
   const [application, saveApplication] = useDemoStorage<TeacherApplication | null>(teacherApplicationKey, null);
-  const [lessonReport, saveLessonReport] = useDemoStorage<LessonReport | null>(lessonReportKey, null);
   const [approvedTeacher, setApprovedTeacher] = useState<string | null>(null);
+  const [apiQueue, setApiQueue] = useState<ApiModerationQueueItem[]>([]);
+  const [decidedItems, setDecidedItems] = useState<Record<string, "mantido" | "ocultado">>({});
+  const [errorNotice, setErrorNotice] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<ApiModerationQueueItem[]>("/api/moderation/queue")
+      .then((data) => {
+        if (active) setApiQueue(data);
+      })
+      .catch((err) => {
+        if (active) {
+          setErrorNotice(err instanceof Error ? `Erro ao carregar fila de moderação: ${err.message}` : "Erro ao carregar fila de moderação.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function approveTeacher(id: number) {
     const teacher = teachers.find((item) => item.id === id);
@@ -96,7 +114,33 @@ export function ModerationDashboard() {
     setApprovedTeacher(status === "approved" ? application.name : null);
   }
 
+  async function applyDecision(
+    itemId: string,
+    itemType: "lesson" | "course" | "comment",
+    decision: "mantido" | "ocultado"
+  ) {
+    const apiDecision = decision === "mantido" ? "keep" : "hide";
+    setErrorNotice("");
+    try {
+      await apiFetch(`/api/moderation/queue/${encodeURIComponent(itemId)}/decision`, {
+        method: "POST",
+        body: JSON.stringify({
+          item_type: itemType,
+          decision: apiDecision,
+          justification: `Decisão administrativa via painel: ${decision}`,
+        }),
+      });
+      setDecidedItems((prev) => ({ ...prev, [`${itemType}:${itemId}`]: decision }));
+    } catch (err) {
+      setErrorNotice(
+        err instanceof Error ? `Erro ao aplicar decisão: ${err.message}` : "Erro ao aplicar decisão."
+      );
+    }
+  }
+
   const pendingApplication = application?.status === "pending" ? application : null;
+  const apiCommentItems = apiQueue.filter((item) => item.item_type === "comment");
+  const apiContentItems = apiQueue.filter((item) => item.item_type !== "comment");
 
   return (
     <AdminShell activePage="moderation" topbarTitle="Segurança e qualidade da plataforma">
@@ -107,8 +151,10 @@ export function ModerationDashboard() {
             <h1>Moderação e qualidade</h1>
             <p>Analise cadastros, comentários e conteúdos sinalizados pela comunidade.</p>
           </div>
-          <span className={styles.demoBadge}>Dados ilustrativos</span>
+          <span className={styles.demoBadge}>Fila do banco de dados</span>
         </header>
+
+        {errorNotice && <p role="status">{errorNotice}</p>}
 
         {approvedTeacher ? (
           <div className={styles.successNotice} role="status">
@@ -124,12 +170,14 @@ export function ModerationDashboard() {
           </article>
           <article className={styles.metricCard}>
             <span>Comentários bloqueados</span>
-            <strong>{blockedComments.length}</strong>
+            <strong>{blockedComments.length + apiCommentItems.length}</strong>
             <p>Mensagens retidas pelos filtros</p>
           </article>
           <article className={styles.metricCard}>
             <span>Conteúdos reportados</span>
-            <strong>{reportedContent.length + (lessonReport && !lessonReport.decision ? 1 : 0)}</strong>
+            <strong>
+              {reportedContent.length + apiContentItems.filter((i) => !decidedItems[`${i.item_type}:${i.item_id}`]).length}
+            </strong>
             <p>Aguardando análise da equipe</p>
           </article>
         </section>
@@ -185,9 +233,30 @@ export function ModerationDashboard() {
                 <h2 id="comments-title">Comentários bloqueados</h2>
                 <p>Mensagens retidas para revisão manual.</p>
               </div>
-              <span className={styles.countBadge}>{blockedComments.length}</span>
+              <span className={styles.countBadge}>{blockedComments.length + apiCommentItems.length}</span>
             </div>
             <ul className={styles.reviewList}>
+              {apiCommentItems.map((item) => {
+                const decided = decidedItems[`comment:${item.item_id}`];
+                return (
+                  <li className={styles.reviewItem} key={item.queue_id}>
+                    <div className={styles.reviewMeta}>
+                      <strong>{item.author_or_owner}</strong>
+                      <small>Retido no banco</small>
+                    </div>
+                    <p>{item.title_or_excerpt}</p>
+                    <span className={styles.reasonBadge}>{item.reasons[0] ?? "Filtro automático"}</span>
+                    {decided ? (
+                      <p role="status">Decisão registrada neste navegador: comentário {decided}.</p>
+                    ) : (
+                      <div className={styles.reviewActions}>
+                        <button type="button" onClick={() => applyDecision(item.item_id, "comment", "mantido")}>Manter comentário</button>
+                        <button type="button" onClick={() => applyDecision(item.item_id, "comment", "ocultado")}>Ocultar comentário</button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
               {blockedComments.map((comment) => (
                 <li className={styles.reviewItem} key={`${comment.author}-${comment.reason}`}>
                   <div className={styles.reviewMeta}>
@@ -208,18 +277,32 @@ export function ModerationDashboard() {
                 <h2 id="reports-title">Conteúdos reportados</h2>
                 <p>Materiais à espera de análise.</p>
               </div>
-              <span className={styles.countBadge}>{reportedContent.length + (lessonReport && !lessonReport.decision ? 1 : 0)}</span>
+              <span className={styles.countBadge}>
+                {reportedContent.length + apiContentItems.filter((i) => !decidedItems[`${i.item_type}:${i.item_id}`]).length}
+              </span>
             </div>
             <ul className={styles.reviewList}>
-              {lessonReport && <li className={styles.reviewItem}>
-                <div className={styles.reviewMeta}><strong>{lessonReport.lessonTitle ?? "Leis de Newton e suas aplicações"}</strong><small>Denúncia de demonstração</small></div>
-                <p>Física para o ENEM: Mecânica</p>
-                <span className={styles.reasonBadge}>{lessonReport.reason}</span>
-                {lessonReport.decision ? <p role="status">Decisão registrada neste navegador: conteúdo {lessonReport.decision}.</p> : <div className={styles.reviewActions}>
-                  <button type="button" onClick={() => saveLessonReport({ ...lessonReport, decision: "mantido" })}>Manter conteúdo</button>
-                  <button type="button" onClick={() => saveLessonReport({ ...lessonReport, decision: "ocultado" })}>Ocultar conteúdo</button>
-                </div>}
-              </li>}
+              {apiContentItems.map((item) => {
+                const decided = decidedItems[`${item.item_type}:${item.item_id}`];
+                return (
+                  <li className={styles.reviewItem} key={item.queue_id}>
+                    <div className={styles.reviewMeta}>
+                      <strong>{item.title_or_excerpt}</strong>
+                      <small>{item.reports_count} {item.reports_count === 1 ? "denúncia" : "denúncias"}</small>
+                    </div>
+                    <p>{item.author_or_owner}</p>
+                    <span className={styles.reasonBadge}>{item.reasons[0]}</span>
+                    {decided ? (
+                      <p role="status">Decisão registrada neste navegador: conteúdo {decided}.</p>
+                    ) : (
+                      <div className={styles.reviewActions}>
+                        <button type="button" onClick={() => applyDecision(item.item_id, item.item_type, "mantido")}>Manter conteúdo</button>
+                        <button type="button" onClick={() => applyDecision(item.item_id, item.item_type, "ocultado")}>Ocultar conteúdo</button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
               {reportedContent.map((content) => (
                 <li className={styles.reviewItem} key={content.title}>
                   <div className={styles.reviewMeta}>

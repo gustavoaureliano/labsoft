@@ -7,9 +7,11 @@ test("a administração alterna o período dos acessos", async () => {
   await withBrowser(async (driver) => {
     await driver.get(`${baseUrl}/admin`);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Visão geral do negócio"]')), 10000);
+    const mainEl = await driver.findElement(By.css("main"));
+    await driver.wait(until.elementTextContains(mainEl, "2.480"), 5000);
     await pauseForReview();
 
-    const pageText = await driver.findElement(By.css("main")).getText();
+    const pageText = await mainEl.getText();
     assert.match(pageText, /Faturamento mensal\s+R\$ 84\.500/);
     assert.match(pageText, /Professores cadastrados\s+36/);
     assert.match(pageText, /Alunos cadastrados\s+2\.480/);

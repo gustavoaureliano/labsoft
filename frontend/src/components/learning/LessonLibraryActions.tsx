@@ -9,28 +9,54 @@ type LessonLibraryActionsProps = {
   study: StudyDemo;
   saveStudy: (study: StudyDemo) => boolean;
   ready: boolean;
+  onRecordView?: (lessonId: string) => Promise<void> | void;
+  onToggleFavorite?: (lessonId: string) => Promise<boolean>;
+  onUpdatePlaylistLessons?: (playlistId: string, lessonIds: string[]) => Promise<boolean>;
 };
 
-export function LessonLibraryActions({ lessonId, study, saveStudy, ready }: LessonLibraryActionsProps) {
+export function LessonLibraryActions({
+  lessonId,
+  study,
+  ready,
+  onRecordView,
+  onToggleFavorite,
+  onUpdatePlaylistLessons,
+}: LessonLibraryActionsProps) {
   const [notice, setNotice] = useState("");
   const recordedLesson = useRef<string | null>(null);
   const favorite = study.favoriteLessons.includes(lessonId);
 
   useEffect(() => {
-    if (!ready || recordedLesson.current === lessonId) return;
+    if (!ready || recordedLesson.current === lessonId || !onRecordView) return;
     recordedLesson.current = lessonId;
-    saveStudy({ ...study, viewedLessons: [lessonId, ...study.viewedLessons.filter((id) => id !== lessonId)] });
-  }, [ready, study, saveStudy, lessonId]);
+    Promise.resolve(onRecordView(lessonId)).catch((err) => {
+      setNotice(err instanceof Error ? `Erro ao registrar histórico: ${err.message}` : "Erro ao registrar histórico.");
+    });
+  }, [ready, lessonId, onRecordView]);
 
-  function toggleFavorite() {
-    saveStudy({ ...study, favoriteLessons: favorite ? study.favoriteLessons.filter((id) => id !== lessonId) : [...study.favoriteLessons, lessonId] });
-    setNotice(favorite ? "Aula removida dos favoritos." : "Aula adicionada aos favoritos deste navegador.");
+  async function toggleFavorite() {
+    if (!onToggleFavorite) return;
+    try {
+      const nowFav = await onToggleFavorite(lessonId);
+      setNotice(nowFav ? "Aula adicionada aos favoritos deste navegador." : "Aula removida dos favoritos.");
+    } catch (err) {
+      setNotice(err instanceof Error ? `Erro nos favoritos: ${err.message}` : "Erro ao atualizar favoritos.");
+    }
   }
 
-  function addToPlaylist(playlistId: string) {
-    if (!playlistId) return;
-    saveStudy({ ...study, playlists: study.playlists.map((playlist) => playlist.id === playlistId && !playlist.lessonIds.includes(lessonId) ? { ...playlist, lessonIds: [...playlist.lessonIds, lessonId] } : playlist) });
-    setNotice("Aula adicionada à playlist neste navegador.");
+  async function addToPlaylist(playlistId: string) {
+    if (!playlistId || !onUpdatePlaylistLessons) return;
+    const target = study.playlists.find((p) => p.id === playlistId);
+    if (!target) return;
+    try {
+      if (!target.lessonIds.includes(lessonId)) {
+        const nextLessons = [...target.lessonIds, lessonId];
+        await onUpdatePlaylistLessons(playlistId, nextLessons);
+      }
+      setNotice("Aula adicionada à playlist neste navegador.");
+    } catch (err) {
+      setNotice(err instanceof Error ? `Erro na playlist: ${err.message}` : "Erro ao atualizar playlist.");
+    }
   }
 
   return (

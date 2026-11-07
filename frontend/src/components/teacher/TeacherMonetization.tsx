@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { findDemoCourse } from "@/data/demoCourses";
+import { apiFetch, type ApiTeacherAnalytics } from "@/lib/engagementApi";
 import { TeacherShell } from "./TeacherShell";
 import styles from "./TeacherMonetization.module.css";
 
@@ -19,6 +23,32 @@ const courses = [
 const maximumRevenue = Math.max(...revenue.map((item) => item.value));
 
 export function TeacherMonetization() {
+  const [analytics, setAnalytics] = useState<ApiTeacherAnalytics | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<ApiTeacherAnalytics>("/api/analytics/teacher?period=30d&course_id=fisica-enem-mecanica")
+      .then((data) => {
+        if (active) setAnalytics(data);
+      })
+      .catch(() => {
+        if (active) setAnalytics(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const completionValue = analytics
+    ? `${analytics.completion_rate.value.toFixed(1).replace(".", ",")}%`
+    : "78,4%";
+  const avgRatingValue = analytics && analytics.total_ratings.value > 0
+    ? `${analytics.average_rating.value.toFixed(1).replace(".", ",")}/5`
+    : "4,8/5";
+  const avgRatingNote = analytics && analytics.total_ratings.value > 0
+    ? `com ${analytics.total_ratings.value} ${analytics.total_ratings.value === 1 ? "avaliação" : "avaliações"}`
+    : "com 612 avaliações";
+
   return (
     <TeacherShell>
       <div className={styles.page}>
@@ -57,9 +87,9 @@ export function TeacherMonetization() {
           <section className={styles.card} aria-labelledby="engagement-title">
             <div className={styles.cardHeader}><div><span className={styles.eyebrow}>Engajamento</span><h2 id="engagement-title">Atividade dos alunos</h2></div></div>
             <dl className={styles.engagement}>
-              <div><dt>Taxa de conclusão</dt><dd>78,4%</dd><small>+4,2 pontos no mês</small></div>
+              <div><dt>Taxa de conclusão</dt><dd>{completionValue}</dd><small>+4,2 pontos no mês</small></div>
               <div><dt>Tempo médio assistido</dt><dd>42 min</dd><small>por aluno na semana</small></div>
-              <div><dt>Avaliação média</dt><dd>4,8/5</dd><small>com 612 avaliações</small></div>
+              <div><dt>Avaliação média</dt><dd>{avgRatingValue}</dd><small>{avgRatingNote}</small></div>
               <div><dt>Alunos ativos</dt><dd>81%</dd><small>nos últimos 7 dias</small></div>
             </dl>
           </section>
