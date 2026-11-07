@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 from typing import Literal
 
 from pydantic import (
@@ -91,6 +92,14 @@ class EmailVerificationIn(BaseModel):
 
 class UserRoleUpdateIn(BaseModel):
     role: Literal["student", "teacher", "admin"]
+
+
+class ModerationAuditIn(BaseModel):
+    operation_id: UUID
+    item_type: Literal["lesson", "course", "comment"]
+    item_id: str = Field(min_length=1, max_length=255)
+    decision: Literal["keep", "hide", "delete"]
+    justification: str = Field(min_length=1, max_length=1000)
 
 
 class UserStatusUpdateIn(BaseModel):

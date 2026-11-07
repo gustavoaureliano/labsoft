@@ -1,4 +1,6 @@
 from typing import Callable
+import os
+import secrets
 from uuid import uuid4
 
 from fastapi import (
@@ -7,6 +9,7 @@ from fastapi import (
     File,
     FastAPI,
     Form,
+    Header,
     HTTPException,
     Request,
     Response,
@@ -18,6 +21,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.database import get_session as get_db
@@ -49,6 +53,7 @@ from app.services.identity_access.schemas import (
     UserRoleUpdateIn,
     UserStatusUpdateIn,
     UserOut,
+    ModerationAuditIn,
 )
 from app.services.identity_access.services import (
     EmailSender,
@@ -497,6 +502,31 @@ def create_router(
         user: User = Depends(current_user),
     ):
         return user
+
+    @router.post("/admin/audit/moderation", status_code=201)
+    def audit_moderation(
+        body: ModerationAuditIn,
+        admin: User = Depends(auth.roles("admin")),
+        service_token: str | None = Header(default=None, alias="X-Service-Token"),
+        db: Session = Depends(get_db),
+    ):
+        expected = os.getenv("ENGAGEMENT_AUDIT_TOKEN", "")
+        if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
+            raise HTTPException(403, "Auditoria exclusiva do serviço de moderação")
+        key = f"moderation:{body.operation_id}"
+        if db.bind.dialect.name == "postgresql":
+            db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": key})
+        details = body.model_dump(mode="json", exclude={"operation_id"})
+        existing = db.scalar(select(AuditEvent).where(AuditEvent.request_id == key))
+        if existing:
+            if existing.actor_id != admin.id or existing.details != details:
+                raise HTTPException(409, "Operação de auditoria divergente")
+            return {"recorded": True, "audit_id": existing.id}
+        record = AuditEvent(actor_id=admin.id, event="content.moderated", outcome="success",
+                            request_id=key, details=details)
+        db.add(record)
+        db.commit()
+        return {"recorded": True, "audit_id": record.id}
 
     @router.patch(
         "/admin/users/{user_id}/role",

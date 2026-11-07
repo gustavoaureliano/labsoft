@@ -7,6 +7,7 @@ from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 
 import jwt
 
@@ -1332,3 +1333,23 @@ def test_invalid_web_logout_clears_stale_cookies(api):
     assert response.status_code == 401
     assert api.client.cookies.get("aprovaai_access") is None
     assert api.client.cookies.get("aprovaai_refresh") is None
+
+
+def test_admin_moderation_audit_is_owned_and_idempotent(api, monkeypatch):
+    monkeypatch.setenv('ENGAGEMENT_AUDIT_TOKEN','engagement-audit-secret')
+    admin, _, admin_headers = api.account("admin")
+    _, _, student_headers = api.account("student")
+    body={"operation_id":str(uuid4()),"item_type":"lesson","item_id":str(uuid4()),
+          "decision":"hide","justification":"Decisão revisada"}
+    url="/api/v1/admin/audit/moderation"
+    assert api.client.post(url,json=body,headers=student_headers).status_code==403
+    assert api.client.post(url,json=body).status_code==401
+    assert api.client.post(url,json=body,headers=admin_headers).status_code==403
+    admin_headers={**admin_headers,'X-Service-Token':'engagement-audit-secret'}
+    first=api.client.post(url,json=body,headers=admin_headers)
+    second=api.client.post(url,json=body,headers=admin_headers)
+    assert first.status_code==second.status_code==201
+    assert first.json()['audit_id']==second.json()['audit_id']
+    assert api.client.post(url,json={**body,"decision":"delete"},headers=admin_headers).status_code==409
+    records=api.db.query(AuditEvent).filter_by(event="content.moderated").all()
+    assert len(records)==1 and records[0].actor_id==admin.id
