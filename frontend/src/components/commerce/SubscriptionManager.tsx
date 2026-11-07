@@ -6,8 +6,9 @@ import { findCatalogCourse, formatPrice } from "@/data/catalog";
 import styles from "./Commerce.module.css";
 
 export function SubscriptionManager() {
-  const [access, cancelPlan, ready] = useAccess();
+  const [access, cancelPlan, ready, error] = useAccess();
   if (!ready) return <p>Carregando assinatura...</p>;
+  if (error) return <section role="alert"><h1>Acessos indisponíveis</h1><p>{error}</p><Link href="/perfil">Voltar ao perfil</Link></section>;
 
   const subscription = access.subscription;
   if (!subscription) return (

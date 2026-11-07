@@ -10,7 +10,10 @@ def test_owned_listing_and_cancellation(api):
     with Session(api.engine) as db:
         db.add_all([Subscription(user_id=uid, item_id=api.course_id) for uid in [api.users['student-a'],api.users['student-b']]])
         db.commit()
-    result = api.client.get('/api/subscriptions/me').json()
+    response = api.client.get('/api/subscriptions/me')
+    assert response.headers['cache-control'] == 'private, no-store'
+    assert response.headers['vary'] == 'Cookie, Authorization'
+    result = response.json()
     assert result == {'user_id': str(api.users['student-a']), 'items':[{'course_id':str(api.course_id),'status':'active'}]}
     assert api.client.delete(f'/api/subscriptions/me/{api.course_id}').status_code == 204
     assert api.client.delete(f'/api/subscriptions/me/{api.course_id}').status_code == 204

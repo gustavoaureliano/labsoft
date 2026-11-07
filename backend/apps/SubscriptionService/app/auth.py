@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 from uuid import UUID
 
 import httpx
@@ -8,7 +9,7 @@ from pydantic import BaseModel
 
 class Identity(BaseModel):
     id: UUID
-    role: str
+    role: Literal["student", "teacher", "admin"]
 
 
 def credential(request: Request) -> str:

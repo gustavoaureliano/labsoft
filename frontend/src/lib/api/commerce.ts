@@ -4,8 +4,9 @@ import { startTransition, useCallback, useEffect, useState } from "react";
 import { catalogCourses, findCatalogCourse } from "@/data/catalog";
 import { completePlanPrice, type AccessDemo } from "@/data/subscriptionDemo";
 import { api, jsonRequest } from "@/lib/api/learning";
+import { isApiConfigured } from "@/lib/apiClient";
 
-// There is no auth yet: the whole prototype acts as this single user.
+// Legacy paid-flow adapter, pending canonical checkout/payment integration.
 export const DEMO_USER_ID = 1;
 // Reserved backend item_id meaning "complete plan" (whole catalog).
 export const COMPLETE_PLAN_ITEM = 0;
@@ -20,6 +21,12 @@ export const courseIdFor = (itemId: number) => catalogCourses[itemId - 1]?.id;
 export const toCents = (reais: number) => Math.round(reais * 100);
 
 export type PaymentMethod = "pix" | "credito" | "boleto";
+
+export function enrollFreeCourse(courseId: string) {
+  return api<{user_id: string; course_id: string; active: boolean}>(
+    "/api/subscriptions", jsonRequest("POST", {course_id: courseId}),
+  );
+}
 
 type CheckoutView = { checkout_id: string; status: "processing" | "ok" | "payment_failed" };
 
@@ -59,9 +66,17 @@ export function sendHeartbeat(itemId: number, stamp: number) {
 export function useAccess() {
   const [access, setAccess] = useState<AccessDemo>({ courseIds: [], subscription: null });
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    setError(null);
     try {
+      if (isApiConfigured) {
+        const result = await api<{items: {course_id: string; status: string}[]}>("/api/subscriptions/me");
+        setAccess({courseIds: result.items.filter(item => item.status === "active").map(item => item.course_id), subscription: null});
+        setReady(true);
+        return;
+      }
       const { item_ids, items } = await api<{ item_ids: number[]; items: { item_id: number; status: string }[] }>(`/api/subscriptions/${DEMO_USER_ID}`);
       const courseIds = item_ids.filter((id) => id !== COMPLETE_PLAN_ITEM).flatMap((id) => courseIdFor(id) ?? []);
       const lastCourse = courseIds.length ? findCatalogCourse(courseIds[courseIds.length - 1]) : undefined;
@@ -72,8 +87,8 @@ export function useAccess() {
           ? { plan: "complete", status: completePlan.status === "past_due" ? "past_due" : "active", price: completePlanPrice }
           : lastCourse ? { plan: "individual", status: "active", courseId: lastCourse.id, price: lastCourse.price } : null,
       });
-    } catch {
-      setAccess({ courseIds: [], subscription: null });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Não foi possível consultar os acessos.");
     }
     setReady(true);
   }, []);
@@ -85,5 +100,5 @@ export function useAccess() {
     await refresh();
   }, [refresh]);
 
-  return [access, cancelCompletePlan, ready] as const;
+  return [access, cancelCompletePlan, ready, error] as const;
 }

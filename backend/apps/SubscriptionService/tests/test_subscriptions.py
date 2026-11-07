@@ -69,3 +69,8 @@ def test_anonymous_demo_headers_do_not_authenticate(api):
     del api.client.headers['Authorization']
     api.client.headers['X-Demo-User'] = 'aluno-demo'
     assert enroll(api).status_code == 401
+
+
+def test_invalid_identity_role_is_a_dependency_failure(api):
+    api.state['identity_role'] = 'ALUNO'
+    assert enroll(api).status_code == 503

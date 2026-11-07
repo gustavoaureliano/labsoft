@@ -54,7 +54,9 @@ def student_context(request: Request, session: SessionDependency,
                     student_id: Annotated[UUID | None, Header(alias="X-Student-Id")] = None):
     if demo_mode(): return student_id
     access = token(request, required=False)
-    if not access: return None
+    if not access:
+        session.info.pop("access_token", None)
+        return None
     uid, role, _ = principal(request)
     session.info["access_token"] = access
     return uid if role == "student" else None
@@ -65,12 +67,14 @@ StudentDependency = Annotated[UUID | None, Depends(student_context)]
 
 def teacher_context(
     request: Request,
+    session: SessionDependency,
     teacher_id: Annotated[UUID | None, Header(alias="X-Teacher-Id")] = None,
     teacher_name: Annotated[str, Header(alias="X-Teacher-Name")] = "Professor",
 ) -> tuple[UUID, str]:
     if not demo_mode():
         uid, role, name = principal(request)
         if role != "teacher": raise HTTPException(403, "Ação exclusiva do professor")
+        session.info["access_token"] = token(request)
         return uid, name
     if teacher_id is None: raise HTTPException(401, "Professor demo ausente")
     return teacher_id, teacher_name

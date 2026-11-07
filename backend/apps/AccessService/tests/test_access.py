@@ -15,7 +15,7 @@ def api(monkeypatch):
         calls.append(request)
         assert 'cookie' not in request.headers
         if request.headers['authorization'] != 'Bearer valid': return httpx.Response(401)
-        if request.url.host == 'identity': return httpx.Response(200,json={'id':uid,'role':'student'})
+        if request.url.host == 'identity': return httpx.Response(200,json={'id':uid,'role':state.get('identity_role','student')})
         if state.get('http_status'): return httpx.Response(state['http_status'])
         return httpx.Response(200,json=state)
     monkeypatch.setenv('IDENTITY_URL','http://identity')
@@ -29,6 +29,8 @@ def api(monkeypatch):
 def test_access_is_for_authenticated_user_and_canonical_course(api):
     client, uid, cid, _, calls = api
     r = client.get('/api/access',params={'course_id':cid})
+    assert r.headers['cache-control'] == 'private, no-store'
+    assert r.headers['vary'] == 'Cookie, Authorization'
     assert r.json() == {'user_id':uid,'course_id':cid,'allowed':True,'reason':'free_enrollment'}
     assert [c.url.path for c in calls] == ['/api/v1/auth/me','/api/subscriptions/me']
 
@@ -71,3 +73,9 @@ def test_bad_header_does_not_fall_back_to_cookie(api,value):
     client.cookies.set('aprovaai_access','valid',path='/api')
     client.headers['Authorization']=value
     assert client.get('/api/access',params={'course_id':cid}).status_code==401
+
+
+def test_invalid_identity_contract_is_dependency_failure(api):
+    client, _, cid, state, _=api
+    state['identity_role']='ALUNO'
+    assert client.get('/api/access',params={'course_id':cid}).status_code==503

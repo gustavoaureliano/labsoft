@@ -28,6 +28,14 @@ app.include_router(courses_router)
 app.include_router(lookup_router)
 
 
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.setdefault("Vary", "Cookie, Authorization")
+    return response
+
+
 @app.exception_handler(CourseError)
 async def course_error_handler(_: Request, error: CourseError) -> JSONResponse:
     return JSONResponse(

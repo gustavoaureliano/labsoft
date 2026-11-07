@@ -38,6 +38,7 @@ def test_owner_summary_and_duplicate_lesson_writes(integrated, db_session):
     client, uid, _ = integrated
     course = create(client)
     assert course['teacher_id'] == uid and course['teacher_name'] == 'Nome real'
+    assert client.get(f"/api/courses/{course['id']}/summary").headers['cache-control'] == 'private, no-store'
     for _ in range(3): assert client.get(f"/api/courses/{course['id']}/summary").status_code == 200
     db_session.expire_all()
     assert db_session.get(Course, UUID(course['id'])).view_count == 0

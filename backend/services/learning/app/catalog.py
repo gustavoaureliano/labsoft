@@ -5,7 +5,7 @@ from typing import Literal
 
 import httpx
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictBool
 
 from app.identity import access_credential
 from app.integrations import Course, get_current_user
@@ -18,6 +18,23 @@ class CourseLookup(BaseModel):
     title: str
     status: Literal["draft", "published", "archived"]
     cover_url: str | None = None
+
+
+class Enrollment(BaseModel):
+    course_id: UUID
+    status: Literal["active", "cancelled", "past_due"]
+
+
+class Subscriptions(BaseModel):
+    user_id: UUID
+    items: list[Enrollment]
+
+
+class AccessDecision(BaseModel):
+    user_id: UUID
+    course_id: UUID
+    allowed: StrictBool
+    reason: Literal["free_enrollment", "no_active_enrollment"]
 
 
 class CatalogIntegrations:
@@ -56,7 +73,22 @@ class CatalogIntegrations:
         if self.request is None: raise HTTPException(401, "Usuário obrigatório")
         user = getattr(self.request.state, "current_user", None) or get_current_user(self.request)
         if user.role != "teacher":
-            raise HTTPException(503, "Listagem de matrículas ainda não integrada")
+            if user.role != "student":
+                raise HTTPException(403, "Lista exclusiva do aluno ou professor")
+            try:
+                subscriptions = Subscriptions.model_validate(self.read("SUBSCRIPTION_URL", "/api/subscriptions/me"))
+            except ValueError as exc:
+                raise HTTPException(503, "Resposta de matrículas inválida") from exc
+            if str(subscriptions.user_id) != user.id:
+                raise HTTPException(503, "Matrículas de outro usuário")
+            result = []
+            for item in subscriptions.items:
+                if item.status != "active":
+                    continue
+                course = self.course(str(item.course_id))
+                if course is not None:
+                    result.append(course)
+            return result
         page, result = 1, []
         while True:
             data = self.read("CATALOG_URL", f"/api/teacher/courses/summary?page={page}&size=20")
@@ -69,10 +101,17 @@ class CatalogIntegrations:
             except (KeyError, TypeError, ValueError) as exc: raise HTTPException(503, "Paginação inválida") from exc
 
     def has_access(self, student_id, course_id):
-        raise HTTPException(503, "Direito de acesso ainda não integrado")
+        try:
+            course_id = str(UUID(course_id))
+            decision = AccessDecision.model_validate(self.read("ACCESS_URL", f"/api/access?course_id={course_id}"))
+        except ValueError as exc:
+            raise HTTPException(503, "Decisão de acesso inválida") from exc
+        if str(decision.user_id) != student_id or str(decision.course_id) != course_id:
+            raise HTTPException(503, "Decisão de acesso divergente")
+        return decision.allowed
 
     def access_status(self, student_id, course_id):
-        raise HTTPException(503, "Direito de acesso ainda não integrado")
+        return "active" if self.has_access(student_id, course_id) else "none"
 
     def recommendations(self, student_id): return []
     def notifications(self, user_id): return []

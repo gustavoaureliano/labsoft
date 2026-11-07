@@ -21,16 +21,25 @@ from app.media.service import MediaNotFound
 router = APIRouter(prefix="/api/learning", tags=["Aprendizagem"])
 
 
+def summary_user(request: Request):
+    if "authorization" in request.headers or request.cookies.get("aprovaai_access"):
+        return get_current_user(request)
+    return None
+
+
 @router.get("/courses/{course_id}/lesson-summaries")
 def lesson_summaries(course_id: UUID, session: Annotated[Session, Depends(get_session)],
-                     user: Annotated[User, Depends(get_current_user)],
+                     user: Annotated[User | None, Depends(summary_user)],
                      integrations: Annotated[Integrations, Depends(get_integrations)]) -> dict:
     course_id = str(course_id)
-    require_course(user, integrations, course_id, write=True)
+    course = integrations.course(course_id)
+    owner = course is not None and user is not None and user.role == "teacher" and user.id == course.owner_id
+    if course is None or (not course.published and not owner):
+        raise HTTPException(404, "Curso não encontrado")
     items = []
     for lesson in service.list_lessons(session, course_id):
         media = media_service.get_media(session, lesson.media_id) if lesson.media_id else None
-        items.append({"id": lesson.id, "title": lesson.title, "description": lesson.description,
+        items.append({"id": lesson.id, "title": lesson.title, "description": lesson.description if owner else "",
                       "position": lesson.position, "duration_seconds": media.duration_seconds if media else None})
     return {"course_id": course_id, "items": items}
 

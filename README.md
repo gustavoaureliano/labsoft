@@ -23,6 +23,8 @@ Na pasta do serviço, aplique `uv run --locked alembic upgrade head` com `DATABA
 
 Para identidade, execute `backend/infrastructure/identity.sql` com `IDENTITY_MIGRATION_PASSWORD` e `IDENTITY_RUNTIME_PASSWORD`; use as roles correspondentes `aa_identity_migration` e `aa_identity_runtime` na pasta `backend/services/identity/`.
 
+Catálogo e matrícula seguem o mesmo padrão em `catalog.sql` e `subscription.sql`, com prefixos `CATALOG_*`/`aa_catalog_*` e `SUBSCRIPTION_*`/`aa_subscription_*`. As migrações de matrícula ficam em `backend/apps/SubscriptionService/`; o runtime não cria tabelas.
+
 Para autenticação HTTP em aprendizagem, configure `IDENTITY_URL` e `FRONTEND_ORIGIN`; em identidade, use a mesma origem em `AA_FRONTEND_ORIGIN`. Login/refresh emitem o access cookie HttpOnly. Bearer explícito prevalece sobre cookie. Configurar identidade real não configura catálogo ou matrícula automaticamente.
 
 ### Frontend
@@ -74,4 +76,4 @@ O Chromium executa sem janela por padrão, inclusive nos modos sequencial e com 
 
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
-As cinco contribuições foram incorporadas com histórico preservado. Autenticação e aprendizagem já se comunicam por HTTP; a adaptação funcional dos demais contratos continua em andamento. O roteamento não equivale à integração de IDs, permissões ou regras de negócio. Não implantar esta branch intermediária como sistema integrado.
+As cinco contribuições foram incorporadas com histórico preservado. Identidade, catálogo, aulas, matrícula gratuita e acesso já se comunicam por HTTP. Pagamentos/planos e engajamento ainda estão em integração; esta branch não representa o produto completo.

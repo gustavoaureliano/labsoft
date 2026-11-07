@@ -6,6 +6,7 @@ from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.media.models import Media
+from app.integrations import demo_mode, read_lesson_summaries
 
 from .models import Course, CourseLesson, CourseMaterial, CourseReview, Enrollment
 
@@ -68,6 +69,8 @@ class CourseRepository:
         return list(self.session.scalars(query))
 
     def list_lessons(self, course_id: UUID) -> list[CourseLesson]:
+        if not demo_mode():
+            return read_lesson_summaries(course_id, self.session.info.get("access_token"))
         query = (
             select(CourseLesson)
             .where(CourseLesson.course_id == course_id)
@@ -165,6 +168,8 @@ class CourseRepository:
         ) or 0
 
     def lesson_count(self, course_id: UUID) -> int:
+        if not demo_mode():
+            return len(self.list_lessons(course_id))
         return self.session.scalar(
             select(func.count()).select_from(CourseLesson).where(
                 CourseLesson.course_id == course_id

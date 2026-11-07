@@ -1,18 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { CatalogCourse } from "@/data/catalog";
 import { formatPrice } from "@/data/catalog";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { useApi, type Course } from "@/lib/api/learning";
+import { isApiConfigured } from "@/lib/apiClient";
+import { enrollFreeCourse } from "@/lib/api/commerce";
 import styles from "./Commerce.module.css";
 
 export function CourseDetails({ course }: { course: CatalogCourse }) {
+  const router = useRouter();
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState("");
   const [access, , ready] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const learning = useApi<Course[]>("/api/learning/courses");
   const accessibleCourse = learning.data?.find(item => item.id === course.id);
-  const hasDemoAccess = access.courseIds.includes(course.id) || (access.subscription?.status === "active" && access.subscription.plan === "complete");
+  const hasDemoAccess = !isApiConfigured && (access.courseIds.includes(course.id) || (access.subscription?.status === "active" && access.subscription.plan === "complete"));
+
+  async function enroll() {
+    if (enrolling) return;
+    setEnrolling(true); setEnrollmentError("");
+    try {
+      await enrollFreeCourse(course.id);
+      router.push(`/meus-cursos/${encodeURIComponent(course.id)}`);
+    } catch (error) { setEnrollmentError((error as Error).message); }
+    finally { setEnrolling(false); }
+  }
 
   let accessLabel = course.access === "free" ? "Acesso gratuito" : "Acesso ao curso";
   let accessValue = course.access === "free" ? "Gratuito" : formatPrice(course.price);
@@ -34,12 +51,16 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
     accessValue = "Aguarde";
     accessDescription = "Consultando seus cursos na API.";
     action = null;
+  } else if (isApiConfigured && learning.status === 401) {
+    accessLabel = "Entre para estudar";
+    accessDescription = "Faça login para consultar ou adicionar este curso.";
+    action = {href: "/login", label: "Entrar"};
   } else if (learning.error) {
     accessLabel = "Acesso indisponível";
     accessValue = "Tente novamente";
     accessDescription = learning.error;
     action = null;
-  } else if (!ready) {
+  } else if (!isApiConfigured && !ready) {
     accessLabel = "Verificando acesso";
     accessValue = "Aguarde";
     accessDescription = "Consultando os acessos salvos neste navegador.";
@@ -65,7 +86,10 @@ export function CourseDetails({ course }: { course: CatalogCourse }) {
           <span className={styles.eyebrow}>{accessLabel}</span>
           <strong>{accessValue}</strong>
           <p>{accessDescription}</p>
-          {action && <Link className={styles.primary} href={action.href}>{action.label}</Link>}
+          {action && (isApiConfigured && course.access === "free" && action.label === "Adicionar aos meus cursos"
+            ? <button type="button" className={styles.primary} disabled={enrolling} onClick={() => void enroll()}>{enrolling ? "Adicionando..." : action.label}</button>
+            : <Link className={styles.primary} href={action.href}>{action.label}</Link>)}
+          {enrollmentError && <p role="alert">{enrollmentError}</p>}
         </aside>
       </section>
 

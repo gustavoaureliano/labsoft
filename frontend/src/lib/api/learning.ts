@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { EnrolledLesson } from "@/data/courses";
-import { request } from "@/lib/apiClient";
+import { ApiError, request } from "@/lib/apiClient";
 
 export type Lesson = {
   id: string; course_id: string; title: string; description: string; position: number;
@@ -26,17 +26,17 @@ export function jsonRequest(method: string, data: unknown): RequestInit {
 }
 
 export function useApi<T>(path: string | null) {
-  const [result, setResult] = useState<{path: string; data?: T; error?: string} | null>(null);
+  const [result, setResult] = useState<{path: string; data?: T; error?: string; status?: number} | null>(null);
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
     api<T>(path, { signal: controller.signal }).then(
       data => setResult({path, data}),
-      error => { if (!controller.signal.aborted) setResult({path, error: error.message}); },
+      error => { if (!controller.signal.aborted) setResult({path, error: error.message, status: error instanceof ApiError ? error.status : undefined}); },
     );
     return () => controller.abort();
   }, [path]);
-  return { data: result?.path === path ? result.data : undefined, error: result?.path === path ? result.error : undefined };
+  return { data: result?.path === path ? result.data : undefined, error: result?.path === path ? result.error : undefined, status: result?.path === path ? result.status : undefined };
 }
 
 export function lessonLink(id: string, context?: {origin?: string; playlistId?: string}) {

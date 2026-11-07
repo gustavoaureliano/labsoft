@@ -1,5 +1,4 @@
-"""One shared Postgres instance, one schema per service (simulates a database per service).
-Falls back to SQLite for local runs without Postgres."""
+"""Subscription persistence; Alembic owns schema changes, runtime only checks tables."""
 import os
 from datetime import datetime, timezone
 

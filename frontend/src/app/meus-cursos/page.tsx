@@ -11,6 +11,7 @@ import { resolveLessons } from "@/lib/api/library";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
+import { isApiConfigured } from "@/lib/apiClient";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
@@ -72,7 +73,7 @@ export default function MeusCursos() {
           </div>
         </section>
 
-        {access.subscription?.plan === "complete" && access.subscription.status === "active" && <section aria-labelledby="new-access-title">
+        {!isApiConfigured && access.subscription?.plan === "complete" && access.subscription.status === "active" && <section aria-labelledby="new-access-title">
           <h2 id="new-access-title">Acessos adicionados</h2>
           <p className={styles.accessNotice}>Sua assinatura completa está ativa nesta demonstração.</p>
         </section>}

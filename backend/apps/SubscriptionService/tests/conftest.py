@@ -34,7 +34,7 @@ def api(tmp_path, monkeypatch):
         value = request.headers["authorization"].split()[1]
         if request.url.host == "identity":
             if value not in users: return httpx.Response(401)
-            return httpx.Response(200, json={"id": str(users[value]), "role": "teacher" if value == "teacher" else "student"})
+            return httpx.Response(200, json={"id": str(users[value]), "role": state.get("identity_role", "teacher" if value == "teacher" else "student")})
         if state.get("http_status"): return httpx.Response(state["http_status"])
         if str(course_id) not in request.url.path: return httpx.Response(404)
         return httpx.Response(200, json=state)

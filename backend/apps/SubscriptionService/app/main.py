@@ -49,6 +49,14 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Servico de Inscricoes", lifespan=lifespan)
 
 
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.setdefault("Vary", "Cookie, Authorization")
+    return response
+
+
 class SubscriptionIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     course_id: UUID

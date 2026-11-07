@@ -16,7 +16,7 @@ export function ProfilePage() {
   const [savedName, setSavedName] = useState(initialProfile.nickname);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [access] = useAccess();
+  const [access, , accessReady, accessError] = useAccess();
   const fileInput = useRef<HTMLInputElement>(null);
   const currentPlan = access.subscription;
 
@@ -142,7 +142,8 @@ export function ProfilePage() {
 
         <section className={`${styles.card} ${styles.planCard}`} aria-labelledby="plan-title">
           <span className={styles.eyebrow}>{currentPlan?.status === "active" ? "Plano atual" : "Acesso demonstrativo"}</span>
-          <h2 id="plan-title">{currentPlan?.plan === "complete" ? "Assinatura completa" : currentPlan ? "Curso individual" : "Nenhum plano ativo"}</h2>
+          <h2 id="plan-title">{accessError ? "Acessos indisponíveis" : !accessReady ? "Consultando acessos..." : currentPlan?.plan === "complete" ? "Assinatura completa" : currentPlan ? "Curso individual" : "Nenhum plano ativo"}</h2>
+          {accessError && <p role="alert">{accessError}</p>}
           <ul>
             <li><span className={styles.check}><Icon name="check" /></span>Acesso vitalício à matéria escolhida</li>
             <li><span className={styles.check}><Icon name="check" /></span>Videoaulas e material complementar</li>

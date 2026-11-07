@@ -9,9 +9,17 @@ from pydantic import BaseModel
 app = FastAPI(title="Servico de Acesso")
 
 
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.setdefault("Vary", "Cookie, Authorization")
+    return response
+
+
 class Identity(BaseModel):
     id: UUID
-    role: str
+    role: Literal["student", "teacher", "admin"]
 
 
 class Enrollment(BaseModel):
