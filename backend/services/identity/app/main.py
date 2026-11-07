@@ -508,7 +508,7 @@ def create_router(
         service_token: str | None = Header(default=None, alias="X-Service-Token"),
         db: Session = Depends(get_db),
     ):
-        expected = os.getenv("ENGAGEMENT_AUDIT_TOKEN", "")
+        expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
         if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
             raise HTTPException(403, "Auditoria exclusiva do serviço de moderação")
         key = f"moderation:{body.operation_id}"

@@ -35,7 +35,7 @@ def moderate_lesson(lesson_id: str, body: ModerationIn,
                     session: Annotated[Session, Depends(get_session)],
                     user: Annotated[User, Depends(get_current_user)],
                     service_token: str | None = Header(default=None, alias="X-Service-Token")):
-    expected = os.getenv("ENGAGEMENT_LEARNING_TOKEN", "")
+    expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
         raise HTTPException(403, "Comando exclusivo do serviço de moderação")
     if user.role != "admin":

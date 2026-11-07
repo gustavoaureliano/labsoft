@@ -18,8 +18,7 @@ def api(tmp_path, monkeypatch):
     database.Base.metadata.create_all(engine)
     monkeypatch.setattr(database,"engine",engine)
     monkeypatch.setattr(main,"engine",engine)
-    for name in ["CHECKOUT_PAYMENT_TOKEN","SUBSCRIPTION_PAYMENT_TOKEN","PAYMENT_SUBSCRIPTION_TOKEN","PSP_WEBHOOK_TOKEN"]:
-        monkeypatch.setenv(name, name+'-test-secret')
+    monkeypatch.setenv("INTERNAL_SERVICE_TOKEN", "shared-internal-test-secret")
     monkeypatch.setattr(main,"PSP_URL","http://psp")
     monkeypatch.setattr(main,"SUBSCRIPTION_URL","http://subscription")
     notifications=[]
@@ -28,7 +27,7 @@ def api(tmp_path, monkeypatch):
         if url.startswith('http://psp'):
             assert kwargs['headers']['Idempotency-Key'].startswith('payment-')
             return httpx.Response(201,json={'id':'ch_test'},request=httpx.Request('POST',url))
-        assert kwargs['headers']['X-Service-Token']==os.environ['PAYMENT_SUBSCRIPTION_TOKEN']
+        assert kwargs['headers']['X-Service-Token']==os.environ['INTERNAL_SERVICE_TOKEN']
         notifications.append(kwargs['json'])
         return httpx.Response(200,json={'status':'applied'},request=httpx.Request('POST',url))
 
@@ -49,15 +48,15 @@ def payload(plan='one_time',kind='initial',amount=1250):
             'amount':amount,'method':'pix','kind':kind,'plan':plan}
 
 
-def token(name='CHECKOUT_PAYMENT_TOKEN'):
-    return {'X-Service-Token':os.environ[name],'Idempotency-Key':'checkout-test-123'}
+def token():
+    return {'X-Service-Token':os.environ['INTERNAL_SERVICE_TOKEN'],'Idempotency-Key':'checkout-test-123'}
 
 
-def test_payment_requires_scoped_service_credential(api):
+def test_payment_requires_internal_service_credential(api):
     client, engine, _=api
     body=payload()
-    for headers in ({'Idempotency-Key':'checkout-test-123'},{'X-Service-Token':'wrong','Idempotency-Key':'checkout-test-123'},
-                    token('SUBSCRIPTION_PAYMENT_TOKEN')):
+    for headers in ({'Idempotency-Key':'checkout-test-123'},
+                    {'X-Service-Token':'wrong','Idempotency-Key':'checkout-test-123'}):
         assert client.post('/api/payments',json=body,headers=headers).status_code==403
     with Session(engine) as db:assert list(db.scalars(select(main.Payment)))==[]
     assert client.get('/api/payments/1').status_code==403
@@ -77,9 +76,9 @@ def test_idempotent_payment_and_authenticated_webhook(api):
     assert client.get(f'/api/payments/{payment_id}',headers=token()).json()['status']=='pending'
     webhook={'event_id':'evt_test','type':'charge.succeeded','charge_id':'ch_test'}
     assert client.post('/api/payments/webhooks/psp',json=webhook).status_code==403
-    received=client.post('/api/payments/webhooks/psp',json=webhook,headers={'X-Webhook-Token':os.environ['PSP_WEBHOOK_TOKEN']})
+    received=client.post('/api/payments/webhooks/psp',json=webhook,headers={'X-Webhook-Token':os.environ['INTERNAL_SERVICE_TOKEN']})
     assert received.status_code==200
-    assert client.post('/api/payments/webhooks/psp',json=webhook,headers={'X-Webhook-Token':os.environ['PSP_WEBHOOK_TOKEN']}).status_code==200
+    assert client.post('/api/payments/webhooks/psp',json=webhook,headers={'X-Webhook-Token':os.environ['INTERNAL_SERVICE_TOKEN']}).status_code==200
     assert len(notifications)==1 and notifications[0]['user_id']==body['user_id'] and notifications[0]['course_id']==body['course_id']
     assert client.get(f'/api/payments/{payment_id}',headers=token()).json()['status']=='paid'
     with Session(engine) as db:assert len(list(db.scalars(select(main.Payment))))==1
@@ -92,9 +91,8 @@ def test_different_request_same_key_is_rejected(api):
     assert client.post('/api/payments',json={**body,'amount':1337},headers=token()).status_code==409
 
 
-def test_subscription_renewal_only_with_own_credential(api):
+def test_subscription_renewal_checks_plan_and_course_scope(api):
     client, _, _=api
     body=payload(plan='monthly',kind='renewal',amount=4990)
-    assert client.post('/api/payments',json=body,headers=token()).status_code==403
-    assert client.post('/api/payments',json=body,headers=token('SUBSCRIPTION_PAYMENT_TOKEN')).status_code==201
-    assert client.post('/api/payments',json={**body,'course_id':str(uuid4())},headers=token('SUBSCRIPTION_PAYMENT_TOKEN')).status_code==422
+    assert client.post('/api/payments',json=body,headers=token()).status_code==201
+    assert client.post('/api/payments',json={**body,'course_id':str(uuid4())},headers=token()).status_code==422

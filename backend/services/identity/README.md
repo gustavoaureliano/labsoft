@@ -26,8 +26,11 @@ uv sync --locked
 cp .env.example .env
 ```
 
-Defina `DATABASE_URL`, as chaves e o serviço de envio de e-mail em `.env`.
-Gere um par Ed25519 PEM e uma chave Fernet localmente com:
+O `.env.example` contém uma chave JWT **somente para testes locais**. Ajuste
+`DATABASE_URL`; o cadastro funciona sem servidor de e-mail porque
+`AA_EMAIL_FLOWS_ENABLED=false`. Para hospedar o serviço fora do localhost,
+substitua a chave de exemplo e o token interno compartilhado. Gere um novo par
+Ed25519 PEM (e uma chave Fernet, se reativar os fluxos de e-mail) com:
 
 ```bash
 uv run python - <<'PY'
@@ -52,12 +55,12 @@ print("AA_EMAIL_ENCRYPTION_KEY=" + Fernet.generate_key().decode())
 PY
 ```
 
-Copie as três linhas geradas para `.env`. Não compartilhe nem versione esse
-arquivo. As configurações de tokens, emissor, audiência, cookies e origem do
-frontend estão documentadas em `.env.example`. Em produção, use HTTPS e
+Copie as linhas necessárias para `.env`. Não compartilhe nem versione esse
+arquivo de ambiente. As configurações de tokens, emissor, audiência, cookies
+e origem do frontend estão documentadas em `.env.example`. Em produção, use HTTPS e
 configure `AA_COOKIE_SECURE=true`.
 
-Configure **um** provedor de e-mail:
+Somente se ativar `AA_EMAIL_FLOWS_ENABLED=true`, configure **um** provedor de e-mail:
 
 - Brevo: `BREVO_API_KEY` e `BREVO_SENDER_EMAIL` (opcionalmente
   `BREVO_SENDER_NAME`); ou

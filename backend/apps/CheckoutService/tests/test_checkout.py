@@ -21,7 +21,7 @@ def api(monkeypatch, tmp_path):
     monkeypatch.setenv("IDENTITY_URL", "http://identity")
     monkeypatch.setenv("CATALOG_URL", "http://catalog")
     monkeypatch.setenv("FRONTEND_ORIGIN", "http://testserver")
-    monkeypatch.setenv("CHECKOUT_PAYMENT_TOKEN", "checkout-to-payment")
+    monkeypatch.setenv("INTERNAL_SERVICE_TOKEN", "checkout-to-payment")
     monkeypatch.setattr(main, "PAYMENT_URL", "http://payment")
     monkeypatch.setattr(main, "SUBSCRIPTION_URL", "http://subscription")
     users = {"alice": str(uuid4()), "bob": str(uuid4())}

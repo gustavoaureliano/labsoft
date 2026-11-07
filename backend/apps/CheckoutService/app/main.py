@@ -97,7 +97,7 @@ def view(c: Checkout, access_token: str) -> dict:
     if c.payment_id is None:
         return {**base, "status": "processing"}
     try:
-        key = os.getenv("CHECKOUT_PAYMENT_TOKEN", "")
+        key = os.getenv("INTERNAL_SERVICE_TOKEN", "")
         if not key: return {**base, "status": "processing"}
         payment = httpx.get(f"{PAYMENT_URL}/api/payments/{c.payment_id}", timeout=5, headers={"X-Service-Token": key}).json()
         if payment["status"] == "failed":
@@ -140,7 +140,7 @@ def start_checkout(
     different body -> 409. Poll GET /api/checkout/{id} for the outcome."""
     user_id, access = student(request)
     amount = quote(body, access)
-    key = os.getenv("CHECKOUT_PAYMENT_TOKEN", "")
+    key = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if not key:
         raise HTTPException(503, "Pagamento interno não configurado")
     digest = hashlib.sha256(f"{user_id}:{amount}:{_digest(body)}".encode()).hexdigest()

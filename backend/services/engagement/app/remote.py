@@ -84,9 +84,9 @@ class RemoteIntegrations:
         except (httpx.RequestError, ValueError, ValidationError) as exc:
             raise HTTPException(503, "Contrato remoto inválido") from exc
 
-    def write(self, setting, path, token_setting, data):
+    def write(self, setting, path, data):
         base = os.getenv(setting, "").rstrip("/")
-        service_token = os.getenv(token_setting, "")
+        service_token = os.getenv("INTERNAL_SERVICE_TOKEN", "")
         if not base or len(service_token) < 16:
             raise HTTPException(503, "Comando de moderação não configurado")
         try:
@@ -173,27 +173,27 @@ class RemoteIntegrations:
         raise HTTPException(503, "Indicadores ainda não integrados")
 
     def apply_moderation(self, item_type, item_id, decision):
-        if len(os.getenv("ENGAGEMENT_AUDIT_TOKEN", "")) < 16:
+        if len(os.getenv("INTERNAL_SERVICE_TOKEN", "")) < 16:
             raise HTTPException(503, "Auditoria de moderação não configurada")
         try:
             item_id = str(UUID(item_id))
         except ValueError:
             raise HTTPException(404, "Conteúdo não encontrado") from None
         if item_type == "course":
-            path, setting, token = f"/api/courses/{item_id}/moderation", "CATALOG_URL", "ENGAGEMENT_CATALOG_TOKEN"
+            path, setting = f"/api/courses/{item_id}/moderation", "CATALOG_URL"
         elif item_type == "lesson":
-            path, setting, token = f"/api/learning/lessons/{item_id}/moderation", "LEARNING_URL", "ENGAGEMENT_LEARNING_TOKEN"
+            path, setting = f"/api/learning/lessons/{item_id}/moderation", "LEARNING_URL"
         else:
             raise HTTPException(400, "Tipo de moderação inválido")
         expected = {"keep":"visible", "hide":"hidden", "delete":"deleted"}[decision]
-        result = self.write(setting, path, token, {"decision": decision})
+        result = self.write(setting, path, {"decision": decision})
         if not isinstance(result, dict) or result.get("moderation_status") != expected:
             raise HTTPException(503, "Proprietário não confirmou a decisão")
 
     def record_audit(self, admin_id, item_id, item_type, decision, justification, operation_id=None):
         if not operation_id:
             raise HTTPException(503, "Operação de auditoria sem identificador")
-        response = self.write("IDENTITY_URL", "/api/v1/admin/audit/moderation", "ENGAGEMENT_AUDIT_TOKEN",
+        response = self.write("IDENTITY_URL", "/api/v1/admin/audit/moderation",
             {"operation_id": operation_id, "item_type": item_type, "item_id": item_id,
              "decision": decision, "justification": justification})
         if not isinstance(response, dict) or response.get("recorded") is not True or not response.get("audit_id"):

@@ -5,7 +5,7 @@ from app.main import app
 
 def test_admin_hide_keep_and_logical_delete_preserve_lesson(upload_context, monkeypatch):
     client, sessions, _ = upload_context
-    monkeypatch.setenv('ENGAGEMENT_LEARNING_TOKEN','engagement-learning-secret')
+    monkeypatch.setenv('INTERNAL_SERVICE_TOKEN','shared-internal-test-secret')
     course_id='fisica-quantica'
     lesson_id='moderated-lesson'
     with sessions() as session:
@@ -15,7 +15,7 @@ def test_admin_hide_keep_and_logical_delete_preserve_lesson(upload_context, monk
     assert client.put(url,json={'decision':'hide'}).status_code==403
     app.dependency_overrides[get_current_user]=lambda:User('admin-demo','admin','Admin')
     assert client.put(url,json={'decision':'hide'}).status_code==403
-    client.headers['X-Service-Token']='engagement-learning-secret'
+    client.headers['X-Service-Token']='shared-internal-test-secret'
     assert client.put(url,json={'decision':'hide'}).json()['moderation_status']=='hidden'
     app.dependency_overrides[get_current_user]=lambda:DemoIntegrations.users['aluno-demo']
     assert client.get(f'/api/learning/lessons/{lesson_id}/summary').status_code==403

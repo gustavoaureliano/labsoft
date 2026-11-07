@@ -1362,7 +1362,7 @@ def test_invalid_web_logout_clears_stale_cookies(api):
 
 
 def test_admin_moderation_audit_is_owned_and_idempotent(api, monkeypatch):
-    monkeypatch.setenv('ENGAGEMENT_AUDIT_TOKEN','engagement-audit-secret')
+    monkeypatch.setenv('INTERNAL_SERVICE_TOKEN','shared-internal-test-secret')
     admin, _, admin_headers = api.account("admin")
     _, _, student_headers = api.account("student")
     body={"operation_id":str(uuid4()),"item_type":"lesson","item_id":str(uuid4()),
@@ -1371,7 +1371,7 @@ def test_admin_moderation_audit_is_owned_and_idempotent(api, monkeypatch):
     assert api.client.post(url,json=body,headers=student_headers).status_code==403
     assert api.client.post(url,json=body).status_code==401
     assert api.client.post(url,json=body,headers=admin_headers).status_code==403
-    admin_headers={**admin_headers,'X-Service-Token':'engagement-audit-secret'}
+    admin_headers={**admin_headers,'X-Service-Token':'shared-internal-test-secret'}
     first=api.client.post(url,json=body,headers=admin_headers)
     second=api.client.post(url,json=body,headers=admin_headers)
     assert first.status_code==second.status_code==201

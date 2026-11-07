@@ -150,7 +150,7 @@ def test_signed_url_does_not_bypass_unpublication(integrated):
 
 def test_admin_moderation_hides_course_without_deleting_records(integrated, db_session, monkeypatch):
     client, uid, state = integrated
-    monkeypatch.setenv('ENGAGEMENT_CATALOG_TOKEN','engagement-catalog-secret')
+    monkeypatch.setenv('INTERNAL_SERVICE_TOKEN','shared-internal-test-secret')
     course = create(client)
     state['lessons'] = [{"id":str(uuid4()), "title":"Aula", "position":1,"duration_seconds":12}]
     client.post(f"/api/courses/{course['id']}/publication",json={"action":"publish"}).raise_for_status()
@@ -158,7 +158,7 @@ def test_admin_moderation_hides_course_without_deleting_records(integrated, db_s
     assert client.put(url,json={"decision":"hide"}).status_code==403
     state['role']='admin'
     assert client.put(url,json={"decision":"hide"}).status_code==403
-    client.headers['X-Service-Token']='engagement-catalog-secret'
+    client.headers['X-Service-Token']='shared-internal-test-secret'
     hidden=client.put(url,json={"decision":"hide"})
     assert hidden.status_code==200 and hidden.json()['moderation_status']=='hidden'
     assert client.put(url,json={"decision":"hide"}).status_code==200

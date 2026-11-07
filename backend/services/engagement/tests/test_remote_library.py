@@ -23,8 +23,7 @@ def integrated(test_context, monkeypatch):
                      "LEARNING_URL": "http://learning", "ACCESS_URL": "http://access",
                      "FRONTEND_ORIGIN": "http://testserver"}.items():
         monkeypatch.setenv(key, url)
-    for key in ['ENGAGEMENT_CATALOG_TOKEN','ENGAGEMENT_LEARNING_TOKEN','ENGAGEMENT_AUDIT_TOKEN']:
-        monkeypatch.setenv(key,key+'-test-secret')
+    monkeypatch.setenv('INTERNAL_SERVICE_TOKEN','shared-internal-test-secret')
     original = httpx.Client
 
     def respond(req):
@@ -39,14 +38,14 @@ def integrated(test_context, monkeypatch):
                 return httpx.Response(200, json={"id": user_id, "role": "admin" if actor == 3 else "teacher" if actor == 2 else "student"})
             if req.method == 'POST' and req.url.path.endswith('/admin/audit/moderation'):
                 if state['audit_down']:return httpx.Response(503)
-                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_AUDIT_TOKEN']
+                assert req.headers['x-service-token']==os.environ['INTERNAL_SERVICE_TOKEN']
                 body=json.loads(req.content)
                 state['audit'].setdefault(body['operation_id'],body)
                 return httpx.Response(201,json={'recorded':True,'audit_id':body['operation_id']})
             return httpx.Response(200, json={"user_id": user_id, "display_name": f"Aluno {actor}"})
         if req.url.host == "catalog":
             if req.method == 'PUT':
-                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_CATALOG_TOKEN']
+                assert req.headers['x-service-token']==os.environ['INTERNAL_SERVICE_TOKEN']
                 state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
                 return httpx.Response(200,json={'moderation_status':state['moderation_status']})
             return httpx.Response(200, json={"id": course, "teacher_id": ids[2],
@@ -54,7 +53,7 @@ def integrated(test_context, monkeypatch):
                                               "moderation_status":state['moderation_status']})
         if req.url.host == "learning":
             if req.method == 'PUT':
-                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_LEARNING_TOKEN']
+                assert req.headers['x-service-token']==os.environ['INTERNAL_SERVICE_TOKEN']
                 state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
                 return httpx.Response(200,json={'moderation_status':state['moderation_status']})
             if req.url.path.endswith("/summary"):

@@ -95,7 +95,7 @@ def submit_to_psp(db: Session, p: Payment) -> None:
 def notify_subscription(db: Session, p: Payment) -> None:
     """Tell Subscription the outcome. Receiver is idempotent by payment_id; retried by reconcile."""
     try:
-        key = os.environ["PAYMENT_SUBSCRIPTION_TOKEN"]
+        key = os.environ["INTERNAL_SERVICE_TOKEN"]
         r = httpx.post(f"{SUBSCRIPTION_URL}/api/subscriptions/events/payment", timeout=5,
             headers={"X-Service-Token": key}, json={
             "payment_id": p.id, "user_id": str(p.user_id),
@@ -154,9 +154,8 @@ async def reconcile_loop() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
-    for key in ("CHECKOUT_PAYMENT_TOKEN", "SUBSCRIPTION_PAYMENT_TOKEN", "PAYMENT_SUBSCRIPTION_TOKEN", "PSP_WEBHOOK_TOKEN"):
-        if len(os.getenv(key, "")) < 16:
-            raise RuntimeError(f"Configure {key} for the payment service")
+    if len(os.getenv("INTERNAL_SERVICE_TOKEN", "")) < 16:
+        raise RuntimeError("Configure INTERNAL_SERVICE_TOKEN for the payment service")
     task = asyncio.create_task(reconcile_loop())
     yield
     task.cancel()
@@ -173,8 +172,8 @@ async def private_responses(request: Request, call_next):
     return response
 
 
-def require_service_token(value: str | None, setting: str):
-    expected = os.getenv(setting, "")
+def require_service_token(value: str | None):
+    expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if len(expected) < 16 or not value or not secrets.compare_digest(value, expected):
         raise HTTPException(403, "Serviço não autorizado")
 
@@ -211,8 +210,7 @@ def create_payment(
 ) -> dict:
     """Creates a `pending` payment; the outcome arrives later (webhook or reconcile).
     Same Idempotency-Key + same body returns the same payment; different body -> 409."""
-    setting = "SUBSCRIPTION_PAYMENT_TOKEN" if body.kind == "renewal" else "CHECKOUT_PAYMENT_TOKEN"
-    require_service_token(service_token, setting)
+    require_service_token(service_token)
     if (body.plan == "one_time" and body.course_id is None) or (body.plan == "monthly" and body.course_id is not None) or (body.kind == "renewal" and body.plan != "monthly"):
         raise HTTPException(422, "Escopo de pagamento inválido")
     digest = _digest(body)
@@ -246,7 +244,7 @@ def create_payment(
 @app.get("/api/payments/{payment_id}")
 def get_payment(payment_id: int, service_token: str | None = Header(default=None, alias="X-Service-Token"),
                 db: Session = Depends(get_session)) -> dict:
-    require_service_token(service_token, "CHECKOUT_PAYMENT_TOKEN")
+    require_service_token(service_token)
     p = db.get(Payment, payment_id)
     if p is None:
         raise HTTPException(404, "payment not found")
@@ -262,7 +260,7 @@ class PspEvent(BaseModel):
 @app.post("/api/payments/webhooks/psp")
 def psp_webhook(event: PspEvent, service_token: str | None = Header(default=None, alias="X-Webhook-Token"),
                 db: Session = Depends(get_session)) -> dict:
-    require_service_token(service_token, "PSP_WEBHOOK_TOKEN")
+    require_service_token(service_token)
     status = {"charge.succeeded": "paid", "charge.failed": "failed"}.get(event.type)
     if status is None:
         raise HTTPException(400, "unknown event type")

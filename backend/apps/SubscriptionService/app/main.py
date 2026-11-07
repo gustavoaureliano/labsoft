@@ -135,7 +135,7 @@ def payment_event(ev: PaymentEvent,
                   service_token: str | None = Header(default=None, alias="X-Service-Token"),
                   db: Session = Depends(get_session)) -> dict:
     """Payment outcome -> subscription state. Idempotent by payment_id."""
-    expected = os.getenv("PAYMENT_SUBSCRIPTION_TOKEN", "")
+    expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
         raise HTTPException(403, "Serviço não autorizado")
     if (ev.plan == "monthly" and ev.course_id is not None) or (ev.plan == "one_time" and ev.course_id is None):
@@ -182,7 +182,7 @@ def run_billing(as_of: datetime | None = None,
     Run it from cron. Safe to run repeatedly: the idempotency key is derived from the billing cycle
     and attempt, so Payment returns the existing charge instead of creating a second one.
     `as_of` lets you simulate a later date."""
-    expected = os.getenv("BILLING_JOB_TOKEN", "")
+    expected = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
         raise HTTPException(403, "Agendamento não autorizado")
     now = as_of.replace(tzinfo=None) if as_of else utcnow()
@@ -190,7 +190,7 @@ def run_billing(as_of: datetime | None = None,
         CompletePlan.status.in_(["active", "past_due"]),
         CompletePlan.next_billing_at <= now)).all()
     charged, errors = [], 0
-    payment_token = os.getenv("SUBSCRIPTION_PAYMENT_TOKEN", "")
+    payment_token = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     if len(payment_token) < 16:
         raise HTTPException(503, "Pagamento de renovação não configurado")
     for s in due:
