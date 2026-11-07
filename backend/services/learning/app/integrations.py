@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from typing import Literal, Protocol
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, Request
+from fastapi import Header, HTTPException, Request
+
+from app.identity import resolve_identity
 
 
 @dataclass(frozen=True)
@@ -119,9 +121,11 @@ def get_integrations() -> Integrations:
 
 def get_current_user(
     request: Request,
-    integrations: Integrations = Depends(get_integrations),
     x_demo_user: Annotated[str | None, Header(alias="X-Demo-User")] = None,
 ) -> User:
+    if os.environ.get("IDENTITY_URL") or "authorization" in request.headers or request.cookies.get("aprovaai_access"):
+        return User(*resolve_identity(request))
+    integrations = get_integrations()
     # Explicitly insecure development identity; never enabled implicitly.
     identity = x_demo_user or request.headers.get("X-Demo-User") or request.cookies.get("aprovaai_demo_user")
     user = integrations.user(identity or "")

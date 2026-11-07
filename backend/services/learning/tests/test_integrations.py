@@ -16,17 +16,19 @@ def test_development_mode_is_explicit(monkeypatch):
     assert isinstance(get_integrations(), DemoIntegrations)
 
 
-def test_identity_and_access_contracts():
+def test_identity_and_access_contracts(monkeypatch):
+    monkeypatch.setenv("LEARNING_DEMO_MODE", "true")
+    monkeypatch.delenv("IDENTITY_URL", raising=False)
     integrations = DemoIntegrations()
     request = Request({"type": "http", "headers": [(b"x-demo-user", b"aluno-demo")]})
-    assert get_current_user(request, integrations).id == "aluno-demo"
+    assert get_current_user(request).id == "aluno-demo"
     assert integrations.user("missing") is None
     assert integrations.course("missing") is None
     assert integrations.has_access("aluno-demo", "fisica-quantica")
     assert not integrations.has_access("aluno-demo-2", "fisica-quantica")
     assert integrations.course("fisica-quantica").owner_id != "professor-demo-2"
     with pytest.raises(HTTPException) as error:
-        get_current_user(Request({"type": "http", "headers": []}), integrations)
+        get_current_user(Request({"type": "http", "headers": []}))
     assert error.value.status_code == 401
 
 

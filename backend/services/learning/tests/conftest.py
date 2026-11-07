@@ -17,6 +17,8 @@ from app.media.inspection import VideoInfo
 
 @pytest.fixture
 def upload_context(tmp_path, monkeypatch):
+    monkeypatch.setenv("LEARNING_DEMO_MODE", "true")
+    monkeypatch.delenv("IDENTITY_URL", raising=False)
     engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'test.db'}")
     @event.listens_for(engine, "connect")
     def enable_foreign_keys(connection, _):

@@ -8,7 +8,7 @@ Protótipo inicial da interface da AprovaAí.
 - `backend/services/learning/`: API de vídeo e aprendizagem em Python com FastAPI. Veja as [instruções de execução](backend/services/learning/README.md).
 - `backend/services/identity/`: implementação de identidade de Renan, preservada para integração.
 
-Cada backend usa seu próprio diretório de trabalho e ambiente. Identidade e aprendizagem ainda precisam ser conectadas; não copie banco, `.env` ou mídia de outro ambiente automaticamente.
+Cada backend usa seu próprio diretório de trabalho e ambiente. Não copie banco, `.env` ou mídia de outro ambiente automaticamente.
 
 ## Requisitos
 
@@ -17,6 +17,10 @@ Cada backend usa seu próprio diretório de trabalho e ambiente. Identidade e ap
 Em um banco novo e exclusivo de integração, um administrador executa `backend/infrastructure/learning.sql` com `psql`, fornecendo `LEARNING_MIGRATION_PASSWORD` e `LEARNING_RUNTIME_PASSWORD` pelo ambiente. Esse provisionamento inicial cria schema e permissões; não roda no startup.
 
 Na pasta do serviço, aplique `uv run --locked alembic upgrade head` com `DATABASE_URL` da role `aa_learning_migration`. Inicie a aplicação com a role `aa_learning_runtime`. As tabelas continuam sendo gerenciadas pelo Alembic; credenciais ficam fora do Git.
+
+Para identidade, execute `backend/infrastructure/identity.sql` com `IDENTITY_MIGRATION_PASSWORD` e `IDENTITY_RUNTIME_PASSWORD`; use as roles correspondentes `aa_identity_migration` e `aa_identity_runtime` na pasta `backend/services/identity/`.
+
+Para autenticação HTTP em aprendizagem, configure `IDENTITY_URL` e `FRONTEND_ORIGIN`; em identidade, use a mesma origem em `AA_FRONTEND_ORIGIN`. Login/refresh emitem o access cookie HttpOnly. Bearer explícito prevalece sobre cookie. Configurar identidade real não configura catálogo ou matrícula automaticamente.
 
 ### Frontend
 
@@ -74,4 +78,4 @@ O Chromium executa sem janela por padrão, inclusive nos modos sequencial e com 
 
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
-Vídeo e aprendizagem têm backend real: aulas, upload/inspeção de vídeo e thumbnail, reprodução, progresso e certificados. Aprendizagem ainda usa adaptadores demonstrativos para identidade, catálogo e matrícula; conectar o serviço de identidade incorporado é o próximo incremento. Biblioteca/interações e pagamento também dependem de integração posterior.
+Vídeo e aprendizagem têm backend real: aulas, upload/inspeção de vídeo e thumbnail, reprodução, progresso e certificados. A autenticação pode consultar identidade por HTTP; catálogo, matrícula, biblioteca/interações e pagamento ainda dependem das próximas integrações. O cliente de sessão do frontend também precisa das adaptações finais para esse fluxo.
