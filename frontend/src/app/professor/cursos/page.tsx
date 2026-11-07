@@ -15,7 +15,9 @@ export default function GestaoCursos() {
   const [demoCourses] = useDemoStorage(teacherCoursesKey, initialTeacherCourses);
   const backend = useApi<Course[]>("/api/learning/courses");
   const courses = isApiConfigured ? (backend.data ?? []).map(course => ({id: course.id, title: course.title,
-    image: course.image, status: course.published ? "Publicado" : "Rascunho", students: "Matrículas em integração", lessons: course.lessons})) : demoCourses;
+    image: course.image, status: course.moderation_status === "deleted" ? "Excluído pela moderação"
+      : course.moderation_status === "hidden" ? "Oculto pela moderação" : course.published ? "Publicado" : "Rascunho",
+    students: "Matrículas em integração", lessons: course.lessons})) : demoCourses;
   const [sort, setSort] = useState("recentes");
   const orderedCourses = sort === "titulo" ? [...courses].sort((a, b) => a.title.localeCompare(b.title, "pt-BR")) : courses;
 

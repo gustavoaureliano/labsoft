@@ -5,12 +5,14 @@ import { ApiError, request } from "@/lib/apiClient";
 export type Lesson = {
   id: string; course_id: string; title: string; description: string; position: number;
   media_id: string | null; thumbnail_id?: string | null; thumbnail_url?: string;
+  moderation_status?: "visible" | "hidden" | "deleted";
   duration_seconds?: number | null; playable?: boolean; position_seconds?: number; completed?: boolean;
 };
 export type Playback = Lesson & { content_url: string; media_id: string; position_seconds: number; completed: boolean };
 export type Course = {
   id: string; title: string; owner_id: string; image: string; teacher: string;
   published?: boolean;
+  moderation_status?: "visible" | "hidden" | "deleted";
   access_status: "active" | "expired" | "blocked";
   lessons: Lesson[]; sections: {title: string; lesson_ids: string[]}[];
   progress: number; completed: boolean; total_lessons: number; completed_lessons: number; continue_lesson: Lesson | null;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { teacherApplicationKey, type TeacherApplication } from "@/data/demoAccount";
 import { apiFetch, type ApiModerationQueueItem } from "@/lib/engagementApi";
+import { isApiConfigured } from "@/lib/apiClient";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { AdminShell } from "./AdminShell";
 import styles from "./ModerationDashboard.module.css";
@@ -131,6 +132,7 @@ export function ModerationDashboard() {
         }),
       });
       setDecidedItems((prev) => ({ ...prev, [`${itemType}:${itemId}`]: decision }));
+      setApiQueue((current) => current.filter((item) => item.item_type !== itemType || item.item_id !== itemId));
     } catch (err) {
       setErrorNotice(
         err instanceof Error ? `Erro ao aplicar decisão: ${err.message}` : "Erro ao aplicar decisão."
@@ -151,38 +153,38 @@ export function ModerationDashboard() {
             <h1>Moderação e qualidade</h1>
             <p>Analise cadastros, comentários e conteúdos sinalizados pela comunidade.</p>
           </div>
-          <span className={styles.demoBadge}>Fila do banco de dados</span>
+          <span className={styles.demoBadge}>{isApiConfigured ? "Fila real de moderação" : "Demonstração"}</span>
         </header>
 
         {errorNotice && <p role="status">{errorNotice}</p>}
 
-        {approvedTeacher ? (
+        {!isApiConfigured && approvedTeacher ? (
           <div className={styles.successNotice} role="status">
             <strong>{approvedTeacher}</strong> foi aprovado para publicar cursos.
           </div>
         ) : null}
 
         <section className={styles.metrics} aria-label="Resumo das filas de moderação">
-          <article className={styles.metricCard}>
+          {!isApiConfigured && <article className={styles.metricCard}>
             <span>Professores pendentes</span>
             <strong>{teachers.length + (pendingApplication ? 1 : 0)}</strong>
             <p>Cadastros aguardando aprovação</p>
-          </article>
+          </article>}
           <article className={styles.metricCard}>
-            <span>Comentários bloqueados</span>
-            <strong>{blockedComments.length + apiCommentItems.length}</strong>
-            <p>Mensagens retidas pelos filtros</p>
+            <span>{isApiConfigured ? "Comentários pendentes" : "Comentários bloqueados"}</span>
+            <strong>{(isApiConfigured ? 0 : blockedComments.length) + apiCommentItems.length}</strong>
+            <p>{isApiConfigured ? "Denúncias aguardando revisão" : "Mensagens retidas pelos filtros"}</p>
           </article>
           <article className={styles.metricCard}>
             <span>Conteúdos reportados</span>
             <strong>
-              {reportedContent.length + apiContentItems.filter((i) => !decidedItems[`${i.item_type}:${i.item_id}`]).length}
+              {(isApiConfigured ? 0 : reportedContent.length) + apiContentItems.length}
             </strong>
             <p>Aguardando análise da equipe</p>
           </article>
         </section>
 
-        <section className={styles.panel} aria-labelledby="teachers-title">
+        {!isApiConfigured && <section className={styles.panel} aria-labelledby="teachers-title">
           <div className={styles.panelHeader}>
             <div>
               <span className={styles.eyebrow}>Fila de aprovação</span>
@@ -223,17 +225,19 @@ export function ModerationDashboard() {
               <button className={styles.approveButton} type="button" onClick={() => reviewApplication("rejected")}>Recusar</button>
             </span>
           </div>}
-        </section>
+        </section>}
+
+        {isApiConfigured && <p>Solicitações de professores ainda não têm fila integrada. Nenhuma aprovação demonstrativa altera contas reais.</p>}
 
         <div className={styles.reviewGrid}>
           <section className={styles.panel} aria-labelledby="comments-title">
             <div className={styles.panelHeader}>
               <div>
                 <span className={styles.eyebrow}>Comunidade</span>
-                <h2 id="comments-title">Comentários bloqueados</h2>
-                <p>Mensagens retidas para revisão manual.</p>
+                <h2 id="comments-title">{isApiConfigured ? "Comentários denunciados" : "Comentários bloqueados"}</h2>
+                <p>{isApiConfigured ? "Denúncias aguardando revisão manual." : "Mensagens retidas para revisão manual."}</p>
               </div>
-              <span className={styles.countBadge}>{blockedComments.length + apiCommentItems.length}</span>
+              <span className={styles.countBadge}>{(isApiConfigured ? 0 : blockedComments.length) + apiCommentItems.length}</span>
             </div>
             <ul className={styles.reviewList}>
               {apiCommentItems.map((item) => {
@@ -242,7 +246,7 @@ export function ModerationDashboard() {
                   <li className={styles.reviewItem} key={item.queue_id}>
                     <div className={styles.reviewMeta}>
                       <strong>{item.author_or_owner}</strong>
-                      <small>Retido no banco</small>
+                      <small>{isApiConfigured ? "Denúncia pendente" : "Retido no banco"}</small>
                     </div>
                     <p>{item.title_or_excerpt}</p>
                     <span className={styles.reasonBadge}>{item.reasons[0] ?? "Filtro automático"}</span>
@@ -257,7 +261,7 @@ export function ModerationDashboard() {
                   </li>
                 );
               })}
-              {blockedComments.map((comment) => (
+              {!isApiConfigured && blockedComments.map((comment) => (
                 <li className={styles.reviewItem} key={`${comment.author}-${comment.reason}`}>
                   <div className={styles.reviewMeta}>
                     <strong>{comment.author}</strong>
@@ -278,7 +282,7 @@ export function ModerationDashboard() {
                 <p>Materiais à espera de análise.</p>
               </div>
               <span className={styles.countBadge}>
-                {reportedContent.length + apiContentItems.filter((i) => !decidedItems[`${i.item_type}:${i.item_id}`]).length}
+                {(isApiConfigured ? 0 : reportedContent.length) + apiContentItems.length}
               </span>
             </div>
             <ul className={styles.reviewList}>
@@ -303,7 +307,7 @@ export function ModerationDashboard() {
                   </li>
                 );
               })}
-              {reportedContent.map((content) => (
+              {!isApiConfigured && reportedContent.map((content) => (
                 <li className={styles.reviewItem} key={content.title}>
                   <div className={styles.reviewMeta}>
                     <strong>{content.title}</strong>
