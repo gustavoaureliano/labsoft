@@ -5,9 +5,12 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
+from typing import Literal
+from uuid import UUID
+import secrets
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Response, Request
 from pydantic import BaseModel
 from sqlalchemy import UniqueConstraint, func, select
 from sqlalchemy.exc import IntegrityError
@@ -35,8 +38,8 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     idempotency_key: Mapped[str] = mapped_column(unique=True)
     request_hash: Mapped[str]
-    user_id: Mapped[int]
-    item_id: Mapped[int]
+    user_id: Mapped[UUID]
+    item_id: Mapped[UUID | None]
     amount: Mapped[int]  # cents
     method: Mapped[str]
     kind: Mapped[str]  # initial | renewal
@@ -48,8 +51,10 @@ class Payment(Base):
     settled_at: Mapped[datetime | None]
 
     def view(self) -> dict:
-        return {c: getattr(self, c) for c in (
-            "id", "user_id", "item_id", "amount", "method", "kind", "plan", "status", "psp_charge_id")}
+        return {"id": self.id, "user_id": str(self.user_id),
+                "course_id": str(self.item_id) if self.item_id else None,
+                "amount": self.amount, "method": self.method, "kind": self.kind,
+                "plan": self.plan, "status": self.status, "psp_charge_id": self.psp_charge_id}
 
 
 class Payout(Base):
@@ -90,8 +95,11 @@ def submit_to_psp(db: Session, p: Payment) -> None:
 def notify_subscription(db: Session, p: Payment) -> None:
     """Tell Subscription the outcome. Receiver is idempotent by payment_id; retried by reconcile."""
     try:
-        r = httpx.post(f"{SUBSCRIPTION_URL}/api/subscriptions/events/payment", timeout=5, json={
-            "payment_id": p.id, "user_id": p.user_id, "item_id": p.item_id, "amount": p.amount,
+        key = os.environ["PAYMENT_SUBSCRIPTION_TOKEN"]
+        r = httpx.post(f"{SUBSCRIPTION_URL}/api/subscriptions/events/payment", timeout=5,
+            headers={"X-Service-Token": key}, json={
+            "payment_id": p.id, "user_id": str(p.user_id),
+            "course_id": str(p.item_id) if p.item_id else None, "amount": p.amount,
             "method": p.method, "kind": p.kind, "plan": p.plan, "status": p.status})
         r.raise_for_status()
         p.notified = True
@@ -146,6 +154,9 @@ async def reconcile_loop() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    for key in ("CHECKOUT_PAYMENT_TOKEN", "SUBSCRIPTION_PAYMENT_TOKEN", "PAYMENT_SUBSCRIPTION_TOKEN", "PSP_WEBHOOK_TOKEN"):
+        if len(os.getenv(key, "")) < 16:
+            raise RuntimeError(f"Configure {key} for the payment service")
     task = asyncio.create_task(reconcile_loop())
     yield
     task.cancel()
@@ -154,17 +165,31 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Servico de Pagamentos", lifespan=lifespan)
 
 
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.setdefault("Vary", "Cookie, Authorization")
+    return response
+
+
+def require_service_token(value: str | None, setting: str):
+    expected = os.getenv(setting, "")
+    if len(expected) < 16 or not value or not secrets.compare_digest(value, expected):
+        raise HTTPException(403, "Serviço não autorizado")
+
+
 class PaymentIn(BaseModel):
-    user_id: int
-    item_id: int
+    user_id: UUID
+    course_id: UUID | None = None
     amount: int  # cents
-    method: str
-    kind: str = "initial"  # initial | renewal
-    plan: str = "one_time"  # one_time | monthly
+    method: Literal["pix", "credito", "boleto"]
+    kind: Literal["initial", "renewal"] = "initial"
+    plan: Literal["one_time", "monthly"] = "one_time"
 
 
 def _digest(body: BaseModel) -> str:
-    return hashlib.sha256(json.dumps(body.model_dump(), sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(body.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
 
 
 @app.get("/api/health")
@@ -180,10 +205,16 @@ def methods() -> list[str]:
 @app.post("/api/payments", status_code=201)
 def create_payment(
     body: PaymentIn, response: Response,
-    idempotency_key: str = Header(alias="Idempotency-Key"), db: Session = Depends(get_session),
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    service_token: str | None = Header(default=None, alias="X-Service-Token"),
+    db: Session = Depends(get_session),
 ) -> dict:
     """Creates a `pending` payment; the outcome arrives later (webhook or reconcile).
     Same Idempotency-Key + same body returns the same payment; different body -> 409."""
+    setting = "SUBSCRIPTION_PAYMENT_TOKEN" if body.kind == "renewal" else "CHECKOUT_PAYMENT_TOKEN"
+    require_service_token(service_token, setting)
+    if (body.plan == "one_time" and body.course_id is None) or (body.plan == "monthly" and body.course_id is not None) or (body.kind == "renewal" and body.plan != "monthly"):
+        raise HTTPException(422, "Escopo de pagamento inválido")
     digest = _digest(body)
     p = db.scalar(select(Payment).where(Payment.idempotency_key == idempotency_key))
     if p is None:
@@ -192,7 +223,8 @@ def create_payment(
         if body.amount <= 0:
             raise HTTPException(400, "amount must be positive")
         p = Payment(idempotency_key=idempotency_key, request_hash=digest, status="pending",
-                    **body.model_dump())
+                    user_id=body.user_id, item_id=body.course_id, amount=body.amount,
+                    method=body.method, kind=body.kind, plan=body.plan)
         db.add(p)
         try:
             db.commit()
@@ -212,7 +244,9 @@ def create_payment(
 
 
 @app.get("/api/payments/{payment_id}")
-def get_payment(payment_id: int, db: Session = Depends(get_session)) -> dict:
+def get_payment(payment_id: int, service_token: str | None = Header(default=None, alias="X-Service-Token"),
+                db: Session = Depends(get_session)) -> dict:
+    require_service_token(service_token, "CHECKOUT_PAYMENT_TOKEN")
     p = db.get(Payment, payment_id)
     if p is None:
         raise HTTPException(404, "payment not found")
@@ -226,7 +260,9 @@ class PspEvent(BaseModel):
 
 
 @app.post("/api/payments/webhooks/psp")
-def psp_webhook(event: PspEvent, db: Session = Depends(get_session)) -> dict:
+def psp_webhook(event: PspEvent, service_token: str | None = Header(default=None, alias="X-Webhook-Token"),
+                db: Session = Depends(get_session)) -> dict:
+    require_service_token(service_token, "PSP_WEBHOOK_TOKEN")
     status = {"charge.succeeded": "paid", "charge.failed": "failed"}.get(event.type)
     if status is None:
         raise HTTPException(400, "unknown event type")
@@ -237,7 +273,6 @@ def psp_webhook(event: PspEvent, db: Session = Depends(get_session)) -> dict:
     return {"received": True}
 
 
-@app.post("/api/payments/reconcile")
 def reconcile_now(min_age: float = 0, db: Session = Depends(get_session)) -> dict:
     return reconcile(db, min_age)
 
@@ -257,7 +292,6 @@ def _settle_payouts(db: Session, payouts: list[Payout]) -> None:
         db.commit()
 
 
-@app.post("/api/payouts/run")
 def run_payouts(period: str, db: Session = Depends(get_session)) -> dict:
     """Pay teachers for a period (YYYY-MM): TEACHER_SHARE of the revenue paid in that period,
     split across items by watch time (Metering); each item's share goes to its owner.
@@ -297,6 +331,5 @@ def run_payouts(period: str, db: Session = Depends(get_session)) -> dict:
             "payouts": [p.view() for p in payouts]}
 
 
-@app.get("/api/payouts")
 def list_payouts(period: str, db: Session = Depends(get_session)) -> list[dict]:
     return [p.view() for p in db.scalars(select(Payout).where(Payout.period == period))]

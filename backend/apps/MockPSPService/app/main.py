@@ -76,7 +76,8 @@ async def _deliver_webhook(c: dict) -> None:
         delivered = False
         for _ in range(5):  # retry until the receiver answers 2xx
             try:
-                if (await client.post(c["webhook_url"], json=payload)).status_code < 300:
+                if (await client.post(c["webhook_url"], json=payload,
+                    headers={"X-Webhook-Token": os.environ.get("PSP_WEBHOOK_TOKEN", "")})).status_code < 300:
                     delivered = True
                     break
             except httpx.HTTPError:
@@ -84,7 +85,8 @@ async def _deliver_webhook(c: dict) -> None:
             await asyncio.sleep(1)
         if delivered:  # at-least-once: send a duplicate
             try:
-                await client.post(c["webhook_url"], json=payload)
+                await client.post(c["webhook_url"], json=payload,
+                    headers={"X-Webhook-Token": os.environ.get("PSP_WEBHOOK_TOKEN", "")})
             except httpx.HTTPError:
                 pass
 
