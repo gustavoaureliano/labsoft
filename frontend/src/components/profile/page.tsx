@@ -7,20 +7,36 @@ import { Icon } from "./Icons";
 import { initialProfile, type Profile } from "../../data/profile";
 import { formatPrice } from "../../data/catalog";
 import { useAccess } from "@/lib/api/commerce";
+import { getCurrentUserFromApi, isApiConfigured, request } from "@/lib/apiClient";
 import styles from "./page.module.css";
 
 const storageKey = "aprovaai-profile-demo";
+type ApiProfile = {display_name: string; preferences: Record<string, string | number | boolean | null>; avatar_url: string | null};
 
 export function ProfilePage() {
-  const [form, setForm] = useState<Profile>(initialProfile);
-  const [savedName, setSavedName] = useState(initialProfile.nickname);
+  const [form, setForm] = useState<Profile>(isApiConfigured ? {nickname:"",email:"",description:""} : initialProfile);
+  const [savedName, setSavedName] = useState(isApiConfigured ? "Carregando perfil" : initialProfile.nickname);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [access, , accessReady, accessError] = useAccess();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [preferences, setPreferences] = useState<ApiProfile["preferences"]>({});
   const currentPlan = access.subscription;
 
   useEffect(() => {
+    if (isApiConfigured) {
+      let active = true;
+      Promise.all([getCurrentUserFromApi(), request<ApiProfile>("/api/v1/profiles/me")]).then(([user, profile]) => {
+        if (!active) return;
+        startTransition(() => {
+          setForm({nickname: profile.display_name, email: user.email,
+            description: typeof profile.preferences.description === "string" ? profile.preferences.description : ""});
+          setPreferences(profile.preferences);
+          setSavedName(profile.display_name);
+        });
+      }).catch(error => { if (active) setNotice(`Não foi possível carregar o perfil: ${(error as Error).message}`); });
+      return () => { active = false; };
+    }
     try {
       const saved = window.localStorage.getItem(storageKey);
       if (saved) {
@@ -50,8 +66,18 @@ export function ProfilePage() {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const save = (event: FormEvent<HTMLFormElement>) => {
+  const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isApiConfigured) {
+      try {
+        const saved = await request<ApiProfile>("/api/v1/profiles/me", {method:"PATCH",
+          body: JSON.stringify({display_name:form.nickname, preferences:{...preferences, description:form.description}})});
+        setSavedName(saved.display_name);
+        setPreferences(saved.preferences);
+        setNotice("Perfil salvo na plataforma.");
+      } catch (error) { setNotice(`Não foi possível salvar o perfil: ${(error as Error).message}`); }
+      return;
+    }
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(form));
       setSavedName(form.nickname);
@@ -83,7 +109,7 @@ export function ProfilePage() {
       <div className={styles.topGrid}>
         <section className={`${styles.card} ${styles.avatarCard}`} aria-labelledby="avatar-title">
           <div className={styles.avatarVisual}>
-            <button type="button" className={styles.avatarButton} onClick={() => fileInput.current?.click()} aria-label="Alterar avatar">
+            <button type="button" className={styles.avatarButton} disabled={isApiConfigured} onClick={() => fileInput.current?.click()} aria-label="Alterar avatar">
               <Avatar size="large" image={avatar} />
             </button>
           </div>
@@ -91,7 +117,7 @@ export function ProfilePage() {
             <span className={styles.eyebrow}>Foto do perfil</span>
             <h2 id="avatar-title">{savedName}</h2>
             <p>Estudante</p>
-            <button type="button" className={styles.secondaryButton} onClick={() => fileInput.current?.click()}>Alterar foto</button>
+            {isApiConfigured ? <p>Alteração de foto ainda não disponível.</p> : <button type="button" className={styles.secondaryButton} onClick={() => fileInput.current?.click()}>Alterar foto</button>}
           </div>
           <input ref={fileInput} type="file" accept="image/*" className={styles.visuallyHidden} onChange={chooseAvatar} aria-label="Selecionar imagem do avatar" />
         </section>
@@ -103,12 +129,12 @@ export function ProfilePage() {
               <h2 id="personal-title">Dados pessoais</h2>
             </div>
           </div>
-          <form onSubmit={save} className={styles.form}>
+          <form method="post" onSubmit={event => void save(event)} className={styles.form}>
             <label htmlFor="nickname">Apelido</label>
             <input id="nickname" name="nickname" value={form.nickname} onChange={update("nickname")} required maxLength={60} />
 
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" value={form.email} onChange={update("email")} required />
+            <input id="email" name="email" type="email" value={form.email} onChange={update("email")} readOnly={isApiConfigured} required />
 
             <label htmlFor="password">Senha</label>
             <div className={styles.passwordRow}>
@@ -125,6 +151,12 @@ export function ProfilePage() {
       </div>
 
       <div className={styles.bottomGrid}>
+        {isApiConfigured ? <section className={`${styles.card} ${styles.planCard}`}>
+          <h2>Acessos da conta</h2>
+          {accessError ? <p role="alert">{accessError}</p> : !accessReady ? <p>Consultando acessos...</p>
+            : <p>{access.courseIds.length} {access.courseIds.length === 1 ? "curso disponível" : "cursos disponíveis"}.</p>}
+          <Link className={styles.secondaryButton} href="/meus-cursos">Ver meus cursos</Link>
+        </section> : <>
         <section className={`${styles.card} ${styles.paymentCard}`} aria-labelledby="payment-title">
           <div className={styles.sectionHeading}>
             <div>
@@ -151,6 +183,7 @@ export function ProfilePage() {
           </ul>
           <Link className={styles.secondaryButton} href="/planos">Ver outros planos</Link>
         </section>
+        </>}
       </div>
       {notice && <div className={styles.notice} role="status">{notice}</div>}
     </div>
