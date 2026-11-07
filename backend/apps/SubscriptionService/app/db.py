@@ -1,14 +1,13 @@
 """One shared Postgres instance, one schema per service (simulates a database per service).
 Falls back to SQLite for local runs without Postgres."""
 import os
-import time
 from datetime import datetime, timezone
 
 from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session
 
 SCHEMA = "subscription"
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 engine = create_engine(DATABASE_URL)
 IS_SQLITE = engine.dialect.name == "sqlite"
@@ -25,18 +24,11 @@ class Base(DeclarativeBase):
     metadata = MetaData(schema=SCHEMA)
 
 
-def init_db(retries: int = 30) -> None:
-    for attempt in range(retries):
-        try:
-            if not IS_SQLITE:
-                with engine.begin() as conn:
-                    conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}"))
-            Base.metadata.create_all(engine)
-            return
-        except Exception:
-            if attempt == retries - 1:
-                raise
-            time.sleep(1)  # database may still be starting
+def init_db() -> None:
+    # Provisioning and schema changes are explicit Alembic commands, not runtime DDL.
+    prefix = "" if IS_SQLITE else f"{SCHEMA}."
+    with engine.connect() as conn:
+        conn.execute(text(f"SELECT user_id, item_id FROM {prefix}subscription LIMIT 0"))
 
 
 def get_session():

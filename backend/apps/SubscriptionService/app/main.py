@@ -1,15 +1,17 @@
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
+from uuid import UUID
 
 import httpx
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from .db import Base, get_session, init_db, utcnow
+from .auth import student
 
 PAYMENT_URL = os.getenv("PAYMENT_URL", "http://localhost:8004")
 BILLING_PERIOD_DAYS = int(os.getenv("BILLING_PERIOD_DAYS", "30"))
@@ -17,8 +19,8 @@ BILLING_PERIOD_DAYS = int(os.getenv("BILLING_PERIOD_DAYS", "30"))
 
 class Subscription(Base):
     __tablename__ = "subscription"
-    user_id: Mapped[int] = mapped_column(primary_key=True)
-    item_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    item_id: Mapped[UUID] = mapped_column(primary_key=True)
     plan: Mapped[str] = mapped_column(default="one_time")  # one_time | monthly
     price: Mapped[int] = mapped_column(default=0)  # cents per cycle
     method: Mapped[str] = mapped_column(default="pix")  # payment method used for renewals
@@ -46,26 +48,9 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Servico de Inscricoes", lifespan=lifespan)
 
 
-class SubscriptionIn(BaseModel):
-    user_id: int
-    item_id: int
-
-
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
-
-
-@app.post("/api/subscriptions", status_code=201)
-def create_free_subscription(body: SubscriptionIn, db: Session = Depends(get_session)) -> dict:
-    """Free enrollment (no payment). Idempotent. Paid access arrives via payment events instead."""
-    sub = db.get(Subscription, (body.user_id, body.item_id))
-    if sub is None:
-        db.add(Subscription(user_id=body.user_id, item_id=body.item_id))
-    elif sub.status != "active":
-        sub.status = "active"
-    db.commit()
-    return {"user_id": body.user_id, "item_id": body.item_id, "active": True}
 
 
 class PaymentEvent(BaseModel):
@@ -79,7 +64,7 @@ class PaymentEvent(BaseModel):
     status: str  # paid | failed
 
 
-@app.post("/api/subscriptions/events/payment")
+# Retained business logic; HTTP exposure awaits authenticated payment contracts.
 def payment_event(ev: PaymentEvent, db: Session = Depends(get_session)) -> dict:
     """Payment outcome -> subscription state. Idempotent by payment_id."""
     if db.get(ProcessedPayment, ev.payment_id):
@@ -110,7 +95,7 @@ def payment_event(ev: PaymentEvent, db: Session = Depends(get_session)) -> dict:
     return {"status": "applied"}
 
 
-@app.post("/api/billing/run")
+# Retained business logic; scheduler/paid contracts are a separate integration.
 def run_billing(as_of: datetime | None = None, db: Session = Depends(get_session)) -> dict:
     """Create renewal charges for monthly subscriptions that are due (active, or past_due = retry).
     Run it from cron. Safe to run repeatedly: the idempotency key is derived from the billing cycle
@@ -135,25 +120,28 @@ def run_billing(as_of: datetime | None = None, db: Session = Depends(get_session
     return {"as_of": now.isoformat(), "charged": charged, "errors": errors}
 
 
-@app.get("/api/subscriptions/{user_id}")
-def list_subscriptions(user_id: int, db: Session = Depends(get_session)) -> dict:
-    """`item_ids` = items the user can access right now (active only); `items` has full detail."""
+@app.get("/api/subscriptions/me")
+def list_subscriptions(request: Request, db: Session = Depends(get_session)) -> dict:
+    user_id, _ = student(request)
     subs = db.scalars(select(Subscription).where(Subscription.user_id == user_id)).all()
-    return {"user_id": user_id, "item_ids": sorted(s.item_id for s in subs if s.status == "active"),
-            "items": [s.view() for s in subs]}
+    return {"user_id": str(user_id), "items": [
+        {"course_id": str(s.item_id), "status": s.status} for s in subs
+    ]}
 
 
-@app.get("/api/subscriptions/{user_id}/{item_id}")
-def get_subscription(user_id: int, item_id: int, db: Session = Depends(get_session)) -> dict:
-    sub = db.get(Subscription, (user_id, item_id))
-    return {"user_id": user_id, "item_id": item_id, "active": sub is not None and sub.status == "active",
+@app.get("/api/subscriptions/me/{course_id}")
+def get_subscription(course_id: UUID, request: Request, db: Session = Depends(get_session)) -> dict:
+    user_id, _ = student(request)
+    sub = db.get(Subscription, (user_id, course_id))
+    return {"user_id": str(user_id), "course_id": str(course_id), "active": sub is not None and sub.status == "active",
             "status": sub.status if sub else None}
 
 
-@app.delete("/api/subscriptions/{user_id}/{item_id}", status_code=204)
-def cancel_subscription(user_id: int, item_id: int, db: Session = Depends(get_session)) -> None:
+@app.delete("/api/subscriptions/me/{course_id}", status_code=204)
+def cancel_subscription(course_id: UUID, request: Request, db: Session = Depends(get_session)) -> None:
     """Cancel: access ends and no more renewals are billed. Idempotent."""
-    sub = db.get(Subscription, (user_id, item_id))
+    user_id, _ = student(request)
+    sub = db.get(Subscription, (user_id, course_id))
     if sub is not None and sub.status != "cancelled":
         sub.status, sub.next_billing_at = "cancelled", None
         db.commit()

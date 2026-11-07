@@ -6,6 +6,7 @@ out/
 .env*
 !backend/.env.example
 !backend/services/*/.env.example
+!backend/apps/*/.env.example
 !frontend/.env.local.example
 !frontend/.env.example
 *.tsbuildinfo

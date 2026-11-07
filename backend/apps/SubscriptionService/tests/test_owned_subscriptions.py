@@ -1,0 +1,33 @@
+import pytest
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
+from app import db as database
+from app.main import Subscription
+
+
+def test_owned_listing_and_cancellation(api):
+    with Session(api.engine) as db:
+        db.add_all([Subscription(user_id=uid, item_id=api.course_id) for uid in [api.users['student-a'],api.users['student-b']]])
+        db.commit()
+    result = api.client.get('/api/subscriptions/me').json()
+    assert result == {'user_id': str(api.users['student-a']), 'items':[{'course_id':str(api.course_id),'status':'active'}]}
+    assert api.client.delete(f'/api/subscriptions/me/{api.course_id}').status_code == 204
+    assert api.client.delete(f'/api/subscriptions/me/{api.course_id}').status_code == 204
+    with Session(api.engine) as db:
+        assert db.get(Subscription,(api.users['student-a'],api.course_id)).status == 'cancelled'
+        assert db.get(Subscription,(api.users['student-b'],api.course_id)).status == 'active'
+    assert api.client.get(f"/api/subscriptions/{api.users['student-b']}").status_code == 404
+
+
+def test_legacy_payment_and_billing_routes_are_not_exposed(api):
+    assert api.client.post('/api/subscriptions/events/payment',json={}).status_code == 404
+    assert api.client.post('/api/billing/run').status_code == 404
+
+
+def test_runtime_does_not_create_tables(tmp_path, monkeypatch):
+    engine = create_engine(f'sqlite:///{tmp_path}/empty.sqlite')
+    monkeypatch.setattr(database, 'engine', engine)
+    with pytest.raises(OperationalError): database.init_db()
+    assert inspect(engine).get_table_names() == []
+    engine.dispose()
