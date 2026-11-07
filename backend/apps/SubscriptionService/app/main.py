@@ -1,17 +1,18 @@
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
+from decimal import Decimal
 from uuid import UUID
 
 import httpx
-from fastapi import Depends, FastAPI, Request
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from .db import Base, get_session, init_db, utcnow
-from .auth import student
+from .auth import remote, student
 
 PAYMENT_URL = os.getenv("PAYMENT_URL", "http://localhost:8004")
 BILLING_PERIOD_DAYS = int(os.getenv("BILLING_PERIOD_DAYS", "30"))
@@ -48,9 +49,54 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Servico de Inscricoes", lifespan=lifespan)
 
 
+class SubscriptionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    course_id: UUID
+
+
+class CourseLookup(BaseModel):
+    id: UUID
+    status: str
+    access_type: str
+    price: Decimal | None
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/subscriptions", status_code=201)
+def create_free_subscription(body: SubscriptionIn, request: Request, response: Response, db: Session = Depends(get_session)) -> dict:
+    """Create only the authenticated student's validated free enrollment."""
+    user_id, access = student(request)
+    try:
+        course = CourseLookup.model_validate(remote("CATALOG_URL", f"/api/courses/{body.course_id}/summary", access))
+    except ValueError as exc:
+        raise HTTPException(503, "Resposta de curso inválida") from exc
+    if course.id != body.course_id:
+        raise HTTPException(503, "Curso divergente")
+    if course.status != "published" or course.access_type != "free" or course.price not in (None, Decimal(0)):
+        raise HTTPException(409, "Matrícula gratuita exige curso publicado e gratuito")
+    key = (user_id, body.course_id)
+    sub = db.get(Subscription, key)
+    if sub is None:
+        db.add(Subscription(user_id=user_id, item_id=body.course_id))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            sub = db.get(Subscription, key)
+            if sub is None:
+                raise
+            if sub.status != "active":
+                raise HTTPException(409, "Matrícula inativa não pode ser reativada automaticamente")
+            response.status_code = 200
+    else:
+        if sub.status != "active":
+            raise HTTPException(409, "Matrícula inativa não pode ser reativada automaticamente")
+        response.status_code = 200
+    return {"user_id": str(user_id), "course_id": str(body.course_id), "active": True}
 
 
 class PaymentEvent(BaseModel):
