@@ -66,6 +66,7 @@ class ModerationQueueItem(Base):
     id: Mapped[str] = mapped_column(
         String(255), primary_key=True, default=lambda: str(uuid4())
     )
+    operation_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     item_type: Mapped[str] = mapped_column(String(20), nullable=False)
     item_id: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(

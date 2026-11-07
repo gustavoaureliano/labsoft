@@ -1,5 +1,7 @@
 """The real adapter must not trust demo identity or expose another student's data."""
 from uuid import uuid4
+import json
+import os
 
 import httpx
 import pytest
@@ -13,13 +15,16 @@ from app.main import app
 def integrated(test_context, monkeypatch):
     client, _, _ = test_context
     app.dependency_overrides.pop(get_integrations)
-    ids = [str(uuid4()), str(uuid4()), str(uuid4())]
+    ids = [str(uuid4()) for _ in range(4)]
     course, lesson = str(uuid4()), str(uuid4())
-    state = {"allowed": {ids[0]: True, ids[1]: True}, "down": False, "calls": []}
+    state = {"allowed": {ids[0]: True, ids[1]: True}, "down": False, "calls": [],
+             "audit": {}, "audit_down": False, "moderation_status": "visible"}
     for key, url in {"IDENTITY_URL": "http://identity", "CATALOG_URL": "http://catalog",
                      "LEARNING_URL": "http://learning", "ACCESS_URL": "http://access",
                      "FRONTEND_ORIGIN": "http://testserver"}.items():
         monkeypatch.setenv(key, url)
+    for key in ['ENGAGEMENT_CATALOG_TOKEN','ENGAGEMENT_LEARNING_TOKEN','ENGAGEMENT_AUDIT_TOKEN']:
+        monkeypatch.setenv(key,key+'-test-secret')
     original = httpx.Client
 
     def respond(req):
@@ -31,14 +36,29 @@ def integrated(test_context, monkeypatch):
             return httpx.Response(503)
         if req.url.host == "identity":
             if req.url.path.endswith("/auth/me"):
-                return httpx.Response(200, json={"id": user_id, "role": "teacher" if actor == 2 else "student"})
+                return httpx.Response(200, json={"id": user_id, "role": "admin" if actor == 3 else "teacher" if actor == 2 else "student"})
+            if req.method == 'POST' and req.url.path.endswith('/admin/audit/moderation'):
+                if state['audit_down']:return httpx.Response(503)
+                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_AUDIT_TOKEN']
+                body=json.loads(req.content)
+                state['audit'].setdefault(body['operation_id'],body)
+                return httpx.Response(201,json={'recorded':True,'audit_id':body['operation_id']})
             return httpx.Response(200, json={"user_id": user_id, "display_name": f"Aluno {actor}"})
         if req.url.host == "catalog":
+            if req.method == 'PUT':
+                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_CATALOG_TOKEN']
+                state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
+                return httpx.Response(200,json={'moderation_status':state['moderation_status']})
             return httpx.Response(200, json={"id": course, "teacher_id": ids[2],
-                                              "title": "Física", "teacher_name": "Professora", "status": "published"})
+                                              "title": "Física", "teacher_name": "Professora", "status": "published",
+                                              "moderation_status":state['moderation_status']})
         if req.url.host == "learning":
+            if req.method == 'PUT':
+                assert req.headers['x-service-token']==os.environ['ENGAGEMENT_LEARNING_TOKEN']
+                state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
+                return httpx.Response(200,json={'moderation_status':state['moderation_status']})
             if req.url.path.endswith("/summary"):
-                return httpx.Response(200 if actor == 2 or state["allowed"][user_id] else 403,
+                return httpx.Response(200 if actor in (2,3) or state["allowed"][user_id] else 403,
                                       json={"id": lesson, "course_id": course, "title": "Aula real", "position": 1})
         if req.url.host == "access":
             return httpx.Response(200, json={"user_id": user_id, "course_id": course,
@@ -157,3 +177,43 @@ def test_question_refuses_unenrolled_student(integrated):
     client, ids, course, lesson, state = integrated
     state["allowed"][ids[0]] = False
     assert client.post("/api/questions", headers=headers(), json={"course_id":course,"lesson_id":lesson,"prompt":"Sem acesso"}).status_code == 403
+
+
+@pytest.mark.parametrize('item_type', ['lesson','course'])
+def test_admin_applies_owner_decision_and_records_one_audit(integrated, item_type):
+    client, ids, course, lesson, state = integrated
+    item_id = lesson if item_type == 'lesson' else course
+    report = client.post('/api/moderation/reports',headers=headers(),json={
+        'item_type':item_type,'item_id':item_id,'reason':'Problema observado'})
+    assert report.status_code == 201, report.text
+    admin=headers(3)
+    queue=client.get('/api/moderation/queue',headers=headers(3,'GET'))
+    assert queue.status_code == 200 and len(queue.json()) == 1
+    url=f'/api/moderation/queue/{item_id}/decision'
+    body={'item_type':item_type,'decision':'hide','justification':'Revisão necessária'}
+    assert client.post(url,headers=headers(),json=body).status_code == 403
+    hidden=client.post(url,headers=admin,json=body)
+    assert hidden.status_code == 200, hidden.text
+    assert hidden.json()['status']=='hidden' and hidden.json()['audit_recorded'] is True
+    assert state['moderation_status']=='hidden' and len(state['audit'])==1
+    assert client.post(url,headers=admin,json=body).status_code == 200
+    assert len(state['audit'])==1
+    restored=client.post(url,headers=admin,json={**body,'decision':'keep'})
+    assert restored.status_code==200 and state['moderation_status']=='visible'
+    assert len(state['audit'])==2
+
+
+def test_failed_audit_leaves_case_pending_for_retry(integrated):
+    client, ids, course, lesson, state=integrated
+    reported=client.post('/api/moderation/reports',headers=headers(),json={
+        'item_type':'lesson','item_id':lesson,'reason':'Conteúdo indevido'})
+    assert reported.status_code==201
+    state['audit_down']=True
+    url=f'/api/moderation/queue/{lesson}/decision'
+    decision={'item_type':'lesson','decision':'hide','justification':'Revisão necessária'}
+    assert client.post(url,headers=headers(3),json=decision).status_code==503
+    assert state['moderation_status']=='hidden'
+    assert len(client.get('/api/moderation/queue',headers=headers(3,'GET')).json())==1
+    state['audit_down']=False
+    assert client.post(url,headers=headers(3),json=decision).status_code==200
+    assert len(state['audit'])==1

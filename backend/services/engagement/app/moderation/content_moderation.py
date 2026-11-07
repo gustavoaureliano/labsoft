@@ -1,6 +1,7 @@
 """ContentModerationService implementation (F25, F28, F45)."""
 
 from datetime import datetime, timezone
+from uuid import uuid4
 from typing import Literal
 
 from sqlalchemy import select
@@ -45,9 +46,12 @@ def enfileirar_item_para_moderacao(
             item_type=item_type,
             item_id=item_id,
             status="pending",
+            operation_id=str(uuid4()),
         )
         session.add(queue_item)
     else:
+        if queue_item.status != "pending":
+            queue_item.operation_id = str(uuid4())
         queue_item.status = "pending"
         queue_item.decision = None
         queue_item.admin_id = None
@@ -86,6 +90,17 @@ def aplicar_decisao(
     )
     if queue_item is None:
         raise ModerationItemNotFound("Item não encontrado na fila de moderação")
+    if queue_item.status != "pending" and queue_item.decision != decision:
+        # Persist the new operation ID before the HTTP command. A retry after
+        # an owner/audit failure must reuse it instead of writing a second audit.
+        queue_item.operation_id = str(uuid4())
+        queue_item.status = "pending"
+        session.commit()
+    if not queue_item.operation_id:
+        queue_item.operation_id = queue_item.id
+
+    if item_type != "comment":
+        integrations.apply_moderation(item_type, item_id, decision)
 
     status_map: dict[str, Literal["kept", "hidden", "deleted"]] = {
         "keep": "kept",
@@ -127,6 +142,7 @@ def aplicar_decisao(
         item_type=item_type,
         decision=decision,
         justification=justification,
+        operation_id=queue_item.operation_id,
     )
 
     session.commit()

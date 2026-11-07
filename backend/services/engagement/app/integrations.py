@@ -59,8 +59,10 @@ class Integrations(Protocol):
     def course_engagement_snapshot(self, course_id: str, period: str) -> dict[str, Any]: ...
     def platform_snapshot(self, period: str) -> dict[str, Any]: ...
     def record_audit(
-        self, admin_id: str, item_id: str, item_type: str, decision: str, justification: str
+        self, admin_id: str, item_id: str, item_type: str, decision: str, justification: str,
+        operation_id: str | None = None,
     ) -> AuditEntry: ...
+    def apply_moderation(self, item_type: str, item_id: str, decision: str) -> None: ...
 
 
 @dataclass
@@ -342,7 +344,8 @@ class DemoIntegrations:
         }
 
     def record_audit(
-        self, admin_id: str, item_id: str, item_type: str, decision: str, justification: str
+        self, admin_id: str, item_id: str, item_type: str, decision: str, justification: str,
+        operation_id: str | None = None,
     ) -> AuditEntry:
         """Mock for AuditService.registrarTrilhaAuditoria(adminId, itemId, decisao, justificativa) (F45)."""
         entry = AuditEntry(
@@ -355,6 +358,10 @@ class DemoIntegrations:
         )
         self.audit_log.append(entry)
         return entry
+
+    def apply_moderation(self, item_type: str, item_id: str, decision: str) -> None:
+        # Demo records decisions but has no remote owner to change.
+        return None
 
 
 _DEFAULT_DEMO_INTEGRATIONS = DemoIntegrations()

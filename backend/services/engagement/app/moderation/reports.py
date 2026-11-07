@@ -154,7 +154,7 @@ def consultar_denuncias_pendentes(
         except ReportedTargetNotFound:
             title_or_excerpt, author_or_owner = queue_item.item_id, "Desconhecido"
 
-        reasons = [r.reason for r in reports] or ["Retido automaticamente pelo filtro"]
+        reasons = [r.reason for r in reports] or ["Revisão administrativa pendente"]
         result.append(
             ModerationQueueItemResponse(
                 queue_id=queue_item.id,
