@@ -150,7 +150,7 @@ export function AccessPage({ mode }: { mode: Mode }) {
         <Link className={styles.logo} href="/" aria-label="AprovaAí, voltar ao início"><Image src="/aprova-ai-logo.svg" alt="AprovaAí" width={280} height={70} priority /></Link>
         <h1 id="access-title">{copy[mode].title}</h1>
         <p className={styles.description}>{mode === "recover" && isApiConfigured ? resetToken ? "Escolha uma nova senha para sua conta." : "Informe seu e-mail para receber as instruções de recuperação." : copy[mode].description}</p>
-        <form className={styles.form} onSubmit={submit}>
+        <form className={styles.form} method="post" onSubmit={submit}>
           {(mode === "register" || mode === "teacher") && <label>Nome completo<input autoComplete="name" name="name" required /></label>}
           {(mode !== "recover" || !resetToken) && <label>E-mail<span className={styles.inputWithIcon}><Image src="/login-mail.svg" alt="" width={18} height={18} /><input autoComplete="email" name="email" placeholder="nome@exemplo.com" required type="email" /></span></label>}
           {mode === "login" && <label>Senha<span className={styles.inputWithIcon}><Image src="/login-lock.svg" alt="" width={18} height={18} /><input autoComplete="current-password" name="password" required type="password" /></span></label>}
