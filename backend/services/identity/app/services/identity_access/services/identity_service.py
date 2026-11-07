@@ -30,6 +30,8 @@ class IdentityService:
         self,
         db: Session,
         data: RegisterIn,
+        *,
+        requires_email_verification: bool = True,
     ) -> User:
 
         email = str(data.email).strip().lower()
@@ -50,8 +52,8 @@ class IdentityService:
             email=email,
             password_hash=hash_password(data.password),
             role="student",
-            is_active=False,
-            status="pending_verification",
+            is_active=not requires_email_verification,
+            status="pending_verification" if requires_email_verification else "active",
         )
 
         db.add(user)

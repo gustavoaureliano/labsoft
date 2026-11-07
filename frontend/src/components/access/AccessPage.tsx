@@ -24,6 +24,7 @@ import { writeDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./AccessPage.module.css";
 
 type Mode = "login" | "register" | "recover" | "teacher";
+const emailFlowsEnabled = process.env.NEXT_PUBLIC_EMAIL_FLOWS_ENABLED === "true";
 
 function subscribeToHashChange(onChange: () => void) {
   window.addEventListener("hashchange", onChange);
@@ -60,6 +61,14 @@ export function AccessPage({ mode }: { mode: Mode }) {
       );
     }
   }, [mode, resetToken]);
+
+  if (mode === "recover" && isApiConfigured && !emailFlowsEnabled) {
+    return <main className={styles.page}><section className={styles.card}>
+      <h1>Recuperação de acesso indisponível</h1>
+      <p>A recuperação por e-mail não está habilitada nesta versão.</p>
+      <Link href="/login">Voltar para entrar</Link>
+    </section></main>;
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -121,7 +130,9 @@ export function AccessPage({ mode }: { mode: Mode }) {
       setNotice("");
       try {
         await registerWithApi(name, email, password);
-        setNotice("Conta criada. Confira seu e-mail para confirmar o cadastro antes de entrar.");
+        setNotice(emailFlowsEnabled
+          ? "Conta criada. Confira seu e-mail para confirmar o cadastro antes de entrar."
+          : "Conta criada. Você já pode entrar com seu e-mail e senha.");
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "Não foi possível criar a conta.");
       }
@@ -162,7 +173,7 @@ export function AccessPage({ mode }: { mode: Mode }) {
         </form>
         {notice && <p className={styles.notice} role="status">{notice}</p>}
         <div className={styles.links}>
-          {mode === "login" ? <><Link href="/recuperar-acesso">Esqueceu sua senha?</Link><Link href="/cadastro">Criar conta</Link></> : <Link href="/login">Voltar para entrar</Link>}
+          {mode === "login" ? <>{(!isApiConfigured || emailFlowsEnabled) && <Link href="/recuperar-acesso">Esqueceu sua senha?</Link>}<Link href="/cadastro">Criar conta</Link></> : <Link href="/login">Voltar para entrar</Link>}
           {mode === "register" && <Link href="/cadastro/professor">Sou professor</Link>}
         </div>
         <p className={styles.demoNote}>{isApiConfigured && (mode === "login" || mode === "register") ? "Autenticação pela API com cookies HttpOnly de acesso e renovação." : isApiConfigured && mode === "recover" ? "Se o e-mail estiver cadastrado, as instruções serão enviadas para ele." : "Protótipo: nenhum acesso é autenticado e nenhuma senha é armazenada."}</p>

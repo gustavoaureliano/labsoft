@@ -70,6 +70,7 @@ def _settings() -> Settings:
         jwt_public_key=public_key,
         jwt_kid="test-ed25519",
         email_encryption_key=Fernet.generate_key().decode("ascii"),
+        email_flows_enabled=True,
     )
 
 
@@ -277,6 +278,31 @@ def test_email_verification_is_one_time_and_login_waits_for_it(
             "password": "correct horse battery 7",
         },
     ).status_code == 200
+
+
+def test_registration_without_email_flow_is_immediately_usable(api):
+    settings = replace(api.settings, email_flows_enabled=False, email_encryption_key="")
+    app = FastAPI()
+    app.include_router(api.create_router(api.get_db, settings))
+    with TestClient(app) as client:
+        created = _register(client)
+        assert created.status_code == 201, created.text
+        user = api.db.get(User, created.json()["id"])
+        assert user.status == "active" and user.is_active and user.verified_at is None
+        assert api.db.get(Profile, user.id) is not None
+        assert api.db.query(EmailOutbox).count() == 0
+        assert api.db.query(EmailToken).count() == 0
+        assert client.post("/api/v1/auth/login", headers={"Origin": settings.frontend_origin},
+                           json={"email": "new@example.com", "password": "correct horse battery 7"}).status_code == 200
+        assert _register(client).status_code == 409
+        for path, payload in (("verify-email", {"token": "x" * 43}),
+                              ("resend-verification", {"email": "new@example.com"}),
+                              ("forgot-password", {"email": "new@example.com"}),
+                              ("password-recovery/request", {"email": "new@example.com"}),
+                              ("reset-password", {"token": "x" * 43, "new_password": "correct horse battery 8"}),
+                              ("password-recovery/confirm", {"token": "x" * 43, "new_password": "correct horse battery 8"})):
+            assert client.post(f"/api/v1/auth/{path}", json=payload).status_code == 404
+        assert api.db.query(PasswordReset).count() == 0
 
 
 def test_login_issues_refresh_cookie_and_refresh_rotates(

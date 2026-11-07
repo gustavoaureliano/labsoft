@@ -89,7 +89,7 @@ def create_router(
         settings,
         email_sender,
     )
-    email_outbox = EmailOutboxService(settings)
+    email_outbox = EmailOutboxService(settings) if settings.email_flows_enabled else None
 
     media_service = MediaService(settings)
     teacher_apps = TeacherApplicationService()
@@ -121,9 +121,10 @@ def create_router(
         )
         try:
             with translate_service_error():
-                notifications.check_email_available()
+                if settings.email_flows_enabled:
+                    notifications.check_email_available()
                 user = identity.register(
-                    db, body
+                    db, body, requires_email_verification=settings.email_flows_enabled
                 )
 
                 profiles.create(
@@ -131,23 +132,15 @@ def create_router(
                     user,
                     body.display_name,
                 )
-                token = identity.create_verification_token(
-                    db,
-                    user,
-                    settings,
-                )
-                email_outbox.enqueue(
-                    db,
-                    user.id,
-                    user.email,
-                    "verify_email",
-                    token,
-                )
+                if settings.email_flows_enabled:
+                    assert email_outbox is not None
+                    token = identity.create_verification_token(db, user, settings)
+                    email_outbox.enqueue(db, user.id, user.email, "verify_email", token)
                 _record_audit(
                     db,
                     request,
                     "user.registered",
-                    "pending_verification",
+                    "pending_verification" if settings.email_flows_enabled else "success",
                     subject_id=user.id,
                 )
 
@@ -245,6 +238,8 @@ def create_router(
         request: Request,
         db: Session = Depends(get_db),
     ):
+        if not settings.email_flows_enabled:
+            raise HTTPException(404, "Confirmação de e-mail indisponível")
         _check_rate_limit(
             db,
             request,
@@ -282,6 +277,8 @@ def create_router(
         request: Request,
         db: Session = Depends(get_db),
     ):
+        if not settings.email_flows_enabled:
+            raise HTTPException(404, "Confirmação de e-mail indisponível")
         _check_rate_limit(
             db,
             request,
@@ -296,6 +293,7 @@ def create_router(
                 str(body.email),
             )
             if user is not None:
+                assert email_outbox is not None
                 token = identity.create_verification_token(
                     db,
                     user,
@@ -603,6 +601,8 @@ def create_router(
         request: Request,
         db: Session = Depends(get_db),
     ):
+        if not settings.email_flows_enabled:
+            raise HTTPException(404, "Recuperação por e-mail indisponível")
         _check_rate_limit(
             db,
             request,
@@ -621,6 +621,7 @@ def create_router(
             )
 
         if result:
+            assert email_outbox is not None
             email, token, user_id = result
             email_outbox.enqueue(
                 db,
@@ -652,6 +653,8 @@ def create_router(
         body: PasswordResetIn,
         db: Session = Depends(get_db),
     ):
+        if not settings.email_flows_enabled:
+            raise HTTPException(404, "Recuperação por e-mail indisponível")
         with translate_service_error():
             identity.reset_password(
                 db,

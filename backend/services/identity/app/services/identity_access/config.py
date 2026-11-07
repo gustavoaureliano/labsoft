@@ -33,6 +33,7 @@ class Settings:
     jwt_issuer: str = "aprovaai-auth"
     jwt_audience: str = "aprovaai-api"
     email_encryption_key: str = ""
+    email_flows_enabled: bool = False
     verification_hours: int = 24
     reset_minutes: int = 20
     media_root: Path = Path("./private_uploads")
@@ -144,6 +145,7 @@ class Settings:
                 "aprovaai-api",
             ),
             email_encryption_key=email_encryption_key,
+            email_flows_enabled=os.getenv("AA_EMAIL_FLOWS_ENABLED", "false").lower() == "true",
             verification_hours=_int_env(
                 "AA_VERIFICATION_HOURS",
                 24,
