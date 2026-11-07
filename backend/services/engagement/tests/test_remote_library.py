@@ -13,7 +13,7 @@ from app.main import app
 def integrated(test_context, monkeypatch):
     client, _, _ = test_context
     app.dependency_overrides.pop(get_integrations)
-    ids = [str(uuid4()), str(uuid4())]
+    ids = [str(uuid4()), str(uuid4()), str(uuid4())]
     course, lesson = str(uuid4()), str(uuid4())
     state = {"allowed": {ids[0]: True, ids[1]: True}, "down": False, "calls": []}
     for key, url in {"IDENTITY_URL": "http://identity", "CATALOG_URL": "http://catalog",
@@ -31,14 +31,14 @@ def integrated(test_context, monkeypatch):
             return httpx.Response(503)
         if req.url.host == "identity":
             if req.url.path.endswith("/auth/me"):
-                return httpx.Response(200, json={"id": user_id, "role": "student"})
+                return httpx.Response(200, json={"id": user_id, "role": "teacher" if actor == 2 else "student"})
             return httpx.Response(200, json={"user_id": user_id, "display_name": f"Aluno {actor}"})
         if req.url.host == "catalog":
-            return httpx.Response(200, json={"id": course, "teacher_id": str(uuid4()),
+            return httpx.Response(200, json={"id": course, "teacher_id": ids[2],
                                               "title": "Física", "teacher_name": "Professora", "status": "published"})
         if req.url.host == "learning":
             if req.url.path.endswith("/summary"):
-                return httpx.Response(200 if state["allowed"][user_id] else 403,
+                return httpx.Response(200 if actor == 2 or state["allowed"][user_id] else 403,
                                       json={"id": lesson, "course_id": course, "title": "Aula real", "position": 1})
         if req.url.host == "access":
             return httpx.Response(200, json={"user_id": user_id, "course_id": course,
@@ -131,3 +131,29 @@ def test_notes_comments_and_ratings_use_real_lesson_access(integrated):
     assert client.put(note, headers=headers(), json={"content":"Não posso escrever"}).status_code in (403,404)
     assert client.post(f"/api/interactions/lessons/{lesson}/comments", headers=headers(), json={"content":"Sem acesso"}).status_code in (403,404)
     assert client.put(f"/api/interactions/ratings/{lesson}", headers=headers(), json={"stars":1}).status_code in (403,404)
+
+
+def test_student_question_teacher_answer_and_private_notifications(integrated):
+    client, ids, course, lesson, state = integrated
+    sent = client.post("/api/questions", headers=headers(), json={"course_id":course,"lesson_id":lesson,"prompt":"Pode explicar esta aula?"})
+    assert sent.status_code == 201, sent.text
+    question_id = sent.json()["id"]
+    assert sent.json()["teacher_id"] == ids[2]
+    assert client.get("/api/questions/me", headers=headers(1,"GET")).json() == []
+    assert client.get("/api/questions/teacher", headers=headers(2,"GET")).json()[0]["id"] == question_id
+    assert client.get("/api/notifications", headers=headers(2,"GET")).json()[0]["kind"] == "new_question"
+    assert client.get("/api/notifications", headers=headers(1,"GET")).json() == []
+    assert client.patch(f"/api/questions/{question_id}/answer", headers=headers(1), json={"answer":"Não sou o professor"}).status_code == 403
+    answer = client.patch(f"/api/questions/{question_id}/answer", headers=headers(2), json={"answer":"Vamos revisar juntos."})
+    assert answer.status_code == 200 and answer.json()["status"] == "answered"
+    assert client.get("/api/questions/me", headers=headers(method="GET")).json()[0]["answer"] == "Vamos revisar juntos."
+    notice = client.get("/api/notifications", headers=headers(method="GET")).json()[0]
+    assert notice["kind"] == "question_answered"
+    assert client.patch(f"/api/notifications/{notice['id']}/read", headers=headers(1)).status_code == 404
+    assert client.patch(f"/api/notifications/{notice['id']}/read", headers=headers()).json()["is_read"] is True
+
+
+def test_question_refuses_unenrolled_student(integrated):
+    client, ids, course, lesson, state = integrated
+    state["allowed"][ids[0]] = False
+    assert client.post("/api/questions", headers=headers(), json={"course_id":course,"lesson_id":lesson,"prompt":"Sem acesso"}).status_code == 403
