@@ -18,6 +18,7 @@ import {
   registerWithApi,
   requestPasswordRecovery,
   resetPassword,
+  announceSessionChange,
 } from "@/lib/apiClient";
 import { writeDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./AccessPage.module.css";
@@ -106,6 +107,7 @@ export function AccessPage({ mode }: { mode: Mode }) {
         };
         writeDemoStorage(demoAccountKey, account);
         setDemoRole(user.role);
+        announceSessionChange("login");
         router.replace(roleHome[user.role]);
         router.refresh();
       } catch (error) {
@@ -163,7 +165,7 @@ export function AccessPage({ mode }: { mode: Mode }) {
           {mode === "login" ? <><Link href="/recuperar-acesso">Esqueceu sua senha?</Link><Link href="/cadastro">Criar conta</Link></> : <Link href="/login">Voltar para entrar</Link>}
           {mode === "register" && <Link href="/cadastro/professor">Sou professor</Link>}
         </div>
-        <p className={styles.demoNote}>{isApiConfigured && (mode === "login" || mode === "register") ? "Autenticação pela API. O token de acesso fica apenas em memória e o refresh é protegido por cookie HttpOnly." : isApiConfigured && mode === "recover" ? "Se o e-mail estiver cadastrado, as instruções serão enviadas para ele." : "Protótipo: nenhum acesso é autenticado e nenhuma senha é armazenada."}</p>
+        <p className={styles.demoNote}>{isApiConfigured && (mode === "login" || mode === "register") ? "Autenticação pela API com cookies HttpOnly de acesso e renovação." : isApiConfigured && mode === "recover" ? "Se o e-mail estiver cadastrado, as instruções serão enviadas para ele." : "Protótipo: nenhum acesso é autenticado e nenhuma senha é armazenada."}</p>
       </section>
     </main>
   );

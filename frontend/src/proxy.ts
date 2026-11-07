@@ -1,19 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { demoRoleCookieName, parseDemoRole, roleHome, type DemoRole } from "@/data/demoAccount";
+import { demoRoleCookieName, parseDemoRole, roleHome } from "@/data/demoAccount";
+import { requiredRole } from "@/lib/pageAccess";
 
 const publicPaths = new Set(["/", "/login", "/cadastro", "/cadastro/professor", "/recuperar-acesso", "/professor/solicitacao"]);
-const studentPaths = new Set(["/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa", "/checkout", "/assinatura"]);
-
-function requiredRole(pathname: string): DemoRole | null {
-  if (pathname === "/certificados/verificar" || pathname.startsWith("/certificados/verificar/")) return null;
-  if (studentPaths.has(pathname) || pathname.startsWith("/meus-cursos/") || pathname === "/certificados" || pathname.startsWith("/certificados/")) return "student";
-  if (pathname === "/professor/cursos" || pathname.startsWith("/professor/cursos/") || pathname === "/professor/duvidas" || pathname === "/professor/monetizacao") return "teacher";
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "admin";
-  return null;
-}
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  // Real-mode UI is validated by ApiSessionSync; APIs enforce authorization.
+  // A readable role cookie is only a navigation hint, never session proof.
+  if (process.env.NEXT_PUBLIC_AUTH_ENABLED === "true") return NextResponse.next();
   if (publicPaths.has(pathname)) return NextResponse.next();
 
   const role = parseDemoRole(request.cookies.get(demoRoleCookieName)?.value);

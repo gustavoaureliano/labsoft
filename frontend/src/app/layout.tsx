@@ -16,8 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR">
       <body className={rubik.className}>
         <WorkspaceSidebarProvider>
-          <ApiSessionSync />
-          {children}
+          <ApiSessionSync>{children}</ApiSessionSync>
         </WorkspaceSidebarProvider>
       </body>
     </html>

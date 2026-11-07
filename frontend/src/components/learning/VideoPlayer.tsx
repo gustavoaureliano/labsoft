@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, jsonRequest, type Playback } from "@/lib/api/learning";
+import { isApiConfigured, renewApiSession } from "@/lib/apiClient";
 import styles from "./VideoPlayer.module.css";
 
 export function VideoPlayer({lesson, preview = false, poster}: {lesson: Playback; preview?: boolean; poster?: string}) {
@@ -39,8 +40,13 @@ export function VideoPlayer({lesson, preview = false, poster}: {lesson: Playback
     } finally { saving.current = false; }
   }
 
+  async function reopenSession() {
+    try { await renewApiSession(); window.location.reload(); }
+    catch (error) { setPlaybackError((error as Error).message); }
+  }
+
   return <div>
-    {playbackError ? <div className={styles.unavailable} role="alert"><strong>Não foi possível reproduzir este vídeo</strong><p>{playbackError}</p><span>Você pode consultar a aula ou selecionar outra da lista.</span></div> : <video ref={video} className={styles.video} controls preload="metadata" poster={poster}
+    {playbackError ? <div className={styles.unavailable} role="alert"><strong>Não foi possível reproduzir este vídeo</strong><p>{playbackError}</p><span>Você pode consultar a aula ou selecionar outra da lista.</span>{isApiConfigured && <button type="button" onClick={() => void reopenSession()}>Renovar sessão e reabrir aula</button>}</div> : <video ref={video} className={styles.video} controls preload="metadata" poster={poster}
       src={lesson.content_url}
       onLoadedMetadata={() => { const element = video.current; if (element && !preview) element.currentTime = Math.min(lesson.position_seconds, Math.max(0, element.duration - 0.1)); }}
       onTimeUpdate={() => void savePosition()} onPause={() => void savePosition(true)} onEnded={() => void savePosition(true)}

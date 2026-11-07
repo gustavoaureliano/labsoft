@@ -39,6 +39,7 @@ cd frontend
 - `npm run dev`: inicia o ambiente de desenvolvimento.
 - `npm run lint`: verifica o código.
 - `npm run typecheck`: verifica os tipos TypeScript.
+- `npm run test:api`: verifica o cliente HTTP e a coordenação de sessão.
 - `npm run build`: gera a versão de produção.
 - `npm run test:e2e`: executa os testes Selenium em paralelo no Chromium, com a aplicação já iniciada em `http://localhost:3000`.
 - `npm run test:e2e:sequential`: executa os testes um de cada vez, sem pausas.
@@ -56,15 +57,7 @@ Em outro terminal, também dentro de `frontend/`, execute os testes:
 npm run test:e2e
 ```
 
-Para usar o frontend com a API, copie `frontend/.env.example` para
-`frontend/.env.local` e mantenha o backend disponível em `http://localhost:8000`.
-Com `NEXT_PUBLIC_API_URL` configurada, login, cadastro, confirmação de e-mail e
-recuperação de senha usam a API; `/avisos` lista as notificações da conta
-autenticada. O backend precisa ter um provedor de e-mail configurado e o worker
-da outbox em execução para enviar os links de confirmação e recuperação. Sem
-essa variável, os fluxos demonstrativos locais continuam disponíveis. Configure
-`AA_FRONTEND_ORIGIN` no backend quando a origem do frontend não for
-`http://localhost:3000`.
+Para autenticação real, use `frontend/.env.example`: `NEXT_PUBLIC_AUTH_ENABLED=true`, `IDENTITY_URL` e `BACKEND_URL`. O navegador chama `/api` na própria origem; os destinos ficam no servidor. Configure essa origem em `AA_FRONTEND_ORIGIN` e `FRONTEND_ORIGIN` dos backends. Sem a flag, permanece o modo demo. E-mails exigem provedor/outbox configurados. `NEXT_PUBLIC_API_URL` foi substituída pelo roteamento same-origin.
 
 Abra `/` sem perfil demo para ver a landing, com cursos de exemplo e links para entrar ou criar conta. Depois de entrar como aluno, `/` mostra a Home de estudos. Professor e administrador são direcionados às suas áreas em `/professor/cursos` e `/admin`. O menu da conta permite trocar de perfil ou sair. Dúvidas do aluno ficam em `/duvidas`; dúvidas recebidas pelo professor, em `/professor/duvidas`.
 
@@ -78,4 +71,4 @@ O Chromium executa sem janela por padrão, inclusive nos modos sequencial e com 
 
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
-Vídeo e aprendizagem têm backend real: aulas, upload/inspeção de vídeo e thumbnail, reprodução, progresso e certificados. A autenticação pode consultar identidade por HTTP; catálogo, matrícula, biblioteca/interações e pagamento ainda dependem das próximas integrações. O cliente de sessão do frontend também precisa das adaptações finais para esse fluxo.
+Vídeo e aprendizagem têm backend real: aulas, upload/inspeção de vídeo e thumbnail, reprodução, progresso e certificados. Autenticação usa cookies HttpOnly pela API de identidade. Catálogo, matrícula, biblioteca/interações e pagamento ainda dependem das próximas integrações.

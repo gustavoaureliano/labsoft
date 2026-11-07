@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { EnrolledLesson } from "@/data/courses";
+import { request } from "@/lib/apiClient";
 
 export type Lesson = {
   id: string; course_id: string; title: string; description: string; position: number;
@@ -16,12 +17,7 @@ export type Course = {
 export type Dashboard = { courses: Course[]; current_course: Course | null; recommendations: Course[]; notifications: {title?: string; message?: string}[] };
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, { ...options, cache: "no-store" });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(typeof body?.detail === "string" ? body.detail : `Falha na API (${response.status})`);
-  }
-  return response.status === 204 ? undefined as T : response.json();
+  return request<T>(path, options);
 }
 
 export function jsonRequest(method: string, data: unknown): RequestInit {

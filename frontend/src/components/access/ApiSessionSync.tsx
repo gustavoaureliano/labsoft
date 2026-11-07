@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   demoAccountKey,
   demoRoleCookieName,
   parseDemoRole,
+  roleHome,
   type DemoAccount,
 } from "@/data/demoAccount";
-import { ApiError, getCurrentUserFromApi, isApiConfigured } from "@/lib/apiClient";
+import { ApiError, getCurrentUserFromApi, isApiConfigured, renewApiSession, subscribeSessionChanges } from "@/lib/apiClient";
+import { requiredRole } from "@/lib/pageAccess";
 import { clearDemoRole, setDemoRole } from "@/lib/demoSessionClient";
 import { writeDemoStorage } from "@/lib/useDemoStorage";
 
@@ -19,16 +21,36 @@ function currentRoleFromCookie() {
   return parseDemoRole(cookie?.slice(demoRoleCookieName.length + 1));
 }
 
-export function ApiSessionSync() {
+export function ApiSessionSync({children}: {children: ReactNode}) {
   const router = useRouter();
-  const [validationError, setValidationError] = useState("");
+  const pathname = usePathname();
+  const [result, setResult] = useState<{path: string; valid: boolean; error?: string} | null>(null);
+  const [retry, setRetry] = useState(0);
+  const [renewalNotice, setRenewalNotice] = useState("");
+  const expected = requiredRole(pathname);
+
+  useEffect(() => {
+    if (!isApiConfigured) return;
+    const unsubscribe = subscribeSessionChanges(type => {
+      if (type === "logout") {
+        clearDemoRole();
+        try { localStorage.removeItem(demoAccountKey); } catch { /* No persistent UI cache. */ }
+        window.location.replace("/login");
+      } else {
+        window.location.reload();
+      }
+    });
+    const expired = () => setRenewalNotice("Sua sessão expirou. Renove antes de repetir a operação.");
+    window.addEventListener("aprovaai-session-expired", expired);
+    return () => { unsubscribe(); window.removeEventListener("aprovaai-session-expired", expired); };
+  }, []);
 
   useEffect(() => {
     const previousRole = currentRoleFromCookie();
-    if (!isApiConfigured || !previousRole) return;
+    if (!isApiConfigured) return;
 
     let active = true;
-    getCurrentUserFromApi()
+    getCurrentUserFromApi(Boolean(expected || previousRole))
       .then((user) => {
         if (!active) return;
         const account: DemoAccount = {
@@ -38,27 +60,42 @@ export function ApiSessionSync() {
         };
         writeDemoStorage(demoAccountKey, account);
         setDemoRole(user.role);
+        if (expected && user.role !== expected) {
+          router.replace(roleHome[user.role]);
+          return;
+        }
+        setResult({path: pathname, valid: true});
         if (previousRole !== user.role) router.refresh();
       })
       .catch((error: unknown) => {
         if (!active) return;
         if (error instanceof ApiError && error.status === 401) {
           clearDemoRole();
-          router.replace("/login");
-          router.refresh();
+          setResult({path: pathname, valid: false});
+          if (expected) router.replace("/login");
+          if (previousRole) router.refresh();
           return;
         }
 
         const detail = error instanceof Error ? ` ${error.message}` : "";
-        setValidationError(
-          `Não foi possível validar a sessão com a API.${detail}`,
-        );
+        setResult({path: pathname, valid: false, error: `Não foi possível validar a sessão com a API.${detail}`});
       });
 
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, pathname, expected, retry]);
 
-  return validationError ? <p role="alert">{validationError}</p> : null;
+  async function renew() {
+    try { await renewApiSession(); setRenewalNotice(""); setRetry(value => value + 1); }
+    catch (error) { setRenewalNotice((error as Error).message); }
+  }
+
+  if (!isApiConfigured) return children;
+  const current = result?.path === pathname ? result : null;
+  return <>
+    {current?.error && <p role="alert">{current.error} <button type="button" onClick={() => setRetry(value => value + 1)}>Tentar validar novamente</button></p>}
+    {renewalNotice && <p role="alert">{renewalNotice} <button type="button" onClick={() => void renew()}>Renovar sessão</button></p>}
+    {expected && !current?.valid ? <p role="status">Validando sessão...</p> : children}
+  </>;
 }
