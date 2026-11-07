@@ -20,6 +20,7 @@ from .exceptions import (
 )
 from .models import Course, CourseLesson, CourseMaterial
 from .repository import CourseRepository
+from app.integrations import demo_mode, remote
 from .schemas import (
     AccessResponse,
     CourseCreate,
@@ -295,6 +296,14 @@ class CatalogService(BaseCourseService):
 
 class AccessService(BaseCourseService):
     def check(self, course: Course, *, student_id: UUID | None) -> AccessResponse:
+        if not demo_mode():
+            if student_id is None:
+                return AccessResponse(allowed=False, reason="authentication_required", acquisition_required=True)
+            data = remote("ACCESS_URL", f"/api/access?course_id={course.id}", self.session.info.get("access_token"))
+            if not isinstance(data, dict) or data.get("user_id") != str(student_id) or data.get("course_id") != str(course.id) or type(data.get("allowed")) is not bool:
+                from fastapi import HTTPException
+                raise HTTPException(503, "Decisão de acesso inconsistente")
+            return AccessResponse(allowed=data["allowed"], reason=data.get("reason", "access_decision"), acquisition_required=not data["allowed"])
         if course.access_type == "free":
             return AccessResponse(allowed=True, reason="free_course", acquisition_required=False)
         if student_id and self.repository.has_access(student_id, course.id):
@@ -471,6 +480,18 @@ class MaterialService(BaseCourseService):
 
 
 class PublishingService(BaseCourseService):
+    def __init__(self, session, lesson_loader=None):
+        super().__init__(session)
+        self.lesson_loader = lesson_loader
+        self.lesson_cache = {}
+
+    def _lessons(self, course_id):
+        if self.lesson_loader is None:
+            return self.repository.list_lessons(course_id)
+        if course_id not in self.lesson_cache:
+            self.lesson_cache[course_id] = self.lesson_loader(course_id)
+        return self.lesson_cache[course_id]
+
     def pending(self, course: Course) -> list[str]:
         pending = []
         if not course.title.strip():
@@ -481,7 +502,7 @@ class PublishingService(BaseCourseService):
             pending.append("summary")
         if course.access_type == "paid" and (course.price is None or course.price <= 0):
             pending.append("price")
-        lessons = self.repository.list_lessons(course.id)
+        lessons = self._lessons(course.id)
         if not lessons:
             pending.append("lessons")
         for material in self.repository.list_materials(course.id):
@@ -497,7 +518,7 @@ class PublishingService(BaseCourseService):
             course=CourseResponse.model_validate(course),
             lessons=[
                 LessonResponse.model_validate(item)
-                for item in self.repository.list_lessons(course_id)
+                for item in self._lessons(course_id)
             ],
             materials=[
                 MaterialResponse.model_validate(item)
@@ -510,6 +531,10 @@ class PublishingService(BaseCourseService):
         self, course_id: UUID, *, action: str, teacher_id: UUID
     ) -> PublicationResponse:
         course = self._owned_course(course_id, teacher_id)
+        if action == "publish" and self.lesson_loader is not None:
+            self.session.rollback()
+            self._lessons(course_id)
+            course = self._owned_course(course_id, teacher_id)
         if action == "publish":
             pending = self.pending(course)
             if pending:

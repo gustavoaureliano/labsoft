@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
@@ -18,6 +19,20 @@ from app.learning.schemas import (
 from app.media.service import MediaNotFound
 
 router = APIRouter(prefix="/api/learning", tags=["Aprendizagem"])
+
+
+@router.get("/courses/{course_id}/lesson-summaries")
+def lesson_summaries(course_id: UUID, session: Annotated[Session, Depends(get_session)],
+                     user: Annotated[User, Depends(get_current_user)],
+                     integrations: Annotated[Integrations, Depends(get_integrations)]) -> dict:
+    course_id = str(course_id)
+    require_course(user, integrations, course_id, write=True)
+    items = []
+    for lesson in service.list_lessons(session, course_id):
+        media = media_service.get_media(session, lesson.media_id) if lesson.media_id else None
+        items.append({"id": lesson.id, "title": lesson.title, "description": lesson.description,
+                      "position": lesson.position, "duration_seconds": media.duration_seconds if media else None})
+    return {"course_id": course_id, "items": items}
 
 
 @router.get("/courses")

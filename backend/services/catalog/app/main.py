@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.courses.exceptions import CourseError
 from app.courses.router import router as courses_router
+from app.courses.lookup import router as lookup_router
 
 app = FastAPI(title="AprovaAí API")
 
@@ -24,6 +25,7 @@ if cors_origins:
     )
 
 app.include_router(courses_router)
+app.include_router(lookup_router)
 
 
 @app.exception_handler(CourseError)

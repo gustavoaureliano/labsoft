@@ -30,7 +30,9 @@ def db_session(tmp_path):
 
 
 @pytest.fixture()
-def client(db_session):
+def client(db_session, monkeypatch):
+    monkeypatch.setenv("CATALOG_DEMO_MODE", "true")
+    monkeypatch.delenv("IDENTITY_URL", raising=False)
     def override_session():
         yield db_session
 

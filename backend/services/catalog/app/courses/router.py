@@ -3,7 +3,8 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
+from app.integrations import demo_mode, principal, lesson_reader, token
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -49,10 +50,29 @@ router = APIRouter(prefix="/api", tags=["courses"])
 SessionDependency = Annotated[Session, Depends(get_session)]
 
 
+def student_context(request: Request, session: SessionDependency,
+                    student_id: Annotated[UUID | None, Header(alias="X-Student-Id")] = None):
+    if demo_mode(): return student_id
+    access = token(request, required=False)
+    if not access: return None
+    uid, role, _ = principal(request)
+    session.info["access_token"] = access
+    return uid if role == "student" else None
+
+
+StudentDependency = Annotated[UUID | None, Depends(student_context)]
+
+
 def teacher_context(
-    teacher_id: Annotated[UUID, Header(alias="X-Teacher-Id")],
+    request: Request,
+    teacher_id: Annotated[UUID | None, Header(alias="X-Teacher-Id")] = None,
     teacher_name: Annotated[str, Header(alias="X-Teacher-Name")] = "Professor",
 ) -> tuple[UUID, str]:
+    if not demo_mode():
+        uid, role, name = principal(request)
+        if role != "teacher": raise HTTPException(403, "Ação exclusiva do professor")
+        return uid, name
+    if teacher_id is None: raise HTTPException(401, "Professor demo ausente")
     return teacher_id, teacher_name
 
 
@@ -76,7 +96,7 @@ def search(
 @router.get("/recommendations", response_model=RecommendationResponse)
 def recommendations(
     session: SessionDependency,
-    student_id: Annotated[UUID, Header(alias="X-Student-Id")],
+    student_id: StudentDependency,
     limit: Annotated[int, Query(ge=1, le=50)] = 6,
 ) -> RecommendationResponse:
     return RecommendationService(session).recommend(student_id, limit=limit)
@@ -130,7 +150,7 @@ def create_course(
 def course_details(
     course_id: UUID,
     session: SessionDependency,
-    student_id: Annotated[UUID | None, Header(alias="X-Student-Id")] = None,
+    student_id: StudentDependency,
 ) -> CourseDetailsResponse:
     return CatalogService(session).details(course_id, student_id=student_id)
 
@@ -153,6 +173,7 @@ def create_lesson(
     session: SessionDependency,
     teacher: TeacherDependency,
 ) -> LessonResponse:
+    if not demo_mode(): raise HTTPException(410, "Gerencie aulas pelo serviço de aprendizagem")
     teacher_id, _ = teacher
     return CourseService(session).add_lesson(course_id, payload, teacher_id=teacher_id)
 
@@ -165,6 +186,7 @@ def update_lesson(
     session: SessionDependency,
     teacher: TeacherDependency,
 ) -> LessonResponse:
+    if not demo_mode(): raise HTTPException(410, "Gerencie aulas pelo serviço de aprendizagem")
     teacher_id, _ = teacher
     return CourseService(session).update_lesson(
         course_id, lesson_id, payload, teacher_id=teacher_id
@@ -178,6 +200,7 @@ def delete_lesson(
     session: SessionDependency,
     teacher: TeacherDependency,
 ) -> Response:
+    if not demo_mode(): raise HTTPException(410, "Gerencie aulas pelo serviço de aprendizagem")
     teacher_id, _ = teacher
     CourseService(session).delete_lesson(course_id, lesson_id, teacher_id=teacher_id)
     return Response(status_code=204)
@@ -187,8 +210,8 @@ def delete_lesson(
 def course_materials(
     course_id: UUID,
     session: SessionDependency,
+    student_id: StudentDependency,
     lesson_id: UUID | None = None,
-    student_id: Annotated[UUID | None, Header(alias="X-Student-Id")] = None,
 ) -> MaterialListResponse:
     storage = LocalMediaStorage()
     return MaterialService(session).list_authorized(
@@ -293,22 +316,24 @@ def delete_material(
 @router.get("/courses/{course_id}/preview", response_model=CoursePreviewResponse)
 def preview_course(
     course_id: UUID,
+    request: Request,
     session: SessionDependency,
     teacher: TeacherDependency,
 ) -> CoursePreviewResponse:
     teacher_id, _ = teacher
-    return PublishingService(session).preview(course_id, teacher_id=teacher_id)
+    return PublishingService(session, lesson_reader(request)).preview(course_id, teacher_id=teacher_id)
 
 
 @router.post("/courses/{course_id}/publication", response_model=PublicationResponse)
 def set_course_publication(
     course_id: UUID,
+    request: Request,
     payload: PublicationRequest,
     session: SessionDependency,
     teacher: TeacherDependency,
 ) -> PublicationResponse:
     teacher_id, _ = teacher
-    return PublishingService(session).set_publication(
+    return PublishingService(session, lesson_reader(request)).set_publication(
         course_id, action=payload.action.value, teacher_id=teacher_id
     )
 

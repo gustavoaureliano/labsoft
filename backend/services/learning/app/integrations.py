@@ -110,7 +110,10 @@ class DemoIntegrations:
         return None
 
 
-def get_integrations() -> Integrations:
+def get_integrations(request: Request = None) -> Integrations:
+    if os.environ.get("CATALOG_URL"):
+        from app.catalog import CatalogIntegrations
+        return CatalogIntegrations(request)
     if os.environ.get("LEARNING_DEMO_MODE", "false").lower() != "true":
         raise HTTPException(503, "Integrações reais ainda não configuradas")
     if os.environ.get("LEARNING_DEMO_SCENARIO") == "showcase":
@@ -124,7 +127,9 @@ def get_current_user(
     x_demo_user: Annotated[str | None, Header(alias="X-Demo-User")] = None,
 ) -> User:
     if os.environ.get("IDENTITY_URL") or "authorization" in request.headers or request.cookies.get("aprovaai_access"):
-        return User(*resolve_identity(request))
+        user = User(*resolve_identity(request))
+        request.state.current_user = user
+        return user
     integrations = get_integrations()
     # Explicitly insecure development identity; never enabled implicitly.
     identity = x_demo_user or request.headers.get("X-Demo-User") or request.cookies.get("aprovaai_demo_user")

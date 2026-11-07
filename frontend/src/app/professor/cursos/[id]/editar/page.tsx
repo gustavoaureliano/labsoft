@@ -1,6 +1,8 @@
 import { CourseEditor } from "@/components/teacher/CourseEditor";
+import { CourseEditorIntegrated } from "@/components/teacher/CourseEditorIntegrated";
 import { TeacherShell } from "@/components/teacher/TeacherShell";
 
 export default async function EditCoursePage({ params }: PageProps<"/professor/cursos/[id]/editar">) {
-  return <TeacherShell activePage="courses"><CourseEditor courseId={(await params).id} /></TeacherShell>;
+  const {id} = await params;
+  return <TeacherShell activePage="courses">{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <CourseEditorIntegrated courseId={id} /> : <CourseEditor courseId={id} />}</TeacherShell>;
 }
