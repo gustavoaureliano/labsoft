@@ -7,6 +7,7 @@ out/
 !backend/.env.example
 !backend/services/*/.env.example
 !frontend/.env.local.example
+!frontend/.env.example
 *.tsbuildinfo
 next-env.d.ts
 .venv/
@@ -15,3 +16,40 @@ __pycache__/
 backend/storage/
 backend/services/*/storage/
 .pytest_cache/
+private_uploads/
+
+
+# ==========================================
+# Python - Cache
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+
+# ==========================================
+# Node.js / React / TypeScript - Cache
+# ==========================================
+.npm/
+.yarn/cache/
+.pnpm-store/
+.cache/
+.parcel-cache/
+.next/cache/
+.nuxt/
+.turbo/
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# ==========================================
+# Ferramentas - Cache
+# ==========================================
+.tox/
+.nox/
+.pytype/
+.pyright/

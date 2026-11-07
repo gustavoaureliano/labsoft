@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
+import { ApiSessionSync } from "@/components/access/ApiSessionSync";
 import { WorkspaceSidebarProvider } from "@/components/layout/WorkspaceSidebarState";
 import "./globals.css";
 
@@ -13,7 +14,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body className={rubik.className}><WorkspaceSidebarProvider>{children}</WorkspaceSidebarProvider></body>
+      <body className={rubik.className}>
+        <WorkspaceSidebarProvider>
+          <ApiSessionSync />
+          {children}
+        </WorkspaceSidebarProvider>
+      </body>
     </html>
   );
 }
