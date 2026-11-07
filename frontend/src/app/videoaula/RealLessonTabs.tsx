@@ -78,7 +78,7 @@ export function RealLessonTabs({description, lessonId, courseId}: {description: 
             <p>Média: {rating.data.average_rating} ({rating.data.total_ratings} avaliações)</p>
           </div>}
       </>}
-      {active === "Materiais" && <><h2>Materiais complementares</h2><Link href={`/materiais-complementares?curso=${encodeURIComponent(courseId)}`}>Ver materiais do curso</Link></>}
+      {active === "Materiais" && <><h2>Materiais complementares</h2><Link href={`/materiais-complementares?curso=${encodeURIComponent(courseId)}&aula=${encodeURIComponent(lessonId)}`}>Ver materiais desta aula</Link></>}
       {message && <p role="status">{message}</p>}
     </div>
   </section>;

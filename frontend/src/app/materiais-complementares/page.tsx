@@ -6,6 +6,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import type { ComplementaryMaterial } from "@/data/catalog";
 import { toComplementaryMaterial } from "@/lib/api/adapters";
 import { absoluteApiUrl, apiRequest, studentHeaders } from "@/lib/api/client";
+import { isApiConfigured } from "@/lib/apiClient";
+import type { Course as LearningCourse } from "@/lib/api/learning";
 import type { ApiCoursePage, ApiMaterialList } from "@/lib/api/types";
 import styles from "./page.module.css";
 
@@ -15,12 +17,13 @@ type LibraryMaterial = ComplementaryMaterial & {
 };
 
 export default function MateriaisComplementares({searchParams}: PageProps<"/materiais-complementares">) {
-  const {curso} = use(searchParams);
+  const {curso, aula} = use(searchParams);
   const initialCourse = typeof curso === "string" ? curso : "Todos";
-  return <MaterialsLibrary key={initialCourse} initialCourse={initialCourse} />;
+  const lessonId = typeof aula === "string" ? aula : null;
+  return <MaterialsLibrary key={`${initialCourse}:${lessonId ?? ""}`} initialCourse={initialCourse} lessonId={lessonId} />;
 }
 
-function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
+function MaterialsLibrary({initialCourse, lessonId}: {initialCourse: string; lessonId: string | null}) {
   const [selectedCourse, setSelectedCourse] = useState(initialCourse);
   const [selectedType, setSelectedType] = useState("Todos");
   const [materials, setMaterials] = useState<LibraryMaterial[]>([]);
@@ -41,16 +44,19 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
   useEffect(() => {
     async function loadMaterials() {
       try {
-        const catalog = await apiRequest<ApiCoursePage>("/api/courses?page=1&size=100");
-        const lists = await Promise.all(catalog.items.map(async (course) => {
-          const list = await apiRequest<ApiMaterialList>(`/api/courses/${course.id}/materials`, { headers: studentHeaders() });
+        const courses = isApiConfigured
+          ? await apiRequest<LearningCourse[]>("/api/learning/courses")
+          : (await apiRequest<ApiCoursePage>("/api/courses?page=1&size=100")).items;
+        const lists = await Promise.all(courses.map(async (course) => {
+          const lesson = lessonId && course.id === initialCourse ? `?lesson_id=${encodeURIComponent(lessonId)}` : "";
+          const list = await apiRequest<ApiMaterialList>(`/api/courses/${course.id}/materials${lesson}`, { headers: studentHeaders() });
           return list.items.map((material) => ({
             ...toComplementaryMaterial(material, course.title),
             authorized: material.authorized,
             downloadUrl: material.download_url,
           }));
         }));
-        setCourseOptions(catalog.items.map((course) => ({ id: course.id, title: course.title })));
+        setCourseOptions(courses.map((course) => ({ id: course.id, title: course.title })));
         setMaterials(lists.flat());
         setError("");
       } catch {
@@ -60,7 +66,7 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
       }
     }
     loadMaterials();
-  }, []);
+  }, [initialCourse, lessonId]);
 
   return (
     <AppShell activePage="materials">
