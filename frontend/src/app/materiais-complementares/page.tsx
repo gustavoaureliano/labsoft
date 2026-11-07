@@ -1,21 +1,34 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { catalogCourses, complementaryMaterials, materialTypes } from "@/data/catalog";
+import type { ComplementaryMaterial } from "@/data/catalog";
+import { toComplementaryMaterial } from "@/lib/api/adapters";
+import { absoluteApiUrl, apiRequest, studentHeaders } from "@/lib/api/client";
+import type { ApiCoursePage, ApiMaterialList } from "@/lib/api/types";
 import styles from "./page.module.css";
+
+type LibraryMaterial = ComplementaryMaterial & {
+  authorized: boolean;
+  downloadUrl: string | null;
+};
 
 export default function MateriaisComplementares({searchParams}: PageProps<"/materiais-complementares">) {
   const {curso} = use(searchParams);
-  const initialCourse = typeof curso === "string" && catalogCourses.some(course => course.id === curso) ? curso : "Todos";
+  const initialCourse = typeof curso === "string" ? curso : "Todos";
   return <MaterialsLibrary key={initialCourse} initialCourse={initialCourse} />;
 }
 
 function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
   const [selectedCourse, setSelectedCourse] = useState(initialCourse);
   const [selectedType, setSelectedType] = useState("Todos");
-  const filteredMaterials = complementaryMaterials.filter((material) =>
+  const [materials, setMaterials] = useState<LibraryMaterial[]>([]);
+  const [courseOptions, setCourseOptions] = useState<Array<{ id: string; title: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const materialTypes = [...new Set(materials.map((material) => material.type))];
+  const filteredMaterials = materials.filter((material) =>
     (selectedCourse === "Todos" || material.courseId === selectedCourse)
     && (selectedType === "Todos" || material.type === selectedType),
   );
@@ -24,7 +37,30 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
     groups[material.courseTitle].push(material);
     return groups;
   }, {});
-  const courseOptions = catalogCourses;
+
+  useEffect(() => {
+    async function loadMaterials() {
+      try {
+        const catalog = await apiRequest<ApiCoursePage>("/api/courses?page=1&size=100");
+        const lists = await Promise.all(catalog.items.map(async (course) => {
+          const list = await apiRequest<ApiMaterialList>(`/api/courses/${course.id}/materials`, { headers: studentHeaders() });
+          return list.items.map((material) => ({
+            ...toComplementaryMaterial(material, course.title),
+            authorized: material.authorized,
+            downloadUrl: material.download_url,
+          }));
+        }));
+        setCourseOptions(catalog.items.map((course) => ({ id: course.id, title: course.title })));
+        setMaterials(lists.flat());
+        setError("");
+      } catch {
+        setError("Não foi possível carregar os materiais.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMaterials();
+  }, []);
 
   return (
     <AppShell activePage="materials">
@@ -33,7 +69,6 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
           <span>Continue aprendendo</span>
           <h1>Materiais complementares</h1>
           <p>Resumos, exercícios e revisões para acompanhar seus cursos.</p>
-          <p>Materiais ilustrativos nesta demonstração; os arquivos não estão disponíveis para download.</p>
         </header>
 
         <section className={styles.library} aria-label="Filtros de materiais">
@@ -54,7 +89,7 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
           <span className={styles.resultCount} aria-live="polite">{filteredMaterials.length} {filteredMaterials.length === 1 ? "material" : "materiais"}</span>
         </section>
 
-        {filteredMaterials.length ? (
+        {loading ? <p className={styles.emptyState}>Carregando materiais...</p> : error ? <p className={styles.emptyState}>{error}</p> : filteredMaterials.length ? (
           <div className={styles.groups}>
             {Object.entries(groupedMaterials).map(([courseTitle, materials]) => (
               <section aria-labelledby={`course-${materials[0].courseId}`} className={styles.courseGroup} key={courseTitle}>
@@ -74,7 +109,9 @@ function MaterialsLibrary({initialCourse}: {initialCourse: string}) {
                         <h3>{material.title}</h3>
                         <p>{material.description}</p>
                       </div>
-                      <span className={styles.format}>{material.format}</span>
+                      {material.downloadUrl && material.authorized
+                        ? <a className={styles.format} href={absoluteApiUrl(material.downloadUrl)} rel="noreferrer" target="_blank">Abrir {material.format}</a>
+                        : <span className={styles.format}>{material.authorized ? material.format : "Matrícula necessária"}</span>}
                     </li>
                   ))}
                 </ul>

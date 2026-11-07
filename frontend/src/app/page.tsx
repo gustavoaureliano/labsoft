@@ -5,8 +5,10 @@ import { Logo } from "@/components/brand/Logo";
 import { CatalogCourseCard } from "@/components/catalog/CatalogCourseCard";
 import { HomeDashboard } from "@/components/home/HomeDashboard";
 import { AppShell } from "@/components/layout/AppShell";
-import { catalogCourses } from "@/data/catalog";
 import { demoRoleCookieName, parseDemoRole, roleHome } from "@/data/demoAccount";
+import { toCatalogCourse } from "@/lib/api/adapters";
+import { apiRequest } from "@/lib/api/client";
+import type { ApiLanding } from "@/lib/api/types";
 import styles from "./page.module.css";
 
 export default async function HomePage() {
@@ -18,7 +20,16 @@ export default async function HomePage() {
   return <LandingPage />;
 }
 
-function LandingPage() {
+async function LandingPage() {
+  let courses: ReturnType<typeof toCatalogCourse>[] = [];
+  let serviceUnavailable = false;
+  try {
+    const landing = await apiRequest<ApiLanding>("/api/landing");
+    courses = landing.sample_courses.slice(0, 3).map((course) => toCatalogCourse(course));
+  } catch {
+    serviceUnavailable = true;
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -53,8 +64,9 @@ function LandingPage() {
             <p>Uma amostra dos conteúdos disponíveis para quem entra na AprovaAí.</p>
           </div>
           <div className={styles.courseGrid}>
-            {catalogCourses.slice(0, 3).map((course) => <CatalogCourseCard course={course} key={course.id} />)}
+            {courses.map((course) => <CatalogCourseCard course={course} key={course.id} />)}
           </div>
+          {!courses.length && <p>{serviceUnavailable ? "O catálogo está temporariamente indisponível." : "Novos cursos serão publicados em breve."}</p>}
           <Link className={styles.exploreLink} href="/login">Entre para explorar todos os cursos →</Link>
         </section>
       </main>

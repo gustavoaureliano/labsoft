@@ -10,7 +10,7 @@ function formatSize(size?: number) {
   return `${(size / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
 }
 
-export function DemoFileField({ accept, current, inputLabel, onRemove, onSelect }: { accept: string; current?: DemoFileMetadata | null; inputLabel: string; onRemove?: () => void; onSelect: (file: DemoFileMetadata) => void }) {
+export function DemoFileField({ accept, current, inputLabel, onRemove, onSelect }: { accept: string; current?: DemoFileMetadata | null; inputLabel: string; onRemove?: () => void; onSelect: (file: File) => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("");
 
@@ -22,7 +22,7 @@ export function DemoFileField({ accept, current, inputLabel, onRemove, onSelect 
       event.target.value = "";
       return;
     }
-    onSelect({ name: file.name, type: file.type || "Arquivo", size: file.size });
+    onSelect(file);
     setNotice("");
     event.target.value = "";
   }
