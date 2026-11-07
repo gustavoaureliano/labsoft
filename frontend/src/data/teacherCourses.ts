@@ -2,7 +2,7 @@ import { demoCourses, demoTeacherId } from "./demoCourses";
 
 export type DemoFileMetadata = { name: string; type: string; size: number };
 export type TeacherLesson = { id: string; title: string; duration: string; videoName: string; videoType?: string; videoSize?: number; thumbnail?: string; thumbnailName?: string; thumbnailType?: string; thumbnailSize?: number };
-export type TeacherMaterial = { id: string; title: string; kind: string; fileName?: string; fileType?: string; fileSize?: number };
+export type TeacherMaterial = { id: string; title: string; kind: string; lessonId?: string | null; fileName?: string; fileType?: string; fileSize?: number };
 
 export type TeacherCourse = {
   id: string;

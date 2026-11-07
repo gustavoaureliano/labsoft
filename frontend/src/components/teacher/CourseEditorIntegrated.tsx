@@ -34,6 +34,7 @@ function previewToEditor(preview: ApiCoursePreview): TeacherCourse {
       id: material.id,
       title: material.title,
       kind: material.kind,
+      lessonId: material.lesson_id,
       fileName: material.external_url ?? material.title,
     })),
   };
@@ -73,7 +74,7 @@ function CourseEditorForm({ initialCourse, originalMaterialIds, isNew }: {
   const [pendingMaterialFiles, setPendingMaterialFiles] = useState<Record<string, File>>({});
 
   const update = (field: keyof TeacherCourse) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setCourse((current) => ({ ...current, [field]: event.target.value }));
-  const updateMaterial = (index: number, field: "title" | "kind", value: string) => setCourse((current) => ({ ...current, materials: current.materials.map((material, position) => position === index ? { ...material, [field]: value } : material) }));
+  const updateMaterial = (index: number, field: "title" | "kind" | "lessonId", value: string) => setCourse((current) => ({ ...current, materials: current.materials.map((material, position) => position === index ? { ...material, [field]: value } : material) }));
 
   function addMaterial(file: File) {
     const id = `material-${crypto.randomUUID()}`;
@@ -89,7 +90,7 @@ function CourseEditorForm({ initialCourse, originalMaterialIds, isNew }: {
     const saved: ApiMaterial[] = [];
     for (const [position, material] of course.materials.entries()) {
       if (originalMaterialIds.includes(material.id)) {
-        saved.push(await apiRequest<ApiMaterial>(`/api/courses/${courseId}/materials/${material.id}`, { method: "PATCH", headers: teacherHeaders(), body: JSON.stringify({ title: material.title, kind: material.kind, position }) }));
+        saved.push(await apiRequest<ApiMaterial>(`/api/courses/${courseId}/materials/${material.id}`, { method: "PATCH", headers: teacherHeaders(), body: JSON.stringify({ title: material.title, position, lesson_id: material.lessonId || null }) }));
         continue;
       }
       const file = pendingMaterialFiles[material.id];
@@ -100,6 +101,7 @@ function CourseEditorForm({ initialCourse, originalMaterialIds, isNew }: {
       form.append("kind", material.kind);
       form.append("access_level", "enrolled");
       form.append("position", String(position));
+      if (material.lessonId) form.append("lesson_id", material.lessonId);
       saved.push(await apiRequest<ApiMaterial>(`/api/courses/${courseId}/materials/upload`, { method: "POST", headers: teacherHeaders(), body: form }));
     }
     return saved;
@@ -161,7 +163,23 @@ function CourseEditorForm({ initialCourse, originalMaterialIds, isNew }: {
 
       <section className={styles.card} aria-labelledby="materials-title">
         <div className={styles.sectionHeading}><div><h2 id="materials-title">3. Materiais complementares</h2><p>Os arquivos serão enviados ao backend ao salvar.</p></div><DemoFileField accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" inputLabel="Enviar material" onSelect={addMaterial} /></div>
-        <div className={styles.rows}>{course.materials.length ? course.materials.map((material, index) => <div className={styles.materialRow} key={material.id}><label>Título<input aria-label={`Título do material ${index + 1}`} value={material.title} onChange={(event) => updateMaterial(index, "title", event.target.value)} /></label><label>Formato<select aria-label={`Formato do material ${index + 1}`} value={material.kind} onChange={(event) => updateMaterial(index, "kind", event.target.value)}><option>PDF</option><option>DOC</option><option>DOCX</option><option>PPT</option><option>PPTX</option><option>ZIP</option><option>Link</option></select></label><div className={styles.materialFile}><span>{material.fileName ?? material.title}</span><small>{material.fileType || material.kind}{material.fileSize ? ` · ${(material.fileSize / 1024).toFixed(0)} KB` : ""}</small></div><button type="button" onClick={() => setCourse((current) => ({ ...current, materials: current.materials.filter((_, position) => position !== index) }))}>Excluir</button></div>) : <p className={styles.emptyRow}>Nenhum material adicionado.</p>}</div>
+        <div className={styles.rows}>{course.materials.length ? course.materials.map((material, index) => (
+          <div className={styles.materialRow} key={material.id}>
+            <label>Título<input aria-label={`Título do material ${index + 1}`} value={material.title} onChange={event => updateMaterial(index, "title", event.target.value)} /></label>
+            <label>Formato<select aria-label={`Formato do material ${index + 1}`} value={material.kind} onChange={event => updateMaterial(index, "kind", event.target.value)}>
+              {['PDF', 'DOC', 'DOCX', 'PPT', 'PPTX', 'ZIP', 'Link'].map(kind => <option key={kind}>{kind}</option>)}
+            </select></label>
+            <label>Aula<select aria-label={`Aula do material ${index + 1}`} value={material.lessonId ?? ""} onChange={event => updateMaterial(index, "lessonId", event.target.value)}>
+              <option value="">Material geral do curso</option>
+              {course.lessons.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
+            </select></label>
+            <div className={styles.materialFile}>
+              <span>{material.fileName ?? material.title}</span>
+              <small>{material.fileType || material.kind}{material.fileSize ? ` · ${(material.fileSize / 1024).toFixed(0)} KB` : ""}</small>
+            </div>
+            <button type="button" onClick={() => setCourse(current => ({...current, materials: current.materials.filter((_, position) => position !== index)}))}>Excluir</button>
+          </div>
+        )) : <p className={styles.emptyRow}>Nenhum material adicionado.</p>}</div>
       </section>
 
       {preview && <section className={styles.preview} aria-label="Prévia do curso"><span>Prévia</span><h2>{course.title || "Curso sem título"}</h2><p>{course.summary || "Adicione uma descrição para apresentar o curso."}</p><strong>{course.lessons.length} {course.lessons.length === 1 ? "aula" : "aulas"} · {course.access === "free" ? "Gratuito" : `R$ ${course.price}`}</strong></section>}
