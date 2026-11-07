@@ -15,6 +15,12 @@ export function pauseForReview() {
   return reviewDelay > 0 ? new Promise((resolve) => setTimeout(resolve, reviewDelay)) : Promise.resolve();
 }
 
+/** Purchases now live in the backend (demo user 1), so tests start from a clean slate.
+ *  Needs the backend services running behind the frontend's /api rewrites. */
+export async function resetCommerceState() {
+  for (const itemId of [0, 1, 2, 3, 4, 5]) await fetch(`${baseUrl}/api/subscriptions/1/${itemId}`, { method: "DELETE" });
+}
+
 export async function setDemoRoleForTest(driver: WebDriver, role: DemoRole | null) {
   if (role) await driver.manage().addCookie({ name: demoRoleCookieName, value: role, path: "/" });
   else await driver.manage().deleteCookie(demoRoleCookieName);

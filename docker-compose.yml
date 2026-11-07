@@ -1,0 +1,64 @@
+# Works with `podman compose up --build` and `docker compose up --build`.
+x-db-env: &db-env
+  DATABASE_URL: postgresql+psycopg://aprovaai:aprovaai@db:5432/aprovaai
+
+services:
+  db:
+    # one Postgres instance; each service gets its own schema inside it
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: aprovaai
+      POSTGRES_PASSWORD: aprovaai
+      POSTGRES_DB: aprovaai
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+
+  access:
+    build: {context: ./backend/apps, args: {SERVICE: AccessService}}
+    environment: {SUBSCRIPTION_URL: "http://subscription:8000"}
+    ports: ["8001:8000"]
+    depends_on: [subscription]
+  content:
+    # MOCK of the media team's service: sample lessons/documents, access enforced via `access`
+    build: {context: ./backend/apps, args: {SERVICE: ContentMockService}}
+    environment: {ACCESS_URL: "http://access:8000"}
+    ports: ["8006:8000"]
+    depends_on: [access]
+  checkout:
+    build: {context: ./backend/apps, args: {SERVICE: CheckoutService}}
+    environment:
+      <<: *db-env
+      PAYMENT_URL: "http://payment:8000"
+      SUBSCRIPTION_URL: "http://subscription:8000"
+    ports: ["8002:8000"]
+    depends_on: [db, payment, subscription]
+  subscription:
+    build: {context: ./backend/apps, args: {SERVICE: SubscriptionService}}
+    environment:
+      <<: *db-env
+      PAYMENT_URL: "http://payment:8000"
+    ports: ["8003:8000"]
+    depends_on: [db]
+  payment:
+    build: {context: ./backend/apps, args: {SERVICE: PaymentService}}
+    environment:
+      <<: *db-env
+      PSP_URL: "http://psp:8000"
+      PAYMENT_SELF_URL: "http://payment:8000"   # where the PSP sends webhooks
+      SUBSCRIPTION_URL: "http://subscription:8000"
+      METERING_URL: "http://metering:8000"
+      CONTENT_URL: "http://content:8000"
+    ports: ["8004:8000"]
+    depends_on: [db]
+  psp:
+    # MOCK of the external payment provider (idempotency, async settlement, webhooks)
+    build: {context: ./backend/apps, args: {SERVICE: MockPSPService}}
+    ports: ["8007:8000"]
+  metering:
+    build: {context: ./backend/apps, args: {SERVICE: MeteringService}}
+    environment: *db-env
+    ports: ["8005:8000"]
+    depends_on: [db]
+
+volumes:
+  pgdata:

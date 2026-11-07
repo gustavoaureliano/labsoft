@@ -6,8 +6,7 @@ import { Avatar } from "./Avatar";
 import { Icon } from "./Icons";
 import { initialProfile, type Profile } from "../../data/profile";
 import { formatPrice } from "../../data/catalog";
-import { accessDemoKey, initialAccessDemo } from "../../data/subscriptionDemo";
-import { useDemoStorage } from "../../lib/useDemoStorage";
+import { useAccess } from "@/lib/api/commerce";
 import styles from "./page.module.css";
 
 const storageKey = "aprovaai-profile-demo";
@@ -17,7 +16,7 @@ export function ProfilePage() {
   const [savedName, setSavedName] = useState(initialProfile.nickname);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
+  const [access] = useAccess();
   const fileInput = useRef<HTMLInputElement>(null);
   const currentPlan = access.subscription;
 

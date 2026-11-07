@@ -1,0 +1,50 @@
+@startuml metering-sequence
+title Metering: watch-time heartbeats and teacher payouts
+
+actor "Browser\n(VideoPlayer)" as UI
+participant "Metering\nService" as MET
+database "metering\nschema" as METDB
+participant "Payment\nService" as PAY
+database "payment\nschema" as PAYDB
+participant "Content mock\n(media team)" as CNT
+participant "Mock PSP" as PSP
+
+== While a video is playing ==
+loop every 10 s while the video is playing (not paused or ended)
+  UI -> MET : POST /api/heartbeat\n{user, item, stamp = position in s}
+  MET -> METDB : insert beat(user, item, stamp, created_at)
+  MET --> UI : 202 accepted
+end
+note right of UI
+  Preview mode and lessons whose course_id
+  is not in the catalog send no heartbeats.
+  Each beat counts as 10 s watched.
+end note
+
+== Usage report for one user and item ==
+UI -> MET : GET /api/usage/{user}/{item}
+MET -> METDB : count beats, last stamp
+MET --> UI : {beats, seconds_watched, last_position}
+
+== Teacher payout for a period (run by an operator or cron) ==
+PAY -> PAY : POST /api/payouts/run?period=YYYY-MM
+PAY -> PAYDB : payouts for this period already exist?
+alt already computed
+  PAYDB --> PAY : existing payouts (not recomputed)
+else first run
+  PAY -> PAYDB : revenue = sum of payments paid in the period
+  PAY -> MET : GET /api/usage/summary?from&to
+  MET -> METDB : beats grouped by item in [from, to)
+  MET --> PAY : seconds per item
+  PAY -> CNT : GET /api/items/owners
+  CNT --> PAY : item -> teacher id
+  PAY -> PAY : pool = 70% of revenue\nshare per item = pool x item seconds / total seconds
+  PAY -> PAYDB : insert payouts (status = due)\nunique per (period, item)
+end
+loop each payout still due
+  PAY -> PSP : POST /v1/transfers\nIdempotency-Key: payout-<id>
+  PSP --> PAY : transfer paid
+  PAY -> PAYDB : status = paid
+end
+
+@enduml

@@ -1,0 +1,76 @@
+@startuml checkout-sequence
+title Checkout: idempotent purchase with asynchronous settlement
+
+actor "Browser\n(CheckoutFlow)" as UI
+participant "Checkout\nService" as CO
+database "checkout\nschema" as CODB
+participant "Payment\nService" as PAY
+database "payment\nschema" as PAYDB
+participant "Mock PSP" as PSP
+participant "Subscription\nService" as SUB
+
+== Start purchase (safe to retry) ==
+UI -> CO : POST /api/checkout\nIdempotency-Key: K\n{user, item, amount, method, plan}
+CO -> CODB : find checkout by K
+alt K already used
+  alt same request body
+    CODB --> CO : existing checkout (resume)
+  else different body
+    CO --> UI : 409 Conflict
+  end
+else new key
+  CO -> CODB : insert checkout(K, request hash)
+end
+
+opt payment_id not saved yet (first try, or crash before saving it)
+  CO -> PAY : POST /api/payments\nIdempotency-Key: checkout-<id>
+  PAY -> PAYDB : find or insert payment (status = pending)
+  PAY -> PSP : POST /v1/charges\nIdempotency-Key: payment-<id>
+  PSP --> PAY : charge {id, status: pending}
+  PAY -> PAYDB : save psp_charge_id
+  PAY --> CO : payment {id, status: pending}
+  CO -> CODB : save payment_id
+end
+CO --> UI : {checkout_id, status: processing}
+
+== Settlement (asynchronous, at-least-once) ==
+PSP -> PSP : wait settle delay
+PSP -> PAY : POST /api/payments/webhooks/psp\n{charge.succeeded | charge.failed}
+PAY -> PAYDB : pending -> paid | failed\n(ignored if already final)
+PAY -> SUB : POST /api/subscriptions/events/payment
+SUB -> SUB : apply once per payment_id\n(paid -> subscription active)
+SUB --> PAY : 200
+PAY -> PAYDB : notified = true
+PAY --> PSP : 200
+PSP -> PAY : duplicate webhook
+PAY --> PSP : 200 (no-op)
+
+== Recovery (background reconcile every 2 s) ==
+group webhook lost, PSP was down, or Subscription was down
+  PAY -> PAYDB : pending payments older than 5 s
+  PAY -> PSP : POST /v1/charges again if never submitted\n(same key, so no second charge)
+  PAY -> PSP : GET /v1/charges/{id}
+  PSP --> PAY : succeeded | failed
+  PAY -> PAYDB : settle
+  PAY -> SUB : resend event if notified = false
+end
+
+== Poll for the outcome ==
+loop every 1 s until not processing (max 30 s)
+  UI -> CO : GET /api/checkout/{checkout_id}
+  CO -> PAY : GET /api/payments/{payment_id}
+  alt payment failed
+    CO --> UI : payment_failed
+  else payment paid
+    CO -> SUB : GET /api/subscriptions/{user}/{item}
+    alt subscription active
+      CO --> UI : ok
+    else not active yet
+      CO --> UI : processing
+    end
+  else payment pending
+    CO --> UI : processing
+  end
+end
+
+@enduml

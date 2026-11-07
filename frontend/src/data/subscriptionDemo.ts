@@ -1,5 +1,5 @@
 export type SubscriptionPlan = "individual" | "complete";
-export type SubscriptionStatus = "active" | "cancelled";
+export type SubscriptionStatus = "active" | "past_due" | "cancelled";
 
 export type AccessDemo = {
   courseIds: string[];
