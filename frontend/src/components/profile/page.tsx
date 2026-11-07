@@ -154,6 +154,7 @@ export function ProfilePage() {
         {isApiConfigured ? <section className={`${styles.card} ${styles.planCard}`}>
           <h2>Acessos da conta</h2>
           {accessError ? <p role="alert">{accessError}</p> : !accessReady ? <p>Consultando acessos...</p>
+            : access.subscription?.plan === "complete" ? <p>Plano completo: {access.subscription.status === "active" ? "ativo" : "pagamento pendente"}.</p>
             : <p>{access.courseIds.length} {access.courseIds.length === 1 ? "curso disponível" : "cursos disponíveis"}.</p>}
           <Link className={styles.secondaryButton} href="/meus-cursos">Ver meus cursos</Link>
         </section> : <>

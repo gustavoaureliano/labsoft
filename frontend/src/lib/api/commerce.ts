@@ -36,15 +36,28 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  *  Reuse the same `idempotencyKey` when retrying the same attempt; make a new one after a refusal.
  *  Resolves "ok", or "processing" if it hasn't settled within the polling window. */
 export async function purchase(
-  itemId: number, priceReais: number, method: PaymentMethod, plan: "one_time" | "monthly", idempotencyKey: string,
+  itemId: number | string, priceReais: number, method: PaymentMethod, plan: "one_time" | "monthly", idempotencyKey: string,
 ): Promise<"ok" | "processing"> {
-  if (isApiConfigured) throw new Error("Compras e planos pagos ainda não estão disponíveis no modo integrado.");
+  if (isApiConfigured) {
+    if (plan === "one_time" && priceReais <= 0) {
+      await enrollFreeCourse(String(itemId));
+      return "ok";
+    }
+    const data = jsonRequest("POST", {plan, method, course_id: plan === "one_time" ? String(itemId) : null});
+    let view = await api<CheckoutView>("/api/checkout", { ...data, headers: {...data.headers, "Idempotency-Key":idempotencyKey} });
+    for (let attempt = 0; view.status === "processing" && attempt < 30; attempt++) {
+      await sleep(1000);
+      view = await api<CheckoutView>(`/api/checkout/${view.checkout_id}`);
+    }
+    if (view.status === "payment_failed") throw new Error("Pagamento recusado. Tente outro método.");
+    return view.status === "ok" ? "ok" : "processing";
+  }
   if (priceReais <= 0) { // free enrollment: no payment, just subscribe
     await api("/api/subscriptions", jsonRequest("POST", { user_id: DEMO_USER_ID, item_id: itemId }));
     return "ok";
   }
-  const request = jsonRequest("POST", { user_id: DEMO_USER_ID, item_id: itemId, amount: toCents(priceReais), method, plan });
-  let view = await api<CheckoutView>("/api/checkout", { ...request, headers: { ...request.headers, "Idempotency-Key": idempotencyKey } });
+  const payload = jsonRequest("POST", { user_id: DEMO_USER_ID, item_id: itemId, amount: toCents(priceReais), method, plan });
+  let view = await api<CheckoutView>("/api/checkout", { ...payload, headers: { ...payload.headers, "Idempotency-Key": idempotencyKey } });
   for (let attempt = 0; view.status === "processing" && attempt < 30; attempt++) {
     await sleep(1000);
     view = await api<CheckoutView>(`/api/checkout/${view.checkout_id}`);
@@ -75,8 +88,14 @@ export function useAccess() {
     setError(null);
     try {
       if (isApiConfigured) {
-        const result = await api<{items: {course_id: string; status: string}[]}>("/api/subscriptions/me");
-        setAccess({courseIds: result.items.filter(item => item.status === "active").map(item => item.course_id), subscription: null});
+        const result = await api<{items: {course_id: string; status: string; price: number}[];
+          complete_plan: {status: "active" | "past_due" | "cancelled"; price: number} | null}>("/api/subscriptions/me");
+        const paid = result.items.find(item => item.status === "active" && item.price > 0);
+        const plan = result.complete_plan;
+        setAccess({courseIds: result.items.filter(item => item.status === "active").map(item => item.course_id),
+          subscription: plan && plan.status !== "cancelled"
+            ? {plan:"complete", status:plan.status, price:plan.price / 100}
+            : paid ? {plan:"individual", status:"active", courseId:paid.course_id, price:paid.price / 100} : null});
         setReady(true);
         return;
       }
@@ -99,8 +118,7 @@ export function useAccess() {
   useEffect(() => { startTransition(() => { void refresh(); }); }, [refresh]);
 
   const cancelCompletePlan = useCallback(async () => {
-    if (isApiConfigured) throw new Error("Cancelamento de planos pagos ainda não está integrado.");
-    await api(`/api/subscriptions/${DEMO_USER_ID}/${COMPLETE_PLAN_ITEM}`, { method: "DELETE" });
+    await api(isApiConfigured ? "/api/subscriptions/me/complete-plan" : `/api/subscriptions/${DEMO_USER_ID}/${COMPLETE_PLAN_ITEM}`, { method: "DELETE" });
     await refresh();
   }, [refresh]);
 
