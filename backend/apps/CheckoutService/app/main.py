@@ -108,7 +108,7 @@ def view(c: Checkout, access_token: str) -> dict:
             if sub["user_id"] != str(c.user_id):
                 return {**base, "status": "processing"}
             if c.plan == "monthly":
-                active = sub.get("complete_plan", {}).get("status") == "active"
+                active = (sub.get("complete_plan") or {}).get("status") == "active"
             else:
                 active = any(item["course_id"] == str(c.item_id) and item["status"] == "active"
                              for item in sub["items"])

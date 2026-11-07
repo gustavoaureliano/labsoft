@@ -25,11 +25,18 @@ class Identity(BaseModel):
 class Enrollment(BaseModel):
     course_id: UUID
     status: Literal["active", "cancelled", "past_due"]
+    price: int = 0
+
+
+class CompletePlan(BaseModel):
+    status: Literal["active", "cancelled", "past_due"]
+    price: int
 
 
 class Subscriptions(BaseModel):
     user_id: UUID
     items: list[Enrollment]
+    complete_plan: CompletePlan | None = None
 
 
 def credential(request: Request) -> str:
@@ -77,8 +84,11 @@ async def check_access(course_id: UUID, request: Request) -> dict:
         subscriptions = await read(client, "SUBSCRIPTION_URL", "/api/subscriptions/me", token, Subscriptions)
     if subscriptions.user_id != user.id:
         raise HTTPException(503, "Usuário divergente na resposta de matrícula")
-    allowed = any(item.course_id == course_id and item.status == "active" for item in subscriptions.items)
+    individual = next((item for item in subscriptions.items if item.course_id == course_id and item.status == "active"), None)
+    complete = subscriptions.complete_plan is not None and subscriptions.complete_plan.status == "active"
+    allowed = individual is not None or complete
     return {
         "user_id": str(user.id), "course_id": str(course_id), "allowed": allowed,
-        "reason": "free_enrollment" if allowed else "no_active_enrollment",
+        "reason": ("individual_purchase" if individual.price > 0 else "free_enrollment") if individual
+                  else "complete_plan" if complete else "no_active_enrollment",
     }

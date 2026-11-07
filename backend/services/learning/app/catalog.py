@@ -25,16 +25,22 @@ class Enrollment(BaseModel):
     status: Literal["active", "cancelled", "past_due"]
 
 
+class CompletePlan(BaseModel):
+    status: Literal["active", "past_due", "cancelled"]
+    price: int
+
+
 class Subscriptions(BaseModel):
     user_id: UUID
     items: list[Enrollment]
+    complete_plan: CompletePlan | None = None
 
 
 class AccessDecision(BaseModel):
     user_id: UUID
     course_id: UUID
     allowed: StrictBool
-    reason: Literal["free_enrollment", "no_active_enrollment"]
+    reason: Literal["free_enrollment", "individual_purchase", "complete_plan", "no_active_enrollment"]
 
 
 class CatalogIntegrations:
@@ -82,12 +88,28 @@ class CatalogIntegrations:
             if str(subscriptions.user_id) != user.id:
                 raise HTTPException(503, "Matrículas de outro usuário")
             result = []
+            if subscriptions.complete_plan and subscriptions.complete_plan.status == "active":
+                page = 1
+                while True:
+                    data = self.read("CATALOG_URL", f"/api/courses?page={page}&size=100")
+                    try:
+                        pagination = data["pagination"]
+                        if pagination["page"] != page or not isinstance(pagination["pages"], int):
+                            raise ValueError("Página inválida")
+                        result.extend(self.convert(item) for item in data["items"])
+                        if page >= pagination["pages"]:
+                            break
+                        page += 1
+                    except (KeyError, TypeError, ValueError) as exc:
+                        raise HTTPException(503, "Catálogo paginado inválido") from exc
+            known = {course.id for course in result}
             for item in subscriptions.items:
-                if item.status != "active":
+                if item.status != "active" or str(item.course_id) in known:
                     continue
                 course = self.course(str(item.course_id))
                 if course is not None:
                     result.append(course)
+                    known.add(course.id)
             return result
         page, result = 1, []
         while True:

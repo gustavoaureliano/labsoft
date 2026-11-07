@@ -1,11 +1,13 @@
 import os
+import secrets
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
+from typing import Literal
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -38,6 +40,16 @@ class ProcessedPayment(Base):
     """Dedup table: payment events are delivered at-least-once, applied exactly once."""
     __tablename__ = "processed_payment"
     payment_id: Mapped[int] = mapped_column(primary_key=True)
+
+
+class CompletePlan(Base):
+    __tablename__ = "complete_plan"
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    price: Mapped[int] = mapped_column(default=4990)
+    method: Mapped[str] = mapped_column(default="pix")
+    status: Mapped[str] = mapped_column(default="active")
+    next_billing_at: Mapped[datetime | None]
+    attempt: Mapped[int] = mapped_column(default=0)
 
 
 @asynccontextmanager
@@ -109,28 +121,41 @@ def create_free_subscription(body: SubscriptionIn, request: Request, response: R
 
 class PaymentEvent(BaseModel):
     payment_id: int
-    user_id: int
-    item_id: int
+    user_id: UUID
+    course_id: UUID | None = None
     amount: int
     method: str
-    kind: str  # initial | renewal
-    plan: str  # one_time | monthly
-    status: str  # paid | failed
+    kind: Literal["initial", "renewal"]
+    plan: Literal["one_time", "monthly"]
+    status: Literal["paid", "failed"]
 
 
-# Retained business logic; HTTP exposure awaits authenticated payment contracts.
-def payment_event(ev: PaymentEvent, db: Session = Depends(get_session)) -> dict:
+@app.post("/api/subscriptions/events/payment")
+def payment_event(ev: PaymentEvent,
+                  service_token: str | None = Header(default=None, alias="X-Service-Token"),
+                  db: Session = Depends(get_session)) -> dict:
     """Payment outcome -> subscription state. Idempotent by payment_id."""
+    expected = os.getenv("PAYMENT_SUBSCRIPTION_TOKEN", "")
+    if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
+        raise HTTPException(403, "Serviço não autorizado")
+    if (ev.plan == "monthly" and ev.course_id is not None) or (ev.plan == "one_time" and ev.course_id is None):
+        raise HTTPException(422, "Escopo de pagamento inválido")
+    if ev.plan == "monthly" and ev.amount != 4990:
+        raise HTTPException(422, "Preço do plano divergente")
+    if ev.kind == "renewal" and (ev.plan != "monthly" or ev.amount <= 0):
+        raise HTTPException(422, "Renovação inválida")
     if db.get(ProcessedPayment, ev.payment_id):
         return {"status": "duplicate"}
     db.add(ProcessedPayment(payment_id=ev.payment_id))
-    sub = db.get(Subscription, (ev.user_id, ev.item_id))
+    sub = db.get(CompletePlan, ev.user_id) if ev.plan == "monthly" else db.get(Subscription, (ev.user_id, ev.course_id))
+    if ev.kind == "renewal" and (sub is None or sub.status == "cancelled"):
+        raise HTTPException(409, "Assinatura não renovável")
     now = utcnow()
     period = timedelta(days=BILLING_PERIOD_DAYS)
     if ev.status == "paid":
         if ev.kind == "initial" or sub is None:
             if sub is None:
-                sub = Subscription(user_id=ev.user_id, item_id=ev.item_id)
+                sub = CompletePlan(user_id=ev.user_id) if ev.plan == "monthly" else Subscription(user_id=ev.user_id, item_id=ev.course_id)
                 db.add(sub)
             sub.plan, sub.price, sub.method = ev.plan, ev.amount, ev.method
             sub.status, sub.attempt = "active", 0
@@ -149,25 +174,34 @@ def payment_event(ev: PaymentEvent, db: Session = Depends(get_session)) -> dict:
     return {"status": "applied"}
 
 
-# Retained business logic; scheduler/paid contracts are a separate integration.
-def run_billing(as_of: datetime | None = None, db: Session = Depends(get_session)) -> dict:
+@app.post("/api/billing/run")
+def run_billing(as_of: datetime | None = None,
+                service_token: str | None = Header(default=None, alias="X-Service-Token"),
+                db: Session = Depends(get_session)) -> dict:
     """Create renewal charges for monthly subscriptions that are due (active, or past_due = retry).
     Run it from cron. Safe to run repeatedly: the idempotency key is derived from the billing cycle
     and attempt, so Payment returns the existing charge instead of creating a second one.
     `as_of` lets you simulate a later date."""
+    expected = os.getenv("BILLING_JOB_TOKEN", "")
+    if len(expected) < 16 or not service_token or not secrets.compare_digest(service_token, expected):
+        raise HTTPException(403, "Agendamento não autorizado")
     now = as_of.replace(tzinfo=None) if as_of else utcnow()
-    due = db.scalars(select(Subscription).where(
-        Subscription.plan == "monthly", Subscription.status.in_(["active", "past_due"]),
-        Subscription.next_billing_at <= now)).all()
+    due = db.scalars(select(CompletePlan).where(
+        CompletePlan.status.in_(["active", "past_due"]),
+        CompletePlan.next_billing_at <= now)).all()
     charged, errors = [], 0
+    payment_token = os.getenv("SUBSCRIPTION_PAYMENT_TOKEN", "")
+    if len(payment_token) < 16:
+        raise HTTPException(503, "Pagamento de renovação não configurado")
     for s in due:
-        key = f"renewal-{s.user_id}-{s.item_id}-{s.next_billing_at.date().isoformat()}-{s.attempt}"
+        key = f"renewal-{s.user_id}-{s.next_billing_at.date().isoformat()}-{s.attempt}"
         try:
-            r = httpx.post(f"{PAYMENT_URL}/api/payments", headers={"Idempotency-Key": key}, timeout=5, json={
-                "user_id": s.user_id, "item_id": s.item_id, "amount": s.price, "method": s.method,
+            r = httpx.post(f"{PAYMENT_URL}/api/payments", headers={"Idempotency-Key": key,
+                "X-Service-Token": payment_token}, timeout=5, json={
+                "user_id": str(s.user_id), "course_id": None, "amount": s.price, "method": s.method,
                 "kind": "renewal", "plan": "monthly"})
             r.raise_for_status()
-            charged.append({"user_id": s.user_id, "item_id": s.item_id, "payment_id": r.json()["id"],
+            charged.append({"user_id": str(s.user_id), "payment_id": r.json()["id"],
                             "status": r.json()["status"]})
         except httpx.HTTPError:
             errors += 1
@@ -178,9 +212,22 @@ def run_billing(as_of: datetime | None = None, db: Session = Depends(get_session
 def list_subscriptions(request: Request, db: Session = Depends(get_session)) -> dict:
     user_id, _ = student(request)
     subs = db.scalars(select(Subscription).where(Subscription.user_id == user_id)).all()
+    complete = db.get(CompletePlan, user_id)
     return {"user_id": str(user_id), "items": [
-        {"course_id": str(s.item_id), "status": s.status} for s in subs
-    ]}
+        {"course_id": str(s.item_id), "status": s.status, "price": s.price} for s in subs
+    ], "complete_plan": {"status": complete.status, "price": complete.price,
+                          "next_billing_at": complete.next_billing_at.isoformat() if complete.next_billing_at else None} if complete else None}
+
+
+@app.delete("/api/subscriptions/me/complete-plan", status_code=204)
+def cancel_complete_plan(request: Request, db: Session = Depends(get_session)) -> Response:
+    user_id, _ = student(request)
+    plan = db.get(CompletePlan, user_id)
+    if plan is not None and plan.status != "cancelled":
+        plan.status = "cancelled"
+        plan.next_billing_at = None
+        db.commit()
+    return Response(status_code=204)
 
 
 @app.get("/api/subscriptions/me/{course_id}")
@@ -197,5 +244,7 @@ def cancel_subscription(course_id: UUID, request: Request, db: Session = Depends
     user_id, _ = student(request)
     sub = db.get(Subscription, (user_id, course_id))
     if sub is not None and sub.status != "cancelled":
+        if sub.price > 0:
+            raise HTTPException(409, "Compra individual não é cancelável por esta rota")
         sub.status, sub.next_billing_at = "cancelled", None
         db.commit()

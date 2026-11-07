@@ -28,6 +28,7 @@ def init_db() -> None:
     prefix = "" if IS_SQLITE else f"{SCHEMA}."
     with engine.connect() as conn:
         conn.execute(text(f"SELECT user_id, item_id FROM {prefix}subscription LIMIT 0"))
+        conn.execute(text(f"SELECT user_id FROM {prefix}complete_plan LIMIT 0"))
 
 
 def get_session():

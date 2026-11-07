@@ -79,3 +79,15 @@ def test_invalid_identity_contract_is_dependency_failure(api):
     client, _, cid, state, _=api
     state['identity_role']='ALUNO'
     assert client.get('/api/access',params={'course_id':cid}).status_code==503
+
+
+def test_active_complete_plan_allows_course_but_cancellation_preserves_purchase(api):
+    client, _, cid, state, _=api
+    state['items']=[]
+    state['complete_plan']={'status':'active','price':4990}
+    assert client.get('/api/access',params={'course_id':cid}).json()['reason']=='complete_plan'
+    state['complete_plan']['status']='past_due'
+    assert client.get('/api/access',params={'course_id':cid}).json()['allowed'] is False
+    state['items']=[{'course_id':cid,'status':'active','price':1250}]
+    state['complete_plan']['status']='cancelled'
+    assert client.get('/api/access',params={'course_id':cid}).json()['reason']=='individual_purchase'

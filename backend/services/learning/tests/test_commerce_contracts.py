@@ -3,7 +3,7 @@ import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 from app.catalog import CatalogIntegrations
-from app.integrations import User
+from app.integrations import Course, User
 
 
 @pytest.mark.parametrize('allowed', [True, False])
@@ -33,8 +33,26 @@ def test_only_own_active_enrollments_are_composed():
     integrations=CatalogIntegrations(request)
     payload={'user_id':uid,'items':[{'course_id':active,'status':'active'},{'course_id':cancelled,'status':'cancelled'}]}
     integrations.read=lambda *args,**kwargs:payload
-    integrations.course=lambda cid:cid
-    assert integrations.courses()==[active]
+    integrations.course=lambda cid:Course(cid,"Curso",uid,"","Professor")
+    assert [course.id for course in integrations.courses()]==[active]
     payload['user_id']=str(uuid4())
     with pytest.raises(HTTPException) as exc:integrations.courses()
     assert exc.value.status_code==503
+
+
+def test_complete_plan_composes_catalog_and_keeps_individual_grant():
+    uid, first, second = str(uuid4()), str(uuid4()), str(uuid4())
+    request=Request({'type':'http','method':'GET','headers':[]})
+    request.state.current_user=User(uid,'student','Aluno')
+    integrations=CatalogIntegrations(request)
+    payload={'user_id':uid,'items':[{'course_id':first,'status':'active'}],
+             'complete_plan':{'status':'active','price':4990}}
+    def read(setting,path,**kwargs):
+        if setting=='SUBSCRIPTION_URL': return payload
+        return {'items':[{'id':second,'title':'Curso','teacher_id':uid,'teacher_name':'Professor','status':'published'}],
+                'pagination':{'page':1,'pages':1}}
+    integrations.read=read
+    integrations.course=lambda cid:Course(cid,"Curso",uid,"","Professor")
+    assert {row.id for row in integrations.courses()}=={first,second}
+    payload['complete_plan']['status']='cancelled'
+    assert [row.id for row in integrations.courses()]==[first]
