@@ -360,7 +360,11 @@ class DemoIntegrations:
 _DEFAULT_DEMO_INTEGRATIONS = DemoIntegrations()
 
 
-def get_integrations() -> Integrations:
+def get_integrations(request: Request = None) -> Integrations:
+    if os.environ.get("IDENTITY_URL") or (request is not None and
+        ("authorization" in request.headers or request.cookies.get("aprovaai_access"))):
+        from app.remote import RemoteIntegrations
+        return RemoteIntegrations(request)
     if os.environ.get("LEARNING_DEMO_MODE", "false").lower() != "true":
         raise HTTPException(503, "Integrações reais ainda não configuradas")
     return _DEFAULT_DEMO_INTEGRATIONS
@@ -371,6 +375,8 @@ def get_current_user(
     integrations: Annotated[Integrations, Depends(get_integrations)],
     x_demo_user: Annotated[str | None, Header(alias="X-Demo-User")] = None,
 ) -> User:
+    if not isinstance(integrations, DemoIntegrations):
+        return integrations.current_user()
     role_to_user = {
         "student": "aluno-demo",
         "teacher": "professor-demo",

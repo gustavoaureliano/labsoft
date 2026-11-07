@@ -9,6 +9,7 @@ from app.integrations import Integrations, User, get_current_user, get_integrati
 from app.permissions import require_course
 from app.learning.models import Lesson
 from app.media import service as media_service
+from app.media.models import Media
 from app.learning import progress
 from app.learning import dashboard
 from app.learning.schemas import ProgressResponse, ProgressUpdate
@@ -42,6 +43,21 @@ def lesson_summaries(course_id: UUID, session: Annotated[Session, Depends(get_se
         items.append({"id": lesson.id, "title": lesson.title, "description": lesson.description if owner else "",
                       "position": lesson.position, "duration_seconds": media.duration_seconds if media else None})
     return {"course_id": course_id, "items": items}
+
+
+@router.get("/lessons/{lesson_id}/summary")
+def lesson_reference(lesson_id: str, session: Annotated[Session, Depends(get_session)],
+                     user: Annotated[User, Depends(get_current_user)],
+                     integrations: Annotated[Integrations, Depends(get_integrations)]) -> dict:
+    """An authorized reference for interactions, without media or progress."""
+    try:
+        lesson = service.get_lesson(session, lesson_id)
+    except service.LessonNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    require_course(user, integrations, lesson.course_id)
+    media = session.get(Media, lesson.media_id) if lesson.media_id else None
+    return {"id": lesson.id, "course_id": lesson.course_id, "title": lesson.title,
+            "position": lesson.position, "duration_seconds": media.duration_seconds if media else None}
 
 
 @router.get("/courses")

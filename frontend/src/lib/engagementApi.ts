@@ -189,7 +189,7 @@ export async function apiFetch<T = unknown>(
 
 const LIBRARY_SYNC_EVENT = "aprovaai-library-sync";
 
-export function useStudyLibrary() {
+export function useStudyLibrary(enabled = true) {
   const [study, setStudy] = useState<StudyDemo>({
     viewedLessons: [],
     favoriteLessons: [],
@@ -199,6 +199,7 @@ export function useStudyLibrary() {
   const [error, setError] = useState<string | null>(null);
 
   const refreshFromBackend = useCallback(async () => {
+    if (!enabled) return false;
     try {
       const [historyData, favData, playlistData] = await Promise.all([
         apiFetch<{ lesson_id: string }[]>("/api/library/history"),
@@ -223,9 +224,10 @@ export function useStudyLibrary() {
       setReady(true);
       return false;
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     startTransition(() => { void refreshFromBackend(); });
     const handleSync = () => {
       void refreshFromBackend();
@@ -234,7 +236,7 @@ export function useStudyLibrary() {
     return () => {
       window.removeEventListener(LIBRARY_SYNC_EVENT, handleSync);
     };
-  }, [refreshFromBackend]);
+  }, [enabled, refreshFromBackend]);
 
   const recordLessonView = useCallback(
     async (lessonId: string) => {

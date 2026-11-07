@@ -5,11 +5,9 @@ import { CourseLessonList } from "@/components/learning/CourseLessonList";
 import { LessonLibraryActions } from "@/components/learning/LessonLibraryActions";
 import { VideoPlayer } from "@/components/learning/VideoPlayer";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
-import { useDemoStorage } from "@/lib/useDemoStorage";
 import { useApi, displayLessons, lessonLink, type Playback, type Course, type Dashboard } from "@/lib/api/learning";
 import { LessonTabs } from "./LessonTabs";
-import { resolveLessons } from "@/lib/api/library";
+import { resolveLessons, useLibrary } from "@/lib/api/library";
 import styles from "./page.module.css";
 
 export function VideoLessonExperience({lessonId, origin, playlistId}: {lessonId?: string; origin?: string; playlistId?: string}) {
@@ -18,9 +16,9 @@ export function VideoLessonExperience({lessonId, origin, playlistId}: {lessonId?
   const playback = useApi<Playback>(selected ? `/api/learning/lessons/${encodeURIComponent(selected)}/playback` : null);
   const course = useApi<Course>(playback.data ? `/api/learning/courses/${playback.data.course_id}` : null);
   const accessibleCourses = useApi<Course[]>(selected && playback.error ? "/api/learning/courses" : null);
-  const [study, saveStudy, ready] = useDemoStorage(studyDemoKey, initialStudyDemo);
+  const {study, saveStudy, ready, error: studyError, recordLessonView, toggleFavoriteLesson, updatePlaylistLessons} = useLibrary();
   const library = useApi<Course[]>(origin && origin !== "course" ? "/api/learning/courses" : null);
-  const error = home.error || course.error || library.error || accessibleCourses.error;
+  const error = home.error || course.error || library.error || accessibleCourses.error || studyError;
   if (error) return <div role="alert"><h1>Aula indisponível</h1><p>{error}</p><Link href="/meus-cursos">Voltar para Meus Cursos</Link></div>;
   if (!selected && home.data) return <p>Nenhuma aula disponível. <Link href="/meus-cursos">Ver cursos</Link></p>;
   if (playback.error && accessibleCourses.data && !accessibleCourses.data.some(item => item.lessons.some(lesson => lesson.id === selected))) {
@@ -46,7 +44,8 @@ export function VideoLessonExperience({lessonId, origin, playlistId}: {lessonId?
       <section className={styles.mainColumn} aria-label="Videoaula">
         <div className={styles.mediaArea}>{playback.data ? <VideoPlayer key={`${lesson.id}:${lesson.media_id}`} lesson={playback.data} poster={list.find(item => item.id === lesson.id)?.thumbnail_url ?? info.image} /> : <div className={styles.unavailablePlayer} role="alert"><strong>Vídeo indisponível nesta aula</strong><p>{playback.error}</p><span>Você ainda pode consultar a descrição ou escolher outra aula do curso.</span></div>}</div>
         <nav className={styles.lessonNavigation} aria-label="Navegar entre aulas"><span>{list[index - 1] && <Link href={lessonLink(list[index - 1].id, {origin, playlistId})}>← Aula anterior</Link>}</span><span>{list[index + 1] && <Link href={lessonLink(list[index + 1].id, {origin, playlistId})}>Próxima aula →</Link>}</span></nav>
-        <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready} />
+        <LessonLibraryActions lessonId={lesson.id} study={study} saveStudy={saveStudy} ready={ready}
+          onRecordView={recordLessonView} onToggleFavorite={toggleFavoriteLesson} onUpdatePlaylistLessons={updatePlaylistLessons} />
         <LessonTabs key={lesson.id} description={lesson.description} lessonId={lesson.id} lessonTitle={lesson.title} courseId={info.id} />
       </section>
       <aside className={styles.lessonPanel}><div className={styles.panelHeading}><h2>{collectionTitle}</h2>{ids ? <p>{list.length} aulas nesta lista</p> : <><p>Seu progresso: {info.progress}%</p><ProgressBar value={info.progress} /></>}</div><CourseLessonList compact lessons={displayLessons(list, lesson.id)} activeLessonId={lesson.id} getLessonHref={item => lessonLink(item.id, {origin, playlistId})} />{ids && list.length < ids.length && <p>Algumas aulas da lista estão indisponíveis; suas referências foram preservadas.</p>}<Link className={styles.allLessonsLink} href={backHref}>{ids ? "Ver biblioteca" : "Ver página do curso"}</Link></aside>

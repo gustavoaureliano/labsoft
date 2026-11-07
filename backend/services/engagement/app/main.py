@@ -1,6 +1,7 @@
 from typing import Annotated
+import os
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.analytics.router import router as analytics_router
@@ -18,6 +19,14 @@ app.include_router(analytics_router)
 app.include_router(moderation_router)
 
 
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.setdefault("Vary", "Cookie, Authorization")
+    return response
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -29,5 +38,7 @@ def reset_demo_state(
     _integrations: Annotated[Integrations, Depends(get_integrations)],
 ) -> dict[str, object]:
     """Reset and re-seed Daniel's tables for deterministic E2E test execution (requires LEARNING_DEMO_MODE=true)."""
+    if os.environ.get("IDENTITY_URL") or os.environ.get("LEARNING_DEMO_MODE", "false").lower() != "true":
+        raise HTTPException(404, "Reinicialização disponível somente no ambiente demo isolado")
     summary = reset_and_seed_daniel_data(session)
     return {"status": "reset", "seeded": summary}
