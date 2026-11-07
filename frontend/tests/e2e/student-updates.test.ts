@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { By, until } from "selenium-webdriver";
 import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
-test("o aluno abre um aviso e encontra o certificado ilustrativo", async () => {
+test("o aluno abre um aviso e consulta o estado real dos certificados", async () => {
   await withBrowser(async (driver) => {
     await driver.get(`${baseUrl}/avisos`);
     const firstNotice = await driver.wait(until.elementLocated(By.xpath('//article[.//h2[normalize-space()="Continue sua aula de Física"]]')), 10000);
@@ -14,9 +14,8 @@ test("o aluno abre um aviso e encontra o certificado ilustrativo", async () => {
     await pauseForReview();
 
     await driver.get(`${baseUrl}/certificados`);
-    assert.match(await driver.findElement(By.css("main")).getText(), /Concluído · exemplo/i);
-    await driver.findElement(By.css('a[href="/certificados/redacao"]')).click();
-    await driver.wait(until.urlContains("/certificados/redacao"), 10000);
-    assert.match(await driver.findElement(By.css("main")).getText(), /prévia visual|demonstrativo/i);
+    await driver.wait(until.elementLocated(By.css("main article")), 10000);
+    assert.match(await driver.findElement(By.css("main")).getText(), /Física para o ENEM: Mecânica/);
+    assert.doesNotMatch(await driver.findElement(By.css("main")).getText(), /Concluído · exemplo|ilustrativo/);
   });
 });

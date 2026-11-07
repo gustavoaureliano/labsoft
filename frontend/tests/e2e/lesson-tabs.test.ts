@@ -30,8 +30,8 @@ test("o aluno explora as abas da videoaula", async () => {
     await pauseForReview();
 
     await driver.findElement(By.css('[role="tab"][id="tab-4"]')).click();
-    const materialsLink = await driver.findElement(By.linkText("Explorar materiais →"));
-    assert.match((await materialsLink.getAttribute("href")) ?? "", /materiais-complementares/);
+    const materialsLink = await driver.findElement(By.linkText("Ver materiais deste curso →"));
+    assert.match((await materialsLink.getAttribute("href")) ?? "", /materiais-complementares\?curso=/);
     await pauseForReview();
   });
 });

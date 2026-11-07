@@ -18,7 +18,7 @@ export function CourseLessonList({ lessons, activeLessonId, compact = false, get
           <Link href={getLessonHref(lesson)} aria-current={lesson.id === activeLessonId ? "page" : undefined}>
             <span className={styles.number}>{lesson.number}</span>
             <span className={styles.copy}><strong>{lesson.title}</strong><small>{lesson.duration} · {lesson.status}</small></span>
-            {!compact && <span className={styles.action}>{lesson.id === activeLessonId ? "Assistindo" : "Assistir"}</span>}
+            {!compact && <span className={styles.action}>{lesson.status === "Indisponível" ? "Indisponível" : lesson.id === activeLessonId ? "Assistindo" : "Assistir"}</span>}
           </Link>
           {onRemoveLesson && <button className={styles.remove} type="button" onClick={() => onRemoveLesson(lesson.id)} aria-label={`Remover ${lesson.title} da playlist`}>Remover</button>}
         </li>

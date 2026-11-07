@@ -7,18 +7,19 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 test("o aluno explora, filtra e encontra um curso", async () => {
   await withBrowser(async (driver) => {
     await driver.get(baseUrl);
-    const homeCard = await driver.findElement(By.css('section#meus-cursos article'));
+    const homeCard = await driver.wait(until.elementLocated(By.css('section#meus-cursos article')), 10000);
     const homeCardClass = await homeCard.getAttribute("class");
     const homeCardTitle = await homeCard.findElement(By.css("h3")).getText();
-    assert.equal(homeCardTitle, "Introdução à Física Quântica");
+    assert.equal(homeCardTitle, "Biologia Celular para Vestibulares");
     await driver.findElement(By.linkText("Explorar todos")).click();
     await driver.wait(until.urlContains("/explorar-cursos"), 10000);
     await pauseForReview();
 
     const results = await driver.wait(until.elementLocated(By.css('section[aria-labelledby="courses-title"]')), 10000);
-    const exploreCardClass = await results.findElement(By.css("article")).getAttribute("class");
+    const matchingCard = await results.findElement(By.xpath(`.//article[.//h3[normalize-space()="${homeCardTitle}"]]`));
+    const exploreCardClass = await matchingCard.getAttribute("class");
     assert.equal(exploreCardClass, homeCardClass);
-    assert.equal(await results.findElement(By.css("article h3")).getText(), homeCardTitle);
+    assert.equal(await matchingCard.findElement(By.css("h3")).getText(), homeCardTitle);
     const count = await results.findElement(By.css('[aria-live="polite"]'));
     assert.equal(await count.getText(), "7 cursos encontrados");
     assert.match(await results.getText(), /Física para o ENEM: Mecânica/);

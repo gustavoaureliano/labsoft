@@ -6,13 +6,14 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 test("o aluno envia uma dúvida geral pela página do curso", async () => {
   await withBrowser(async (driver) => {
     await driver.get(`${baseUrl}/meus-cursos/fisica-enem-mecanica`);
-    await driver.findElement(By.linkText("Tirar dúvida sobre este curso")).click();
+    await (await driver.wait(until.elementLocated(By.linkText("Tirar dúvida sobre este curso")), 10000)).click();
     await driver.wait(until.urlContains("/duvidas?curso=fisica-enem-mecanica"), 10000);
     await driver.wait(until.elementLocated(By.xpath('//h1[normalize-space()="Enviar nova dúvida ao professor"]')), 10000);
     await pauseForReview();
 
     const courseSelect = await driver.findElement(By.css('select[name="course"]'));
     const lessonSelect = await driver.findElement(By.css('select[name="lesson"]'));
+    await driver.wait(async () => (await courseSelect.getAttribute("value")) === "fisica-enem-mecanica", 10000);
     assert.equal(await courseSelect.getAttribute("value"), "fisica-enem-mecanica");
     assert.equal(await lessonSelect.getAttribute("value"), "");
 

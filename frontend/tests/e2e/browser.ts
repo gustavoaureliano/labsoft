@@ -18,11 +18,14 @@ export function pauseForReview() {
 export async function setDemoRoleForTest(driver: WebDriver, role: DemoRole | null) {
   if (role) await driver.manage().addCookie({ name: demoRoleCookieName, value: role, path: "/" });
   else await driver.manage().deleteCookie(demoRoleCookieName);
+  if (role === "student" || role === "teacher") await driver.manage().addCookie({ name: "aprovaai_demo_user", value: role === "student" ? "aluno-demo" : "professor-demo", path: "/" });
+  else await driver.manage().deleteCookie("aprovaai_demo_user");
 }
 
 export async function withBrowser(run: (driver: WebDriver) => Promise<void>, role: DemoRole | null = "student") {
   const options = new chrome.Options();
   options.addArguments("--window-size=1440,900");
+  if (process.env.E2E_HEADLESS !== "false") options.addArguments("--headless=new");
 
   const chromeBinary = process.env.CHROME_BINARY ?? "/usr/bin/chromium";
   if (existsSync(chromeBinary)) options.setChromeBinaryPath(chromeBinary);

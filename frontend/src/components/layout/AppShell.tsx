@@ -14,7 +14,7 @@ const navigation: { label: string; href: string; page: StudentPage; icon: NavIco
   { label: "Meu perfil", href: "/perfil", page: "profile", icon: "profile" },
 ];
 
-export function AppShell({ children, activePage }: { children: ReactNode; activePage?: StudentPage }) {
+export function AppShell({ children, activePage, videoPage = false }: { children: ReactNode; activePage?: StudentPage; videoPage?: boolean }) {
   return (
     <WorkspaceShell
       contentWidth="wide"
@@ -24,6 +24,7 @@ export function AppShell({ children, activePage }: { children: ReactNode; active
       navigation={navigation.map((item) => ({ ...item, selected: item.page === activePage }))}
       role="student"
       showNotifications
+      videoPage={videoPage}
     >
       {children}
     </WorkspaceShell>

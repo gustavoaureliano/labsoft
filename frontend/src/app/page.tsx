@@ -59,7 +59,7 @@ function LandingPage() {
         </section>
       </main>
 
-      <footer className={styles.footer}>AprovaAí · Protótipo de uma plataforma de estudos</footer>
+      <footer className={styles.footer}><span>AprovaAí · Protótipo de uma plataforma de estudos</span><Link href="/certificados/verificar">Verificar certificado</Link></footer>
     </div>
   );
 }

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { blankTeacherCourse, initialTeacherCourses, teacherCoursesKey, type TeacherCourse } from "@/data/teacherCourses";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { DemoFileField } from "./DemoFileField";
-import { DemoImageField } from "./DemoImageField";
+import { DemoLessonDrafts } from "./DemoLessonDrafts";
+import { courseLessonsHref } from "./lessonLinks";
 import styles from "./CourseEditor.module.css";
 
 export function CourseEditor({ courseId }: { courseId?: string }) {
@@ -25,24 +26,8 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
   const [notice, setNotice] = useState("");
 
   const update = (field: keyof TeacherCourse) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setCourse((current) => ({ ...current, [field]: event.target.value }));
-  const updateLesson = (index: number, field: "title" | "duration", value: string) => setCourse((current) => ({ ...current, lessons: current.lessons.map((lesson, position) => position === index ? { ...lesson, [field]: value } : lesson) }));
   const updateMaterial = (index: number, field: "title" | "kind", value: string) => setCourse((current) => ({ ...current, materials: current.materials.map((material, position) => position === index ? { ...material, [field]: value } : material) }));
 
-  function moveLesson(index: number, direction: -1 | 1) {
-    const destination = index + direction;
-    if (destination < 0 || destination >= course.lessons.length) return;
-    const lessons = [...course.lessons];
-    [lessons[index], lessons[destination]] = [lessons[destination], lessons[index]];
-    setCourse((current) => ({ ...current, lessons }));
-  }
-
-  function setLessonVideo(index: number, file: { name: string; type: string; size: number } | null) {
-    setCourse((current) => ({ ...current, lessons: current.lessons.map((lesson, position) => position === index ? { ...lesson, videoName: file?.name ?? "", videoType: file?.type, videoSize: file?.size } : lesson) }));
-  }
-
-  function setLessonThumbnail(index: number, file: { name: string; type: string; size: number } | null) {
-    setCourse((current) => ({ ...current, lessons: current.lessons.map((lesson, position) => position === index ? { ...lesson, thumbnail: undefined, thumbnailName: file?.name, thumbnailType: file?.type, thumbnailSize: file?.size } : lesson) }));
-  }
 
   function addMaterial(file: { name: string; type: string; size: number }) {
     const title = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
@@ -64,7 +49,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
   return (
     <div className={styles.editor}>
       <header className={styles.heading}>
-        <div><span>Editor de cursos</span><h1>{isNew ? "Criar curso" : "Editar curso"}</h1><p>Organize as informações e o conteúdo antes de publicar.</p></div>
+        <div><span>Editor de cursos</span><h1>{isNew ? "Criar curso" : "Editar informações do curso"}</h1><p>Organize a apresentação e os materiais do curso.</p></div>
         <Link href="/professor/cursos">Cancelar e voltar</Link>
       </header>
 
@@ -80,19 +65,7 @@ function CourseEditorForm({ initialCourse, courses, saveCourses, isNew }: { init
         </div>
       </section>
 
-      <section className={styles.card} aria-labelledby="lessons-title">
-        <div className={styles.sectionHeading}><div><h2 id="lessons-title">2. Aulas</h2><p>Selecione um vídeo real. Somente seus dados serão mantidos nesta demonstração.</p></div><button type="button" onClick={() => setCourse((current) => ({ ...current, lessons: [...current.lessons, { id: `aula-${Date.now()}`, title: "", duration: "", videoName: "" }] }))}>+ Adicionar aula</button></div>
-        <div className={styles.rows}>{course.lessons.length ? course.lessons.map((lesson, index) => <div className={styles.contentRow} key={lesson.id}>
-          <span className={styles.position}>{index + 1}</span>
-          <label>Título<input aria-label={`Título da aula ${index + 1}`} value={lesson.title} onChange={(event) => updateLesson(index, "title", event.target.value)} /></label>
-          <label>Duração<input aria-label={`Duração da aula ${index + 1}`} value={lesson.duration} onChange={(event) => updateLesson(index, "duration", event.target.value)} placeholder="20 min" /></label>
-          <div className={styles.mediaFields}>
-            <div className={styles.videoField}><span>Vídeo</span><DemoFileField accept="video/*" inputLabel={`Selecionar vídeo da aula ${index + 1}`} current={lesson.videoName ? { name: lesson.videoName, type: lesson.videoType ?? "Vídeo", size: lesson.videoSize ?? 0 } : null} onSelect={(file) => setLessonVideo(index, file)} onRemove={() => setLessonVideo(index, null)} /></div>
-            <div className={styles.thumbnailField}><span>Thumbnail</span><DemoImageField fallback={lesson.thumbnail ?? course.image} inputLabel={`Selecionar thumbnail da aula ${index + 1}`} current={lesson.thumbnailName ? { name: lesson.thumbnailName, type: lesson.thumbnailType ?? "Imagem", size: lesson.thumbnailSize ?? 0 } : null} onSelect={(file) => setLessonThumbnail(index, file)} onRemove={() => setLessonThumbnail(index, null)} /></div>
-          </div>
-          <div className={styles.rowActions}><button type="button" disabled={index === 0} aria-label={`Mover aula ${index + 1} para cima`} onClick={() => moveLesson(index, -1)}>↑</button><button type="button" disabled={index === course.lessons.length - 1} aria-label={`Mover aula ${index + 1} para baixo`} onClick={() => moveLesson(index, 1)}>↓</button><button type="button" onClick={() => setCourse((current) => ({ ...current, lessons: current.lessons.filter((_, position) => position !== index) }))}>Excluir</button></div>
-        </div>) : <p className={styles.emptyRow}>Nenhuma aula adicionada.</p>}</div>
-      </section>
+      {isNew || initialCourse.id.startsWith("curso-") ? <DemoLessonDrafts lessons={course.lessons} image={course.image} onChange={lessons => setCourse(current => ({...current, lessons}))} /> : <section className={styles.card}><div className={styles.sectionHeading}><div><h2>2. Conteúdo das aulas</h2><p>Edite vídeos, imagens e a sequência das aulas em um espaço próprio.</p></div><Link className={styles.primary} href={courseLessonsHref(initialCourse.id, "course-editor")}>Gerenciar aulas</Link></div></section>}
 
       <section className={styles.card} aria-labelledby="materials-title">
         <div className={styles.sectionHeading}><div><h2 id="materials-title">3. Materiais complementares</h2><p>Envie PDFs, documentos, apresentações ou arquivos compactados.</p></div><DemoFileField accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" inputLabel="Enviar material" onSelect={addMaterial} /></div>

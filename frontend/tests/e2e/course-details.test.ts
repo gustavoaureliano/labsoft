@@ -5,6 +5,8 @@ import { baseUrl, pauseForReview, withBrowser } from "./browser.ts";
 
 test("o aluno abre um curso e consulta seus detalhes antes de escolher o acesso", async () => {
   await withBrowser(async (driver) => {
+    // The second student has no Quantum access in either demo scenario.
+    await driver.manage().addCookie({name: "aprovaai_demo_user", value: "aluno-demo-2", path: "/"});
     await driver.get(`${baseUrl}/explorar-cursos`);
     await driver.findElement(By.css('a[aria-label="Ver detalhes de Introdução à Física Quântica"]')).click();
     await driver.wait(until.urlContains("/cursos/fisica-quantica"), 10000);
@@ -12,6 +14,7 @@ test("o aluno abre um curso e consulta seus detalhes antes de escolher o acesso"
     assert.equal(await driver.findElement(By.css("h1")).getText(), "Introdução à Física Quântica");
     assert.match(await driver.findElement(By.css("main")).getText(), /Ementa do curso/);
     assert.match(await driver.findElement(By.css("main")).getText(), /Efeito fotoelétrico/);
+    await driver.wait(until.elementLocated(By.linkText("Escolher acesso")), 10000);
     assert.match(await driver.findElement(By.css("main")).getText(), /R\$ 29,90/);
     await pauseForReview();
 
@@ -27,6 +30,7 @@ test("o aluno continua um curso em que já está matriculado", async () => {
     await driver.get(`${baseUrl}/cursos/fisica-enem-mecanica`);
     const continueLink = await driver.wait(until.elementLocated(By.linkText("Continuar curso")), 10000);
     assert.equal(await continueLink.getAttribute("href"), `${baseUrl}/meus-cursos/fisica-enem-mecanica`);
-    assert.match(await driver.findElement(By.css('aside[aria-label="Opções de acesso"]')).getText(), /68% concluído/);
+    const progress = await driver.executeAsyncScript<number>("const done = arguments[arguments.length - 1]; fetch('/api/learning/courses/fisica-enem-mecanica').then(r => r.json()).then(r => done(r.progress));");
+    assert.ok((await driver.findElement(By.css('aside[aria-label="Opções de acesso"]')).getText()).includes(`${progress}% concluído`));
   });
 });

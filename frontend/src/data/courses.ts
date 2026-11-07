@@ -3,7 +3,7 @@ export type EnrolledLesson = {
   number: string;
   title: string;
   duration: string;
-  status: "Concluída" | "Aula atual" | "Próxima aula";
+  status: "Concluída" | "Aula atual" | "Próxima aula" | "Indisponível";
   description: string;
   thumbnail?: string;
 };

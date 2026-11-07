@@ -49,6 +49,8 @@ Para acompanhar o navegador, use `npm run test:e2e:visual`. Os testes serão exe
 
 Use `BASE_URL` se a aplicação estiver em outra porta. Use `CHROME_BINARY` se o Chromium estiver em outro caminho.
 
+O Chromium executa sem janela por padrão, inclusive nos modos sequencial e com pausas. Para uma demonstração visível, use `E2E_HEADLESS=false npm run test:e2e:visual`.
+
 Os testes percorrem descoberta e detalhes de cursos, contratação demonstrativa, navegação entre aulas e playlists, estudo da videoaula, organização de aulas, dúvidas entre aluno e professor, perfil, avisos, certificados, criação de cursos, seleção de arquivos, métricas e moderação. Também verificam os fluxos demonstrativos de entrada, solicitação docente e denúncia.
 
 Este é um protótipo de interface. Conta, dúvidas, anotações, playlists, cursos do professor, assinatura e decisões de moderação são simuladas no navegador. O editor abre o seletor de arquivos e guarda apenas seus metadados. Não há autenticação, envio real de arquivos ou e-mail, pagamento, reprodução de vídeo ou backend.

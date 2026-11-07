@@ -5,21 +5,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CourseLessonList } from "@/components/learning/CourseLessonList";
-import { PrimaryLink } from "@/components/ui/PrimaryLink";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { currentLesson, enrolledCourse, lessonHref, lessonsFromIds } from "@/data/courses";
+import { useApi, displayLessons, lessonLink, type Course } from "@/lib/api/learning";
+import { resolveLessons } from "@/lib/api/library";
 import { accessDemoKey, initialAccessDemo } from "@/data/subscriptionDemo";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 export default function MeusCursos() {
+  const {data: courses, error: courseError} = useApi<Course[]>("/api/learning/courses");
   const [activeTab, setActiveTab] = useState<"history" | "favorites" | "playlists">("history");
   const [study, saveStudy] = useDemoStorage(studyDemoKey, initialStudyDemo);
   const [access] = useDemoStorage(accessDemoKey, initialAccessDemo);
   const [playlistName, setPlaylistName] = useState("");
-  const historyLessons = lessonsFromIds(study.viewedLessons);
-  const favoriteLessons = lessonsFromIds(study.favoriteLessons);
+  const historyLessons = displayLessons(resolveLessons(study.viewedLessons, courses ?? []));
+  const favoriteLessons = displayLessons(resolveLessons(study.favoriteLessons, courses ?? []));
 
   function createPlaylist(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,20 +39,37 @@ export default function MeusCursos() {
           <p>Acompanhe seu progresso e continue de onde parou.</p>
         </header>
 
-        <section aria-labelledby="in-progress-title">
-          <h2 id="in-progress-title">Em andamento</h2>
-          <article className={styles.course}>
-            <div className={styles.courseVisual}><Image alt={`Capa do curso ${enrolledCourse.title}`} fill priority sizes="(max-width: 750px) 100vw, 40vw" src={enrolledCourse.image} /><span>{enrolledCourse.category}</span></div>
+        <section className={styles.courseSection} aria-labelledby="in-progress-title">
+          <h2 id="in-progress-title">Seus cursos</h2>
+          {courseError && <p role="alert">{courseError}</p>}
+          {!courses && !courseError && <p role="status">Carregando cursos...</p>}
+          {courses?.length === 0 && <p>Nenhum curso com acesso disponível.</p>}
+          <div className={styles.courseGrid}>
+          {courses?.map(course => {
+            const unavailable = course.access_status === "expired" || course.access_status === "blocked";
+            const started = course.progress > 0 || course.lessons.some(lesson => (lesson.position_seconds ?? 0) > 0 || lesson.completed);
+            const state = course.access_status === "expired" ? "Acesso expirado" : course.access_status === "blocked" ? "Acesso bloqueado" : course.completed ? "Concluído" : started ? "Em andamento" : "Não iniciado";
+            const action = unavailable ? "Ver detalhes do acesso" : course.completed ? "Revisar curso" : started ? "Continuar curso" : "Começar curso";
+            return <article className={styles.course} key={course.id}>
+            <Link className={styles.courseLink} href={unavailable ? `/cursos/${course.id}` : course.continue_lesson ? lessonLink(course.continue_lesson.id) : `/meus-cursos/${course.id}`} aria-label={`${unavailable || course.continue_lesson ? action : "Ver curso"}: ${course.title}`}>
+            <div className={styles.courseVisual}><Image alt="" fill sizes="(max-width: 750px) 100vw, (max-width: 1320px) 45vw, 350px" src={course.image} /></div>
             <div className={styles.courseContent}>
-              <span className={styles.eyebrow}>{enrolledCourse.category} · {enrolledCourse.totalLessons} aulas</span>
-              <h3><Link href={`/meus-cursos/${enrolledCourse.id}`}>{enrolledCourse.title}</Link></h3>
-              <p>{enrolledCourse.teacher}</p>
-              <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{enrolledCourse.progress}%</strong></div>
-              <ProgressBar value={enrolledCourse.progress} />
-              <p className={styles.nextLesson}>Próxima aula: {currentLesson.title}</p>
-              <div className={styles.courseActions}><PrimaryLink className={styles.primaryButton} href={lessonHref(currentLesson.id)}>Continuar curso</PrimaryLink><Link href={`/meus-cursos/${enrolledCourse.id}`}>Ver todas as aulas</Link></div>
+              <div className={styles.courseMeta}><span>{unavailable ? "Acesso ao curso" : `${course.total_lessons} aulas`}</span><span className={styles.courseStatus} data-state={unavailable ? course.access_status : course.completed ? "completed" : started ? "started" : "new"}>{state}</span></div>
+              <h3>{course.title}</h3>
+              <p>{course.teacher}</p>
+              <div className={styles.courseFooter}>
+              {unavailable ? <p className={styles.nextLesson}>Não é possível assistir às aulas enquanto o acesso estiver {course.access_status === "expired" ? "expirado" : "bloqueado"}.</p> : <>
+                <div className={styles.progressCopy}><span>Progresso do curso</span><strong>{course.progress}%</strong></div>
+                <ProgressBar value={course.progress} />
+                <p className={styles.nextLesson}>{course.continue_lesson ? course.completed ? "Curso concluído. Reveja as aulas quando quiser." : `${started ? "Continue em" : "Comece por"}: ${course.continue_lesson.title}` : "Aulas em preparação"}</p>
+              </>}
+              <span className={styles.courseAction}>{unavailable || course.continue_lesson ? action : "Ver curso"} →</span>
+              </div>
             </div>
-          </article>
+            </Link>
+          </article>;
+          })}
+          </div>
         </section>
 
         {access.subscription?.plan === "complete" && access.subscription.status === "active" && <section aria-labelledby="new-access-title">
@@ -67,14 +85,15 @@ export default function MeusCursos() {
             <button type="button" aria-pressed={activeTab === "playlists"} onClick={() => setActiveTab("playlists")}>Playlists</button>
           </div>
           <div className={styles.libraryContent}>
-            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
-            {activeTab === "favorites" && (favoriteLessons.length > 0 ? <CourseLessonList lessons={favoriteLessons} getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "favorites" })} /> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
+            {activeTab === "history" && (historyLessons.length > 0 ? <CourseLessonList lessons={historyLessons} getLessonHref={(lesson) => lessonLink(lesson.id, { origin: "history" })} /> : <p>Abra uma videoaula para começar seu histórico neste navegador.</p>)}
+            {activeTab === "favorites" && (favoriteLessons.length > 0 ? <CourseLessonList lessons={favoriteLessons} getLessonHref={(lesson) => lessonLink(lesson.id, { origin: "favorites" })} /> : <p>Você ainda não salvou uma aula nos favoritos.</p>)}
             {activeTab === "playlists" && <>
               <form className={styles.playlistForm} onSubmit={createPlaylist}><label htmlFor="playlist-name">Nova playlist</label><input id="playlist-name" value={playlistName} onChange={(event) => setPlaylistName(event.target.value)} maxLength={60} placeholder="Ex.: Revisão de Física" /><button type="submit" disabled={!playlistName.trim()}>Criar playlist</button></form>
               <ul className={styles.playlistList}>{study.playlists.map((playlist) => <li key={playlist.id}><Link href={`/meus-cursos/playlists/${playlist.id}`}><span><strong>{playlist.name}</strong><small>{playlist.lessonIds.length} {playlist.lessonIds.length === 1 ? "aula" : "aulas"}</small></span><b>Ver playlist →</b></Link></li>)}</ul>
             </>}
           </div>
           <p className={styles.demoNote}>Histórico, favoritos e playlists ficam somente neste navegador.</p>
+          {courses && (historyLessons.length < study.viewedLessons.length || favoriteLessons.length < study.favoriteLessons.length) && <p>Referências antigas ou sem acesso foram preservadas no navegador, mas não substituídas por outras aulas.</p>}
         </section>
       </div>
     </AppShell>

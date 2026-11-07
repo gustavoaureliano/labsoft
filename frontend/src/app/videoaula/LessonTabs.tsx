@@ -2,19 +2,20 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { questionHref } from "@/data/courses";
-import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, type LessonReport } from "@/data/lessonInteractionsDemo";
+import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 const tabs = ["Visão Geral", "Comentários", "Anotações", "Avaliações", "Materiais"] as const;
 type Tab = (typeof tabs)[number];
 
-export function LessonTabs({ description, lessonId, lessonTitle }: { description: string; lessonId: string; lessonTitle: string }) {
+export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { description: string; lessonId: string; lessonTitle: string; courseId: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Visão Geral");
   const [comment, setComment] = useState("");
   const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsStorageKey(lessonId), initialLessonInteractions);
-  const [report, saveReport] = useDemoStorage<LessonReport | null>(lessonReportStorageKey(lessonId), null);
+  const [localReport, saveReport] = useDemoStorage<LessonReport | null>(lessonReportStorageKey(lessonId), null);
+  const [latestReport, saveLatestReport] = useDemoStorage<LessonReport | null>(lessonReportKey, null);
+  const report = latestReport?.lessonId === lessonId ? latestReport : localReport;
   const [note, setNote] = useState<string | null>(null);
 
   function addComment(event: FormEvent<HTMLFormElement>) {
@@ -28,7 +29,11 @@ export function LessonTabs({ description, lessonId, lessonTitle }: { description
   function reportLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const reason = String(new FormData(event.currentTarget).get("reason") ?? "").trim();
-    if (reason && !report) saveReport({ reason, lessonId, lessonTitle });
+    if (reason && !report) {
+      const next = {reason, lessonId, lessonTitle};
+      saveReport(next);
+      saveLatestReport(next); // Existing moderation demo consumes the latest report.
+    }
   }
 
   return (
@@ -69,7 +74,7 @@ export function LessonTabs({ description, lessonId, lessonTitle }: { description
             <p>Os comentários são públicos para os participantes do curso e servem para compartilhar observações sobre a aula.</p>
             <div className={styles.questionCallout}>
               <span>Precisa de uma resposta do professor?</span>
-              <Link href={questionHref(lessonId)}>Enviar dúvida ao professor</Link>
+              <Link href={`/duvidas?${new URLSearchParams({curso: courseId, aula: lessonId})}`}>Enviar dúvida ao professor</Link>
             </div>
             {interactions.comments.length ? (
               <ul className={styles.comments}>
@@ -110,8 +115,8 @@ export function LessonTabs({ description, lessonId, lessonTitle }: { description
         {activeTab === "Materiais" && (
           <div>
             <h2>Materiais complementares</h2>
-            <p>Encontre resumos e exercícios para continuar estudando.</p>
-            <Link className={styles.materialLink} href="/materiais-complementares">Explorar materiais →</Link>
+            <p>Consulte os materiais demonstrativos do curso. Eles não estão vinculados especificamente a esta aula nem disponíveis para download nesta versão.</p>
+            <Link className={styles.materialLink} href={`/materiais-complementares?curso=${encodeURIComponent(courseId)}`}>Ver materiais deste curso →</Link>
           </div>
         )}
       </div>

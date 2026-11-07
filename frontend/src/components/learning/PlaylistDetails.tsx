@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { lessonHref, lessonsFromIds } from "@/data/courses";
+import { useApi, displayLessons, lessonLink, type Course } from "@/lib/api/learning";
+import { resolveLessons } from "@/lib/api/library";
 import { initialStudyDemo, studyDemoKey } from "@/data/studyDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
 import { CourseLessonList } from "./CourseLessonList";
 import styles from "./PlaylistDetails.module.css";
 
 export function PlaylistDetails({ playlistId }: { playlistId: string }) {
+  const {data: courses, error} = useApi<Course[]>("/api/learning/courses");
   const [study, saveStudy, ready] = useDemoStorage(studyDemoKey, initialStudyDemo);
   const playlist = study.playlists.find((item) => item.id === playlistId);
 
-  if (!ready) return <p className={styles.status}>Carregando playlist...</p>;
+  if (error) return <p role="alert">{error}</p>;
+  if (!ready || !courses) return <p className={styles.status}>Carregando playlist...</p>;
   if (!playlist) return <section className={styles.empty}><h1>Playlist não encontrada</h1><p>Ela pode ter sido removida deste navegador.</p><Link href="/meus-cursos">Voltar para Meus Cursos</Link></section>;
 
-  const lessons = lessonsFromIds(playlist.lessonIds);
+  const resolved = resolveLessons(playlist.lessonIds, courses);
+  const lessons = displayLessons(resolved);
 
   function removeLesson(lessonId: string) {
     saveStudy({
@@ -36,11 +40,12 @@ export function PlaylistDetails({ playlistId }: { playlistId: string }) {
         {lessons.length > 0 ? (
           <CourseLessonList
             lessons={lessons}
-            getLessonHref={(lesson) => lessonHref(lesson.id, { origin: "playlist", playlistId })}
+            getLessonHref={(lesson) => lessonLink(lesson.id, { origin: "playlist", playlistId })}
             onRemoveLesson={removeLesson}
           />
         ) : <p className={styles.status}>Esta playlist ainda não tem aulas. Adicione uma pela página de uma videoaula.</p>}
       </section>
+      {resolved.length < playlist.lessonIds.length && <p role="status">Algumas referências antigas, removidas ou sem acesso não estão disponíveis. Os identificadores foram preservados, sem substituir suas aulas.</p>}
       <p className={styles.note}>Esta playlist fica somente neste navegador.</p>
     </div>
   );

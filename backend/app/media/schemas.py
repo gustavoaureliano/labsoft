@@ -1,0 +1,17 @@
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
+
+class MediaResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    original_filename: str
+    content_type: str
+    size_bytes: int
+    status: str
+    created_at: datetime
+    duration_seconds: float | None
+    codec: str | None

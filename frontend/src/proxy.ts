@@ -5,6 +5,7 @@ const publicPaths = new Set(["/", "/login", "/cadastro", "/cadastro/professor", 
 const studentPaths = new Set(["/meus-cursos", "/videoaula", "/duvidas", "/perfil", "/avisos", "/explorar-cursos", "/materiais-complementares", "/pesquisa", "/checkout", "/assinatura"]);
 
 function requiredRole(pathname: string): DemoRole | null {
+  if (pathname === "/certificados/verificar" || pathname.startsWith("/certificados/verificar/")) return null;
   if (studentPaths.has(pathname) || pathname.startsWith("/meus-cursos/") || pathname === "/certificados" || pathname.startsWith("/certificados/")) return "student";
   if (pathname === "/professor/cursos" || pathname.startsWith("/professor/cursos/") || pathname === "/professor/duvidas" || pathname === "/professor/monetizacao") return "teacher";
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return "admin";
@@ -28,5 +29,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  // API authorization belongs to FastAPI, not page-role redirects.
+  matcher: ["/((?!api/|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

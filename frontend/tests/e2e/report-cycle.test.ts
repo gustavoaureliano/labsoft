@@ -5,8 +5,8 @@ import { baseUrl, pauseForReview, setDemoRoleForTest, withBrowser } from "./brow
 
 test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", async () => {
   await withBrowser(async (driver) => {
-    await driver.get(`${baseUrl}/videoaula`);
-    await driver.findElement(By.css("#lesson-report")).sendKeys("Áudio indisponível");
+    await driver.get(`${baseUrl}/videoaula?aula=demo-mecanica-vetores`);
+    await (await driver.wait(until.elementLocated(By.css("#lesson-report")), 10000)).sendKeys("Áudio indisponível");
     const submit = await driver.findElement(By.xpath('//button[normalize-space()="Enviar denúncia"]'));
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'})", submit);
     await submit.click();
@@ -22,8 +22,8 @@ test("o aluno denuncia uma aula uma vez e a moderação registra a decisão", as
     await keep.click();
     assert.match(await report.getText(), /conteúdo mantido/);
     await setDemoRoleForTest(driver, "student");
-    await driver.get(`${baseUrl}/videoaula`);
-    const lessonPanel = await driver.findElement(By.css('[role="tabpanel"]'));
+    await driver.get(`${baseUrl}/videoaula?aula=demo-mecanica-vetores`);
+    const lessonPanel = await driver.wait(until.elementLocated(By.css('[role="tabpanel"]')), 10000);
     await driver.wait(until.elementTextContains(lessonPanel, "conteúdo mantido"), 5000);
     assert.match(await lessonPanel.getText(), /conteúdo mantido/);
   });
