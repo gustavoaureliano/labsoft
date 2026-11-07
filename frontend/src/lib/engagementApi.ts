@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { demoAccountKey, demoRoleCookieName, type DemoAccount, type DemoRole } from "@/data/demoAccount";
 import { initialStudyDemo, type StudyDemo } from "@/data/studyDemo";
 import { ApiError as SessionApiError, isApiConfigured, request } from "@/lib/apiClient";
@@ -226,7 +226,7 @@ export function useStudyLibrary() {
   }, []);
 
   useEffect(() => {
-    void refreshFromBackend();
+    startTransition(() => { void refreshFromBackend(); });
     const handleSync = () => {
       void refreshFromBackend();
     };
