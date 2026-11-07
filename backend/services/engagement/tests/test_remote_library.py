@@ -115,3 +115,19 @@ def test_personal_library_responses_are_not_publicly_cached(integrated):
     response = client.get("/api/library/history", headers=headers(method="GET"))
     assert response.status_code == 200
     assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_notes_comments_and_ratings_use_real_lesson_access(integrated):
+    client, ids, _, lesson, state = integrated
+    note = f"/api/interactions/lessons/{lesson}/note"
+    assert client.put(note, headers=headers(), json={"content":"Minha nota privada"}).status_code == 200
+    assert client.get(note, headers=headers(method="GET")).json()["content"] == "Minha nota privada"
+    assert client.get(note, headers=headers(1,"GET")).json()["content"] == ""
+    comment = client.post(f"/api/interactions/lessons/{lesson}/comments", headers=headers(), json={"content":"Aula muito boa"})
+    assert comment.status_code == 201 and comment.json()["author_id"] == ids[0]
+    rating = client.put(f"/api/interactions/ratings/{lesson}", headers=headers(), json={"target_type":"lesson","stars":5})
+    assert rating.status_code == 200 and rating.json()["student_stars"] == 5
+    state["allowed"][ids[0]] = False
+    assert client.put(note, headers=headers(), json={"content":"Não posso escrever"}).status_code in (403,404)
+    assert client.post(f"/api/interactions/lessons/{lesson}/comments", headers=headers(), json={"content":"Sem acesso"}).status_code in (403,404)
+    assert client.put(f"/api/interactions/ratings/{lesson}", headers=headers(), json={"stars":1}).status_code in (403,404)

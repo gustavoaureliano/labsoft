@@ -4,12 +4,20 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { initialLessonInteractions, lessonInteractionsStorageKey, lessonReportStorageKey, lessonReportKey, type LessonReport } from "@/data/lessonInteractionsDemo";
 import { useDemoStorage } from "@/lib/useDemoStorage";
+import { isApiConfigured } from "@/lib/apiClient";
+import { RealLessonTabs } from "./RealLessonTabs";
 import styles from "./page.module.css";
 
 const tabs = ["Visão Geral", "Comentários", "Anotações", "Avaliações", "Materiais"] as const;
 type Tab = (typeof tabs)[number];
 
-export function LessonTabs({ description, lessonId, lessonTitle, courseId }: { description: string; lessonId: string; lessonTitle: string; courseId: string }) {
+type Props = { description: string; lessonId: string; lessonTitle: string; courseId: string };
+
+export function LessonTabs(props: Props) {
+  return isApiConfigured ? <RealLessonTabs {...props} /> : <DemoLessonTabs {...props} />;
+}
+
+function DemoLessonTabs({ description, lessonId, lessonTitle, courseId }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Visão Geral");
   const [comment, setComment] = useState("");
   const [interactions, saveInteractions] = useDemoStorage(lessonInteractionsStorageKey(lessonId), initialLessonInteractions);
