@@ -1,13 +1,13 @@
 """Explicit development seed for Daniel's tables: python -m app.seed. Never runs on startup."""
 
 from datetime import datetime, timedelta, timezone
+import os
 
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.communication.models import Notification, Question
 from app.database import SessionLocal
-from app.integrations import get_integrations
 from app.library_interaction.models import (
     ContentRating,
     LessonComment,
@@ -171,7 +171,9 @@ def reset_and_seed_daniel_data(session: Session) -> dict[str, int]:
 
 
 if __name__ == "__main__":
-    get_integrations()  # Refuse to seed without explicit development mode (LEARNING_DEMO_MODE=true).
+    # Refuse to seed without explicit, isolated development mode.
+    if os.environ.get("IDENTITY_URL") or os.environ.get("LEARNING_DEMO_MODE", "false").lower() != "true":
+        raise SystemExit("Seed disponível somente com LEARNING_DEMO_MODE=true e sem IDENTITY_URL")
     with SessionLocal() as session:
         summary = seed_daniel_data(session)
         print(f"Seed concluído: {summary}; registros existentes preservados.")

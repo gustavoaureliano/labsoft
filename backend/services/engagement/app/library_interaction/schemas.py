@@ -1,7 +1,7 @@
 """Request and response schemas for StudyLibraryController and LessonInteractionController."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -32,7 +32,10 @@ class PlaylistRenameRequest(BaseModel):
 
 class PlaylistLessonsUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    lesson_ids: list[str]
+    # Each new lesson costs remote access checks; keep requests bounded.
+    lesson_ids: list[Annotated[str, Field(min_length=1, max_length=255)]] = Field(
+        max_length=200
+    )
 
 
 class PlaylistResponse(BaseModel):
@@ -58,7 +61,8 @@ class PlaylistPlaybackContextResponse(BaseModel):
 
 class PrivateNoteUpdateRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    content: str = Field(min_length=1, max_length=5000)
+    # Empty content clears the note.
+    content: str = Field(min_length=0, max_length=5000)
 
 
 class PrivateNoteResponse(BaseModel):

@@ -78,6 +78,8 @@ def responder_duvida(
         raise HTTPException(404, str(exc)) from exc
     except question_service.QuestionAccessDenied as exc:
         raise HTTPException(403, str(exc)) from exc
+    except question_service.QuestionAlreadyAnswered as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @router.get("/api/notifications", response_model=list[NotificationResponse])

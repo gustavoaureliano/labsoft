@@ -6,6 +6,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.database import commit_with_retry
 from app.integrations import Integrations, User
 from app.library_interaction.models import (
     LessonFavorite,
@@ -19,7 +20,7 @@ from app.library_interaction.schemas import (
     PlaylistPlaybackContextResponse,
     PlaylistResponse,
 )
-from app.permissions import require_lesson_access, require_student
+from app.permissions import canonical_id, require_lesson_access, require_student
 
 
 class PlaylistNotFound(Exception):
@@ -42,15 +43,18 @@ def registrar_aula_assistida(
     lesson = require_lesson_access(user, integrations, lesson_id)
     now = datetime.now(timezone.utc)
 
-    record = session.get(LessonHistory, (user.id, lesson_id))
-    if record is None:
-        record = LessonHistory(
-            student_id=user.id, lesson_id=lesson_id, viewed_at=now
-        )
-        session.add(record)
-    else:
-        record.viewed_at = now
-    session.commit()
+    def stage() -> LessonHistory:
+        record = session.get(LessonHistory, (user.id, lesson.id))
+        if record is None:
+            record = LessonHistory(
+                student_id=user.id, lesson_id=lesson.id, viewed_at=now
+            )
+            session.add(record)
+        else:
+            record.viewed_at = now
+        return record
+
+    record = commit_with_retry(session, stage)
     session.refresh(record)
     return HistoryEntryResponse(
         lesson_id=record.lesson_id,
@@ -68,7 +72,7 @@ def listar_historico_recente(
     rows = session.scalars(
         select(LessonHistory)
         .where(LessonHistory.student_id == user.id)
-        .order_by(LessonHistory.viewed_at.desc())
+        .order_by(LessonHistory.viewed_at.desc(), LessonHistory.lesson_id.asc())
     )
     items: list[HistoryEntryResponse] = []
     for row in rows:
@@ -91,12 +95,15 @@ def adicionar_favorito(
     require_student(user)
     lesson = require_lesson_access(user, integrations, lesson_id)
 
-    record = session.get(LessonFavorite, (user.id, lesson_id))
-    if record is None:
-        record = LessonFavorite(student_id=user.id, lesson_id=lesson_id)
-        session.add(record)
-        session.commit()
-        session.refresh(record)
+    def stage() -> LessonFavorite:
+        record = session.get(LessonFavorite, (user.id, lesson.id))
+        if record is None:
+            record = LessonFavorite(student_id=user.id, lesson_id=lesson.id)
+            session.add(record)
+        return record
+
+    record = commit_with_retry(session, stage)
+    session.refresh(record)
     return FavoriteEntryResponse(
         lesson_id=record.lesson_id,
         title=lesson.title,
@@ -108,7 +115,7 @@ def adicionar_favorito(
 def remover_favorito(session: Session, user: User, lesson_id: str) -> None:
     """F22 — Remover vínculo de favorito."""
     require_student(user)
-    record = session.get(LessonFavorite, (user.id, lesson_id))
+    record = session.get(LessonFavorite, (user.id, canonical_id(lesson_id)))
     if record is not None:
         session.delete(record)
         session.commit()
@@ -156,9 +163,9 @@ def _serialize_playlist(session: Session, playlist: Playlist) -> PlaylistRespons
 
 
 def _get_owned_playlist(
-    session: Session, student_id: str, playlist_id: str
+    session: Session, student_id: str, playlist_id: str, *, for_update: bool = False
 ) -> Playlist:
-    playlist = session.get(Playlist, playlist_id)
+    playlist = session.get(Playlist, playlist_id, with_for_update=for_update)
     if playlist is None or playlist.student_id != student_id:
         raise PlaylistNotFound("Playlist não encontrada")
     return playlist
@@ -232,12 +239,28 @@ def organizar_aulas_da_playlist(
 ) -> PlaylistResponse:
     """F23 — organizarAulasDaPlaylist (adicionar, remover ou reordenar aulas na playlist)."""
     require_student(user)
-    playlist = _get_owned_playlist(session, user.id, playlist_id)
+    # Lock the playlist row so concurrent reorders are serialized instead of
+    # colliding on (playlist_id, lesson_id) / (playlist_id, position).
+    playlist = _get_owned_playlist(session, user.id, playlist_id, for_update=True)
+    lesson_ids = [canonical_id(lesson_id) for lesson_id in lesson_ids]
     if len(lesson_ids) != len(set(lesson_ids)):
         raise PlaylistConflict("A playlist não pode conter aulas duplicadas")
 
-    for lesson_id in lesson_ids:
-        require_lesson_access(user, integrations, lesson_id)
+    current = set(
+        session.scalars(
+            select(PlaylistItem.lesson_id).where(PlaylistItem.playlist_id == playlist.id)
+        )
+    )
+    # Only lessons being added need an access check; lessons already saved stay
+    # reorderable even if the student lost access to them later.
+    lesson_ids = [
+        lesson_id
+        if lesson_id in current
+        else require_lesson_access(user, integrations, lesson_id).id
+        for lesson_id in lesson_ids
+    ]
+    if len(lesson_ids) != len(set(lesson_ids)):
+        raise PlaylistConflict("A playlist não pode conter aulas duplicadas")
 
     session.execute(
         delete(PlaylistItem).where(PlaylistItem.playlist_id == playlist.id)
@@ -253,7 +276,13 @@ def organizar_aulas_da_playlist(
             )
         )
     playlist.updated_at = datetime.now(timezone.utc)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise PlaylistConflict(
+            "A playlist foi alterada ao mesmo tempo em outra janela; tente novamente"
+        ) from exc
     session.refresh(playlist)
     return _serialize_playlist(session, playlist)
 
@@ -267,6 +296,7 @@ def obter_contexto_playlist(
 ) -> PlaylistPlaybackContextResponse:
     """F23 — obterContextoPlaylist + LessonPlaybackService.carregarAulaNoContexto."""
     require_student(user)
+    lesson_id = canonical_id(lesson_id)
     playlist = _get_owned_playlist(session, user.id, playlist_id)
     sequence = list(
         session.scalars(

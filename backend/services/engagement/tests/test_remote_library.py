@@ -44,6 +44,11 @@ def integrated(test_context, monkeypatch):
                 return httpx.Response(201,json={'recorded':True,'audit_id':body['operation_id']})
             return httpx.Response(200, json={"user_id": user_id, "display_name": f"Aluno {actor}"})
         if req.url.host == "catalog":
+            if req.url.path == "/api/teacher/courses/summary":
+                items = [{"id": course, "teacher_id": ids[2], "title": "Física", "teacher_name": "Professora",
+                          "status": "published", "moderation_status": state['moderation_status']}]
+                return httpx.Response(200, json={"items": items if actor == 2 else [],
+                                                 "pagination": {"page": 1, "size": 100, "total": 1, "pages": 1}})
             if req.method == 'PUT':
                 assert req.headers['x-service-token']==os.environ['INTERNAL_SERVICE_TOKEN']
                 state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
@@ -56,6 +61,9 @@ def integrated(test_context, monkeypatch):
                 assert req.headers['x-service-token']==os.environ['INTERNAL_SERVICE_TOKEN']
                 state['moderation_status']={'keep':'visible','hide':'hidden','delete':'deleted'}[json.loads(req.content)['decision']]
                 return httpx.Response(200,json={'moderation_status':state['moderation_status']})
+            if req.url.path.endswith("/lesson-summaries"):
+                return httpx.Response(200, json={"course_id": course, "items": [
+                    {"id": lesson, "title": "Aula real", "position": 1, "duration_seconds": 600.0}]})
             if req.url.path.endswith("/summary"):
                 return httpx.Response(200 if actor in (2,3) or state["allowed"][user_id] else 403,
                                       json={"id": lesson, "course_id": course, "title": "Aula real", "position": 1})

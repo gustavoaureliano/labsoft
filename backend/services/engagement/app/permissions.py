@@ -1,8 +1,23 @@
 """Role and ownership permission checks for Daniel's modules."""
 
+from uuid import UUID
+
 from fastapi import HTTPException
 
 from app.integrations import Course, Integrations, LessonRef, User
+
+
+def canonical_id(value: str) -> str:
+    """Return the canonical spelling of a UUID (lowercase, hyphenated).
+
+    UUID() accepts uppercase, missing hyphens, braces and ``urn:uuid:``; storing
+    those variants verbatim would bypass primary/unique keys. Non-UUID ids
+    (demo slugs) are returned unchanged.
+    """
+    try:
+        return str(UUID(value))
+    except (ValueError, AttributeError, TypeError):
+        return value
 
 
 def require_student(user: User) -> None:

@@ -237,6 +237,7 @@ class DemoIntegrations:
         }
     )
     audit_log: list[AuditEntry] = field(default_factory=list)
+    audit_operations: dict[str, AuditEntry] = field(default_factory=dict)
 
     def user(self, user_id: str) -> User | None:
         return self.users.get(user_id)
@@ -347,7 +348,18 @@ class DemoIntegrations:
         self, admin_id: str, item_id: str, item_type: str, decision: str, justification: str,
         operation_id: str | None = None,
     ) -> AuditEntry:
-        """Mock for AuditService.registrarTrilhaAuditoria(adminId, itemId, decisao, justificativa) (F45)."""
+        """Mock for AuditService.registrarTrilhaAuditoria(adminId, itemId, decisao, justificativa) (F45).
+
+        Like identity, an operation_id is recorded once: the same payload is a
+        no-op replay and a different payload is a conflict (409).
+        """
+        if operation_id is not None and operation_id in self.audit_operations:
+            previous = self.audit_operations[operation_id]
+            same = (previous.admin_id, previous.item_id, previous.item_type, previous.decision,
+                    previous.justification) == (admin_id, item_id, item_type, decision, justification)
+            if not same:
+                raise HTTPException(409, "Comando remoto recusado")
+            return previous
         entry = AuditEntry(
             admin_id=admin_id,
             item_id=item_id,
@@ -357,6 +369,8 @@ class DemoIntegrations:
             recorded_at=datetime.now(timezone.utc).isoformat(),
         )
         self.audit_log.append(entry)
+        if operation_id is not None:
+            self.audit_operations[operation_id] = entry
         return entry
 
     def apply_moderation(self, item_type: str, item_id: str, decision: str) -> None:

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.analytics import teacher_analytics as analytics_service
 from app.communication import notifications as notification_service
+from app.database import commit_with_retry
 from app.integrations import Integrations, User
 from app.library_interaction.models import (
     ContentRating,
@@ -21,6 +22,7 @@ from app.library_interaction.schemas import (
 )
 from app.moderation import content_moderation as moderation_service
 from app.permissions import (
+    canonical_id,
     require_course_access,
     require_lesson_access,
     require_student,
@@ -31,12 +33,24 @@ class ParentCommentNotFound(Exception):
     pass
 
 
+def _canonical_target(
+    user: User,
+    integrations: Integrations,
+    target_type: Literal["lesson", "course"],
+    target_id: str,
+) -> str:
+    """Check access and return the id spelled exactly as its owner service stores it."""
+    if target_type == "lesson":
+        return require_lesson_access(user, integrations, target_id).id
+    return require_course_access(user, integrations, target_id).id
+
+
 def obter_anotacao_do_proprietario(
     session: Session, integrations: Integrations, user: User, lesson_id: str
 ) -> PrivateNoteResponse:
     """F24 — Consultar anotação privada restrita ao alunoId e aulaId."""
     require_student(user)
-    require_lesson_access(user, integrations, lesson_id)
+    lesson_id = require_lesson_access(user, integrations, lesson_id).id
     note = session.get(PrivateNote, (user.id, lesson_id))
     if note is None:
         return PrivateNoteResponse(
@@ -60,23 +74,38 @@ def salvar_anotacao_privada(
     lesson_id: str,
     content: str,
 ) -> PrivateNoteResponse:
-    """F24 — Inserir ou atualizar anotação privada vinculada ao aluno e à aula."""
+    """F24 — Inserir ou atualizar anotação privada vinculada ao aluno e à aula.
+
+    Conteúdo vazio apaga a anotação.
+    """
     require_student(user)
-    require_lesson_access(user, integrations, lesson_id)
+    lesson_id = require_lesson_access(user, integrations, lesson_id).id
     now = datetime.now(timezone.utc)
-    note = session.get(PrivateNote, (user.id, lesson_id))
-    if note is None:
-        note = PrivateNote(
-            student_id=user.id,
-            lesson_id=lesson_id,
-            content=content,
-            updated_at=now,
+    if not content:
+        existing = session.get(PrivateNote, (user.id, lesson_id))
+        if existing is not None:
+            session.delete(existing)
+            session.commit()
+        return PrivateNoteResponse(
+            student_id=user.id, lesson_id=lesson_id, content="", updated_at=None
         )
-        session.add(note)
-    else:
-        note.content = content
-        note.updated_at = now
-    session.commit()
+
+    def stage() -> PrivateNote:
+        note = session.get(PrivateNote, (user.id, lesson_id))
+        if note is None:
+            note = PrivateNote(
+                student_id=user.id,
+                lesson_id=lesson_id,
+                content=content,
+                updated_at=now,
+            )
+            session.add(note)
+        else:
+            note.content = content
+            note.updated_at = now
+        return note
+
+    note = commit_with_retry(session, stage)
     session.refresh(note)
     return PrivateNoteResponse(
         student_id=note.student_id,
@@ -95,13 +124,20 @@ def publicar_comentario(
     parent_id: str | None = None,
 ) -> CommentResponse:
     """F25 — Verificar estado de moderação, salvar comentário e notificar autor original em respostas aprovadas."""
-    require_lesson_access(user, integrations, lesson_id)
+    lesson_id = require_lesson_access(user, integrations, lesson_id).id
 
     parent_comment: LessonComment | None = None
     if parent_id is not None:
-        parent_comment = session.get(LessonComment, parent_id)
-        if parent_comment is None or parent_comment.lesson_id != lesson_id:
+        parent_comment = session.get(LessonComment, canonical_id(parent_id))
+        # Hidden, deleted or held comments must not receive replies (nor notify
+        # their authors): they are not visible to the public.
+        if (
+            parent_comment is None
+            or parent_comment.lesson_id != lesson_id
+            or parent_comment.moderation_status != "approved"
+        ):
             raise ParentCommentNotFound("Comentário original não encontrado nesta aula")
+        parent_id = parent_comment.id
 
     moderation_state = moderation_service.verificar_estado_moderacao(content)
 
@@ -133,17 +169,35 @@ def publicar_comentario(
 def listar_comentarios_aula(
     session: Session, integrations: Integrations, user: User, lesson_id: str
 ) -> list[CommentResponse]:
-    """F25 — Listar comentários públicos aprovados da aula."""
-    require_lesson_access(user, integrations, lesson_id)
-    rows = session.scalars(
-        select(LessonComment)
-        .where(
-            LessonComment.lesson_id == lesson_id,
-            LessonComment.moderation_status == "approved",
+    """F25 — Listar comentários públicos aprovados da aula.
+
+    Respostas cujo comentário original foi ocultado, excluído ou retido também
+    deixam de ser exibidas, para não expor uma conversa sobre conteúdo moderado.
+    """
+    lesson_id = require_lesson_access(user, integrations, lesson_id).id
+    rows = list(
+        session.scalars(
+            select(LessonComment)
+            .where(
+                LessonComment.lesson_id == lesson_id,
+                LessonComment.moderation_status == "approved",
+            )
+            .order_by(LessonComment.created_at.asc(), LessonComment.id.asc())
         )
-        .order_by(LessonComment.created_at.asc(), LessonComment.id.asc())
     )
-    return [CommentResponse.model_validate(row) for row in rows]
+    approved_ids = {row.id for row in rows}
+    by_id = {row.id: row for row in rows}
+
+    def visible(row: LessonComment) -> bool:
+        seen: set[str] = set()
+        while row.parent_id is not None:
+            if row.parent_id not in approved_ids or row.parent_id in seen:
+                return False
+            seen.add(row.parent_id)
+            row = by_id[row.parent_id]
+        return True
+
+    return [CommentResponse.model_validate(row) for row in rows if visible(row)]
 
 
 def registrar_avaliacao(
@@ -156,35 +210,35 @@ def registrar_avaliacao(
 ) -> RatingSummaryResponse:
     """F26 — Inserir ou atualizar avaliação única do aluno e recalcular média e total no TeacherAnalyticsService."""
     require_student(user)
-    if target_type == "lesson":
-        require_lesson_access(user, integrations, target_id)
-    else:
-        require_course_access(user, integrations, target_id)
+    target_id = _canonical_target(user, integrations, target_type, target_id)
+    now = datetime.now(timezone.utc)
 
-    existing = session.scalar(
-        select(ContentRating).where(
-            ContentRating.student_id == user.id,
-            ContentRating.target_type == target_type,
-            ContentRating.target_id == target_id,
+    def stage() -> None:
+        existing = session.scalar(
+            select(ContentRating).where(
+                ContentRating.student_id == user.id,
+                ContentRating.target_type == target_type,
+                ContentRating.target_id == target_id,
+            )
         )
-    )
-    if existing is None:
-        rating = ContentRating(
-            student_id=user.id,
-            target_type=target_type,
-            target_id=target_id,
-            stars=stars,
-        )
-        session.add(rating)
-    else:
-        existing.stars = stars
-        existing.updated_at = datetime.now(timezone.utc)
+        if existing is None:
+            session.add(
+                ContentRating(
+                    student_id=user.id,
+                    target_type=target_type,
+                    target_id=target_id,
+                    stars=stars,
+                    updated_at=now,
+                )
+            )
+        else:
+            existing.stars = stars
+            existing.updated_at = now
 
-    session.flush()
+    commit_with_retry(session, stage)
     avg_rating, total_ratings = analytics_service.recalcular_media_avaliacoes(
         session, target_type, target_id
     )
-    session.commit()
 
     return RatingSummaryResponse(
         target_type=target_type,
@@ -203,10 +257,7 @@ def consultar_avaliacao(
     target_id: str,
 ) -> RatingSummaryResponse:
     """F26 — Consultar avaliação atual do aluno e média geral do conteúdo."""
-    if target_type == "lesson":
-        require_lesson_access(user, integrations, target_id)
-    else:
-        require_course_access(user, integrations, target_id)
+    target_id = _canonical_target(user, integrations, target_type, target_id)
 
     existing = session.scalar(
         select(ContentRating).where(

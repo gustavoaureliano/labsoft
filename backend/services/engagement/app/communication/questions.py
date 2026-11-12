@@ -20,6 +20,10 @@ class QuestionAccessDenied(Exception):
     pass
 
 
+class QuestionAlreadyAnswered(Exception):
+    pass
+
+
 def _serialize_question(question: Question, integrations: Integrations) -> QuestionResponse:
     course = integrations.course(question.course_id)
     lesson = integrations.lesson(question.lesson_id) if question.lesson_id else None
@@ -63,8 +67,9 @@ def criar_duvida_privada(
     course = require_course_access(user, integrations, course_id)
     if lesson_id is not None:
         lesson = integrations.lesson(lesson_id)
-        if lesson is None or lesson.course_id != course_id:
+        if lesson is None or lesson.course_id != course.id:
             raise QuestionNotFound("Aula não encontrada neste curso")
+        lesson_id = lesson.id
 
     question = Question(
         student_id=user.id,
@@ -80,9 +85,12 @@ def criar_duvida_privada(
     notification_service.notificar_professor(
         session, course.owner_id, question.id, course.title
     )
+    session.flush()
+    # Build the response (remote lookups) before committing, so a failing
+    # dependency can't report an error for a question that was already saved.
+    response = _serialize_question(question, integrations)
     session.commit()
-    session.refresh(question)
-    return _serialize_question(question, integrations)
+    return response
 
 
 def consultar_duvidas_do_aluno(
@@ -123,11 +131,13 @@ def registrar_resposta(
 ) -> QuestionResponse:
     """F31 — Responder dúvida, atualizar estado para respondida e notificar o aluno."""
     require_teacher(user)
-    question = session.get(Question, question_id)
+    question = session.get(Question, question_id, with_for_update=True)
     if question is None:
         raise QuestionNotFound("Dúvida não encontrada")
     if question.teacher_id != user.id:
         raise QuestionAccessDenied("Esta dúvida não pertence aos cursos deste professor")
+    if question.status == "answered":
+        raise QuestionAlreadyAnswered("Esta dúvida já foi respondida")
 
     question.answer = answer
     question.status = "answered"
@@ -139,6 +149,7 @@ def registrar_resposta(
         question.id,
         course.title if course else question.course_id,
     )
+    session.flush()
+    response = _serialize_question(question, integrations)
     session.commit()
-    session.refresh(question)
-    return _serialize_question(question, integrations)
+    return response

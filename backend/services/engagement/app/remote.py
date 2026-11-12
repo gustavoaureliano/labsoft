@@ -26,6 +26,28 @@ class CourseData(BaseModel):
     teacher_name: str
     title: str
     status: str
+    moderation_status: str = "visible"
+
+
+class Pagination(BaseModel):
+    pages: int
+
+
+class TeacherCoursesPage(BaseModel):
+    items: list[CourseData]
+    pagination: Pagination
+
+
+class LessonSummary(BaseModel):
+    id: UUID
+    title: str
+    position: int
+    duration_seconds: float | None = None
+
+
+class CourseLessons(BaseModel):
+    course_id: UUID
+    items: list[LessonSummary]
 
 
 class LessonData(BaseModel):
@@ -125,7 +147,14 @@ class RemoteIntegrations:
             return None
         if str(row.id) != course_id:
             raise HTTPException(503, "Curso divergente")
-        return Course(course_id, row.title, str(row.teacher_id), row.teacher_name, row.status == "published")
+        return self._course(row)
+
+    @staticmethod
+    def _course(row: CourseData) -> Course:
+        # A course hidden or deleted by moderation is not available to students,
+        # even if its catalog status is still "published".
+        published = row.status == "published" and row.moderation_status == "visible"
+        return Course(str(row.id), row.title, str(row.teacher_id), row.teacher_name, published)
 
     def lesson(self, lesson_id):
         try:
@@ -161,13 +190,35 @@ class RemoteIntegrations:
                 "next_lesson_id": sequence[index+1] if index+1 < len(sequence) else None, "sequence": sequence}
 
     def courses(self):
-        raise HTTPException(503, "Indicadores de cursos ainda não integrados")
+        """Courses of the authenticated teacher (catalog contract; teachers only)."""
+        items, page, pages = [], 1, 1
+        while page <= pages and page <= 50:
+            data = self.read("CATALOG_URL", f"/api/teacher/courses/summary?page={page}&size=100",
+                             TeacherCoursesPage)
+            items.extend(self._course(row) for row in data.items)
+            pages, page = data.pagination.pages, page + 1
+        return items
 
     def course_lessons(self, course_id):
-        raise HTTPException(503, "Indicadores de aulas ainda não integrados")
+        try:
+            course_id = str(UUID(course_id))
+        except ValueError:
+            return []
+        data = self.read("LEARNING_URL", f"/api/learning/courses/{course_id}/lesson-summaries",
+                         CourseLessons, missing=True)
+        if data is None:
+            return []
+        if str(data.course_id) != course_id:
+            raise HTTPException(503, "Curso divergente")
+        return sorted((LessonRef(str(item.id), course_id, item.title, item.position,
+                                 int(item.duration_seconds or 0)) for item in data.items),
+                      key=lambda lesson: lesson.position)
 
     def course_engagement_snapshot(self, course_id, period):
-        raise HTTPException(503, "Indicadores ainda não integrados")
+        # Enrollment and completion belong to access/learning, which expose no
+        # aggregate contract yet: report them as unavailable instead of failing.
+        return {"enrollments": None, "active_students": None,
+                "completion_rate": None, "avg_watch_minutes": None}
 
     def platform_snapshot(self, period):
         raise HTTPException(503, "Indicadores ainda não integrados")

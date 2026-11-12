@@ -6,7 +6,9 @@ from pydantic import BaseModel
 
 
 class MetricIndicator(BaseModel):
-    value: float | int
+    # None: the indicator has no data (e.g. no questions) or its owner
+    # service is not integrated yet; ``source`` says which.
+    value: float | int | None
     source: str
     description: str
 
@@ -14,10 +16,10 @@ class MetricIndicator(BaseModel):
 class CourseAnalyticsItem(BaseModel):
     course_id: str
     course_title: str
-    enrollments: int
+    enrollments: int | None
     active_students: int
-    completion_rate: float
-    avg_watch_minutes: int
+    completion_rate: float | None
+    avg_watch_minutes: int | None
     average_rating: float
     total_ratings: int
     pending_questions: int

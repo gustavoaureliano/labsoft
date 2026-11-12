@@ -93,3 +93,5 @@ def moderar_item(
         )
     except moderation_service.ModerationItemNotFound as exc:
         raise HTTPException(404, str(exc)) from exc
+    except moderation_service.ModerationAlreadyDecided as exc:
+        raise HTTPException(409, str(exc)) from exc

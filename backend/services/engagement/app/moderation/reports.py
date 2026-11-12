@@ -5,6 +5,7 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.database import commit_with_retry
 from app.integrations import Integrations, User
 from app.library_interaction.models import LessonComment
 from app.moderation import content_moderation as moderation_service
@@ -14,6 +15,7 @@ from app.moderation.schemas import (
     MyReportStatusResponse,
     ReportResponse,
 )
+from app.permissions import canonical_id, require_lesson_access
 
 
 class DuplicateReportError(Exception):
@@ -47,6 +49,33 @@ def _resolve_target_metadata(
     return comment.content, comment.author_name
 
 
+def _reportable_item_id(
+    session: Session,
+    integrations: Integrations,
+    user: User,
+    item_type: Literal["lesson", "course", "comment"],
+    item_id: str,
+) -> str:
+    """Return the canonical id of an item the user may report, or raise not found."""
+    if item_type == "lesson":
+        lesson = integrations.lesson(item_id)
+        if lesson is None:
+            raise ReportedTargetNotFound("Aula denunciada não encontrada")
+        return lesson.id
+    if item_type == "course":
+        course = integrations.course(item_id)
+        if course is None:
+            raise ReportedTargetNotFound("Curso denunciado não encontrado")
+        return course.id
+    comment = session.get(LessonComment, canonical_id(item_id))
+    # Only publicly visible comments can be reported: hidden/deleted ones were
+    # already moderated and held ones are already waiting in the queue.
+    if comment is None or comment.moderation_status != "approved":
+        raise ReportedTargetNotFound("Comentário denunciado não encontrado")
+    require_lesson_access(user, integrations, comment.lesson_id)
+    return comment.id
+
+
 def registrar_denuncia(
     session: Session,
     integrations: Integrations,
@@ -56,30 +85,32 @@ def registrar_denuncia(
     reason: str,
 ) -> ReportResponse:
     """F28 — Verificar duplicidade, salvar denúncia e enfileirar item para moderação."""
-    _resolve_target_metadata(session, integrations, item_type, item_id)
+    item_id = _reportable_item_id(session, integrations, user, item_type, item_id)
 
-    existing = session.scalar(
-        select(ContentReport).where(
-            ContentReport.reporter_id == user.id,
-            ContentReport.item_type == item_type,
-            ContentReport.item_id == item_id,
+    def stage() -> ContentReport:
+        existing = session.scalar(
+            select(ContentReport).where(
+                ContentReport.reporter_id == user.id,
+                ContentReport.item_type == item_type,
+                ContentReport.item_id == item_id,
+            )
         )
-    )
-    if existing is not None:
-        raise DuplicateReportError("Você já enviou uma denúncia para este item")
+        if existing is not None:
+            raise DuplicateReportError("Você já enviou uma denúncia para este item")
 
-    report = ContentReport(
-        reporter_id=user.id,
-        item_type=item_type,
-        item_id=item_id,
-        reason=reason,
-        status="pending",
-    )
-    session.add(report)
-    session.flush()
+        report = ContentReport(
+            reporter_id=user.id,
+            item_type=item_type,
+            item_id=item_id,
+            reason=reason,
+            status="pending",
+        )
+        session.add(report)
+        session.flush()
+        moderation_service.enfileirar_item_para_moderacao(session, item_id, item_type)
+        return report
 
-    moderation_service.enfileirar_item_para_moderacao(session, item_id, item_type)
-    session.commit()
+    report = commit_with_retry(session, stage)
     session.refresh(report)
     return ReportResponse.model_validate(report)
 
@@ -91,6 +122,7 @@ def consultar_status_denuncia_usuario(
     item_id: str,
 ) -> MyReportStatusResponse:
     """Consulta no banco se o usuário já denunciou o item e qual foi a decisão da moderação."""
+    item_id = canonical_id(item_id)
     report = session.scalar(
         select(ContentReport).where(
             ContentReport.reporter_id == user.id,
