@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useApi, displayLessons, lessonLink, type Course } from "@/lib/api/learning";
 import { resolveLessons, useLibrary } from "@/lib/api/library";
@@ -11,18 +12,20 @@ export function PlaylistDetails({ playlistId }: { playlistId: string }) {
   const {data: courses, error} = useApi<Course[]>("/api/learning/courses");
   const {study, saveStudy, ready, error: libraryError, updatePlaylistLessons} = useLibrary();
   const playlist = study.playlists.find((item) => item.id === playlistId);
+  const [actionError, setActionError] = useState("");
 
   if (error || libraryError) return <p role="alert">{error || libraryError}</p>;
   if (!ready || !courses) return <p className={styles.status}>Carregando playlist...</p>;
-  if (!playlist) return <section className={styles.empty}><h1>Playlist não encontrada</h1><p>Ela pode ter sido removida deste navegador.</p><Link href="/meus-cursos">Voltar para Meus Cursos</Link></section>;
+  if (!playlist) return <section className={styles.empty}><h1>Playlist não encontrada</h1><p>{isApiConfigured ? "Ela pode ter sido removida ou não pertence à sua conta." : "Ela pode ter sido removida deste navegador."}</p><Link href="/meus-cursos">Voltar para Meus Cursos</Link></section>;
 
   const resolved = resolveLessons(playlist.lessonIds, courses);
   const lessons = displayLessons(resolved);
 
   async function removeLesson(lessonId: string) {
     if (isApiConfigured && updatePlaylistLessons) {
+      setActionError("");
       try { await updatePlaylistLessons(playlistId, playlist!.lessonIds.filter(id => id !== lessonId)); }
-      catch { /* Preserve remote state for retry. */ }
+      catch (err) { setActionError(`Não foi possível remover a aula da playlist: ${err instanceof Error ? err.message : "erro desconhecido"}`); }
       return;
     }
     saveStudy({
@@ -39,6 +42,7 @@ export function PlaylistDetails({ playlistId }: { playlistId: string }) {
         <h1>{playlist.name}</h1>
         <p>{lessons.length} {lessons.length === 1 ? "aula adicionada" : "aulas adicionadas"}. Escolha uma aula para continuar estudando.</p>
       </header>
+      {actionError && <p role="alert">{actionError}</p>}
       <section className={styles.content} aria-labelledby="playlist-lessons-title">
         <h2 id="playlist-lessons-title">Aulas da playlist</h2>
         {lessons.length > 0 ? (

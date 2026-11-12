@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { demoRoleCookieName, parseDemoRole, roleHome } from "@/data/demoAccount";
-import { requiredRole } from "@/lib/pageAccess";
+import { requiredRoles } from "@/lib/pageAccess";
 
 const publicPaths = new Set(["/", "/login", "/cadastro", "/cadastro/professor", "/recuperar-acesso", "/professor/solicitacao"]);
 
@@ -16,10 +16,10 @@ export function proxy(request: NextRequest) {
 
   if (pathname === "/duvidas/aluno") return destination(role === "student" ? "/duvidas" : role ? roleHome[role] : "/login");
 
-  const expectedRole = requiredRole(pathname);
-  if (!expectedRole) return NextResponse.next();
+  const allowedRoles = requiredRoles(pathname);
+  if (!allowedRoles) return NextResponse.next();
   if (!role) return destination("/login");
-  if (role !== expectedRole) return destination(roleHome[role]);
+  if (!allowedRoles.includes(role)) return destination(roleHome[role]);
   return NextResponse.next();
 }
 

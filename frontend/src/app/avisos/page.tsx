@@ -3,14 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { TeacherShell } from "@/components/teacher/TeacherShell";
 import { SimpleScreen } from "@/components/ui/SimpleScreen";
+import { demoAccountKey, type DemoAccount } from "@/data/demoAccount";
 import { apiFetch, type ApiNotification } from "@/lib/engagementApi";
+import { useDemoStorage } from "@/lib/useDemoStorage";
 import styles from "./page.module.css";
 
 export default function AvisosPage() {
   const router = useRouter();
   const [notices, setNotices] = useState<ApiNotification[]>([]);
   const [errorNotice, setErrorNotice] = useState("");
+  const [account] = useDemoStorage<DemoAccount | null>(demoAccountKey, null);
+  const isTeacher = account?.role === "teacher";
 
   useEffect(() => {
     let active = true;
@@ -46,9 +51,8 @@ export default function AvisosPage() {
     }
   }
 
-  return (
-    <AppShell>
-      <SimpleScreen eyebrow="Sua atividade" title="Avisos" description="Atualizações que ajudam você a continuar estudando.">
+  const content = (
+      <SimpleScreen eyebrow="Sua atividade" title="Avisos" description={isTeacher ? "Novas dúvidas e atualizações dos seus cursos." : "Atualizações que ajudam você a continuar estudando."}>
         {errorNotice && <p role="status">{errorNotice}</p>}
         <section className={styles.list} aria-label="Lista de avisos">
           {notices.map((notice) => (
@@ -66,6 +70,7 @@ export default function AvisosPage() {
         </section>
         <p className={styles.demoNote}>Avisos sincronizados com o banco de dados.</p>
       </SimpleScreen>
-    </AppShell>
   );
+
+  return isTeacher ? <TeacherShell activePage="notices">{content}</TeacherShell> : <AppShell>{content}</AppShell>;
 }

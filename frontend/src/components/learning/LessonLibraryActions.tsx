@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { StudyDemo } from "@/data/studyDemo";
+import { isApiConfigured } from "@/lib/apiClient";
 import styles from "./LessonLibraryActions.module.css";
 
 type LessonLibraryActionsProps = {
@@ -38,7 +39,7 @@ export function LessonLibraryActions({
     if (!onToggleFavorite) return;
     try {
       const nowFav = await onToggleFavorite(lessonId);
-      setNotice(nowFav ? "Aula adicionada aos favoritos deste navegador." : "Aula removida dos favoritos.");
+      setNotice(nowFav ? `Aula adicionada aos favoritos${isApiConfigured ? "" : " deste navegador"}.` : "Aula removida dos favoritos.");
     } catch (err) {
       setNotice(err instanceof Error ? `Erro nos favoritos: ${err.message}` : "Erro ao atualizar favoritos.");
     }
@@ -48,12 +49,13 @@ export function LessonLibraryActions({
     if (!playlistId || !onUpdatePlaylistLessons) return;
     const target = study.playlists.find((p) => p.id === playlistId);
     if (!target) return;
+    if (target.lessonIds.includes(lessonId)) {
+      setNotice(`Esta aula já está na playlist "${target.name}".`);
+      return;
+    }
     try {
-      if (!target.lessonIds.includes(lessonId)) {
-        const nextLessons = [...target.lessonIds, lessonId];
-        await onUpdatePlaylistLessons(playlistId, nextLessons);
-      }
-      setNotice("Aula adicionada à playlist neste navegador.");
+      await onUpdatePlaylistLessons(playlistId, [...target.lessonIds, lessonId]);
+      setNotice(`Aula adicionada à playlist "${target.name}"${isApiConfigured ? "" : " neste navegador"}.`);
     } catch (err) {
       setNotice(err instanceof Error ? `Erro na playlist: ${err.message}` : "Erro ao atualizar playlist.");
     }

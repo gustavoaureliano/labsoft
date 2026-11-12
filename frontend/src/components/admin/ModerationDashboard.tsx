@@ -77,12 +77,22 @@ const reportedContent = [
   },
 ];
 
+type Decision = "keep" | "hide" | "delete";
+
+const decisionLabels: Record<Decision, string> = { keep: "mantido", hide: "ocultado", delete: "excluído" };
+
+function isHeldByFilter(item: ApiModerationQueueItem) {
+  return item.item_type === "comment" && item.reports_count === 0;
+}
+
 export function ModerationDashboard() {
   const [teachers, setTeachers] = useState(initialTeachers);
   const [application, saveApplication] = useDemoStorage<TeacherApplication | null>(teacherApplicationKey, null);
   const [approvedTeacher, setApprovedTeacher] = useState<string | null>(null);
   const [apiQueue, setApiQueue] = useState<ApiModerationQueueItem[]>([]);
-  const [decidedItems, setDecidedItems] = useState<Record<string, "mantido" | "ocultado">>({});
+  const [decidedItems, setDecidedItems] = useState<Record<string, string>>({});
+  const [justifications, setJustifications] = useState<Record<string, string>>({});
+  const [busyItem, setBusyItem] = useState<string | null>(null);
   const [errorNotice, setErrorNotice] = useState("");
 
   useEffect(() => {
@@ -115,34 +125,58 @@ export function ModerationDashboard() {
     setApprovedTeacher(status === "approved" ? application.name : null);
   }
 
-  async function applyDecision(
-    itemId: string,
-    itemType: "lesson" | "course" | "comment",
-    decision: "mantido" | "ocultado"
-  ) {
-    const apiDecision = decision === "mantido" ? "keep" : "hide";
+  async function applyDecision(item: ApiModerationQueueItem, decision: Decision) {
+    const key = `${item.item_type}:${item.item_id}`;
+    const justification = (justifications[key] ?? "").trim();
+    if (!justification || justification.length > 1000) {
+      setErrorNotice("Informe uma justificativa de 1 a 1000 caracteres antes de decidir.");
+      return;
+    }
+    if (busyItem) return;
+    setBusyItem(key);
     setErrorNotice("");
     try {
-      await apiFetch(`/api/moderation/queue/${encodeURIComponent(itemId)}/decision`, {
+      await apiFetch(`/api/moderation/queue/${encodeURIComponent(item.item_id)}/decision`, {
         method: "POST",
-        body: JSON.stringify({
-          item_type: itemType,
-          decision: apiDecision,
-          justification: `Decisão administrativa via painel: ${decision}`,
-        }),
+        body: JSON.stringify({ item_type: item.item_type, decision, justification }),
       });
-      setDecidedItems((prev) => ({ ...prev, [`${itemType}:${itemId}`]: decision }));
-      setApiQueue((current) => current.filter((item) => item.item_type !== itemType || item.item_id !== itemId));
+      setDecidedItems((prev) => ({ ...prev, [key]: decisionLabels[decision] }));
     } catch (err) {
-      setErrorNotice(
-        err instanceof Error ? `Erro ao aplicar decisão: ${err.message}` : "Erro ao aplicar decisão."
-      );
+      // The message carries the backend detail (e.g. 409 for an item already deleted).
+      setErrorNotice(err instanceof Error ? `Erro ao aplicar decisão: ${err.message}` : "Erro ao aplicar decisão.");
+    } finally {
+      setBusyItem(null);
     }
+  }
+
+  function renderDecisionControls(item: ApiModerationQueueItem, noun: string) {
+    const key = `${item.item_type}:${item.item_id}`;
+    const decided = decidedItems[key];
+    if (decided) return <p role="status">Decisão registrada: {noun} {decided}.</p>;
+    const justification = justifications[key] ?? "";
+    const disabled = busyItem !== null || !justification.trim();
+    const fieldId = `justification-${item.item_type}-${item.item_id}`;
+    return (
+      <div className={styles.decisionForm}>
+        <label htmlFor={fieldId}>Justificativa da decisão</label>
+        <textarea id={fieldId} rows={2} maxLength={1000} required value={justification}
+          onChange={(event) => setJustifications((prev) => ({ ...prev, [key]: event.target.value }))} />
+        <div className={styles.reviewActions}>
+          <button type="button" disabled={disabled} onClick={() => applyDecision(item, "keep")}>Manter {noun}</button>
+          <button type="button" disabled={disabled} onClick={() => applyDecision(item, "hide")}>Ocultar {noun}</button>
+          <button type="button" disabled={disabled} onClick={() => applyDecision(item, "delete")}>Excluir {noun}</button>
+        </div>
+      </div>
+    );
   }
 
   const pendingApplication = application?.status === "pending" ? application : null;
   const apiCommentItems = apiQueue.filter((item) => item.item_type === "comment");
+  const isPending = (item: ApiModerationQueueItem) => !decidedItems[`${item.item_type}:${item.item_id}`];
+  const pendingCommentsCount = apiCommentItems.filter(isPending).length;
+  const heldCommentsCount = apiCommentItems.filter((item) => isPending(item) && isHeldByFilter(item)).length;
   const apiContentItems = apiQueue.filter((item) => item.item_type !== "comment");
+  const pendingContentCount = apiContentItems.filter(isPending).length;
 
   return (
     <AdminShell activePage="moderation" topbarTitle="Segurança e qualidade da plataforma">
@@ -156,7 +190,7 @@ export function ModerationDashboard() {
           <span className={styles.demoBadge}>{isApiConfigured ? "Fila real de moderação" : "Demonstração"}</span>
         </header>
 
-        {errorNotice && <p role="status">{errorNotice}</p>}
+        {errorNotice && <p role="alert">{errorNotice}</p>}
 
         {!isApiConfigured && approvedTeacher ? (
           <div className={styles.successNotice} role="status">
@@ -172,13 +206,13 @@ export function ModerationDashboard() {
           </article>}
           <article className={styles.metricCard}>
             <span>{isApiConfigured ? "Comentários pendentes" : "Comentários bloqueados"}</span>
-            <strong>{(isApiConfigured ? 0 : blockedComments.length) + apiCommentItems.length}</strong>
-            <p>{isApiConfigured ? "Denúncias aguardando revisão" : "Mensagens retidas pelos filtros"}</p>
+            <strong>{(isApiConfigured ? 0 : blockedComments.length) + pendingCommentsCount}</strong>
+            <p>{isApiConfigured ? `Denúncias e retenções aguardando revisão (${heldCommentsCount} pelo filtro automático)` : "Mensagens retidas pelos filtros"}</p>
           </article>
           <article className={styles.metricCard}>
             <span>Conteúdos reportados</span>
             <strong>
-              {(isApiConfigured ? 0 : reportedContent.length) + apiContentItems.length}
+              {(isApiConfigured ? 0 : reportedContent.length) + pendingContentCount}
             </strong>
             <p>Aguardando análise da equipe</p>
           </article>
@@ -234,33 +268,23 @@ export function ModerationDashboard() {
             <div className={styles.panelHeader}>
               <div>
                 <span className={styles.eyebrow}>Comunidade</span>
-                <h2 id="comments-title">{isApiConfigured ? "Comentários denunciados" : "Comentários bloqueados"}</h2>
-                <p>{isApiConfigured ? "Denúncias aguardando revisão manual." : "Mensagens retidas para revisão manual."}</p>
+                <h2 id="comments-title">{isApiConfigured ? "Comentários denunciados ou retidos" : "Comentários bloqueados"}</h2>
+                <p>{isApiConfigured ? "Denúncias e comentários retidos pelo filtro automático aguardando revisão manual." : "Mensagens retidas para revisão manual."}</p>
               </div>
-              <span className={styles.countBadge}>{(isApiConfigured ? 0 : blockedComments.length) + apiCommentItems.length}</span>
+              <span className={styles.countBadge}>{(isApiConfigured ? 0 : blockedComments.length) + pendingCommentsCount}</span>
             </div>
             <ul className={styles.reviewList}>
-              {apiCommentItems.map((item) => {
-                const decided = decidedItems[`comment:${item.item_id}`];
-                return (
-                  <li className={styles.reviewItem} key={item.queue_id}>
-                    <div className={styles.reviewMeta}>
-                      <strong>{item.author_or_owner}</strong>
-                      <small>{isApiConfigured ? "Denúncia pendente" : "Retido no banco"}</small>
-                    </div>
-                    <p>{item.title_or_excerpt}</p>
-                    <span className={styles.reasonBadge}>{item.reasons[0] ?? "Filtro automático"}</span>
-                    {decided ? (
-                      <p role="status">Decisão registrada neste navegador: comentário {decided}.</p>
-                    ) : (
-                      <div className={styles.reviewActions}>
-                        <button type="button" onClick={() => applyDecision(item.item_id, "comment", "mantido")}>Manter comentário</button>
-                        <button type="button" onClick={() => applyDecision(item.item_id, "comment", "ocultado")}>Ocultar comentário</button>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
+              {apiCommentItems.map((item) => (
+                <li className={styles.reviewItem} key={item.queue_id}>
+                  <div className={styles.reviewMeta}>
+                    <strong>{item.author_or_owner}</strong>
+                    <small>{isHeldByFilter(item) ? "Retido pelo filtro automático" : `${item.reports_count} ${item.reports_count === 1 ? "denúncia" : "denúncias"}`}</small>
+                  </div>
+                  <p>{item.title_or_excerpt}</p>
+                  <span className={styles.reasonBadge}>{item.reasons[0] ?? "Filtro automático"}</span>
+                  {renderDecisionControls(item, "comentário")}
+                </li>
+              ))}
               {!isApiConfigured && blockedComments.map((comment) => (
                 <li className={styles.reviewItem} key={`${comment.author}-${comment.reason}`}>
                   <div className={styles.reviewMeta}>
@@ -282,31 +306,21 @@ export function ModerationDashboard() {
                 <p>Materiais à espera de análise.</p>
               </div>
               <span className={styles.countBadge}>
-                {(isApiConfigured ? 0 : reportedContent.length) + apiContentItems.length}
+                {(isApiConfigured ? 0 : reportedContent.length) + pendingContentCount}
               </span>
             </div>
             <ul className={styles.reviewList}>
-              {apiContentItems.map((item) => {
-                const decided = decidedItems[`${item.item_type}:${item.item_id}`];
-                return (
-                  <li className={styles.reviewItem} key={item.queue_id}>
-                    <div className={styles.reviewMeta}>
-                      <strong>{item.title_or_excerpt}</strong>
-                      <small>{item.reports_count} {item.reports_count === 1 ? "denúncia" : "denúncias"}</small>
-                    </div>
-                    <p>{item.author_or_owner}</p>
-                    <span className={styles.reasonBadge}>{item.reasons[0]}</span>
-                    {decided ? (
-                      <p role="status">Decisão registrada neste navegador: conteúdo {decided}.</p>
-                    ) : (
-                      <div className={styles.reviewActions}>
-                        <button type="button" onClick={() => applyDecision(item.item_id, item.item_type, "mantido")}>Manter conteúdo</button>
-                        <button type="button" onClick={() => applyDecision(item.item_id, item.item_type, "ocultado")}>Ocultar conteúdo</button>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
+              {apiContentItems.map((item) => (
+                <li className={styles.reviewItem} key={item.queue_id}>
+                  <div className={styles.reviewMeta}>
+                    <strong>{item.title_or_excerpt}</strong>
+                    <small>{item.reports_count} {item.reports_count === 1 ? "denúncia" : "denúncias"}</small>
+                  </div>
+                  <p>{item.author_or_owner}</p>
+                  <span className={styles.reasonBadge}>{item.reasons[0]}</span>
+                  {renderDecisionControls(item, "conteúdo")}
+                </li>
+              ))}
               {!isApiConfigured && reportedContent.map((content) => (
                 <li className={styles.reviewItem} key={content.title}>
                   <div className={styles.reviewMeta}>

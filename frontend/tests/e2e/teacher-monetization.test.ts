@@ -19,10 +19,12 @@ test("o professor acompanha relatórios financeiros e de engajamento", async () 
     assert.match(await financialReport.getText(), /Set/);
 
     const engagementReport = await driver.findElement(By.xpath('//section[.//h2[normalize-space()="Atividade dos alunos"]]'));
-    assert.match(await engagementReport.getText(), /Taxa de conclusão\s+78,4%/);
-    assert.match(await engagementReport.getText(), /Avaliação média\s+4,8\/5/);
+    // Indicators come from the engagement API; failures render "—", never invented values.
+    assert.match(await engagementReport.getText(), /Taxa de conclusão/);
+    assert.match(await engagementReport.getText(), /Avaliação média/);
+    assert.doesNotMatch(await engagementReport.getText(), /78,4%|4,8\/5|612 avaliações/);
 
-    const courseRows = await driver.findElements(By.css("table tbody tr"));
+    const courseRows = await driver.findElements(By.xpath('//section[.//h2[normalize-space()="Receita por curso"]]//table/tbody/tr'));
     assert.equal(courseRows.length, 2);
     assert.match(await courseRows[0].getText(), /Introdução à Física Quântica 924 R\$ 9\.240 100%/);
     assert.match(await courseRows[1].getText(), /Física para o ENEM: Mecânica 6000 R\$ 0 0%/);

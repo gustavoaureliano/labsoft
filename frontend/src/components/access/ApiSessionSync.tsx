@@ -10,7 +10,7 @@ import {
   type DemoAccount,
 } from "@/data/demoAccount";
 import { ApiError, getCurrentUserFromApi, isApiConfigured, renewApiSession, subscribeSessionChanges } from "@/lib/apiClient";
-import { requiredRole } from "@/lib/pageAccess";
+import { requiredRoles } from "@/lib/pageAccess";
 import { clearDemoRole, setDemoRole } from "@/lib/demoSessionClient";
 import { writeDemoStorage } from "@/lib/useDemoStorage";
 
@@ -27,7 +27,7 @@ export function ApiSessionSync({children}: {children: ReactNode}) {
   const [result, setResult] = useState<{path: string; valid: boolean; error?: string} | null>(null);
   const [retry, setRetry] = useState(0);
   const [renewalNotice, setRenewalNotice] = useState("");
-  const expected = requiredRole(pathname);
+  const expected = requiredRoles(pathname);
 
   useEffect(() => {
     if (!isApiConfigured) return;
@@ -60,7 +60,7 @@ export function ApiSessionSync({children}: {children: ReactNode}) {
         };
         writeDemoStorage(demoAccountKey, account);
         setDemoRole(user.role);
-        if (expected && user.role !== expected) {
+        if (expected && !expected.includes(user.role)) {
           router.replace(roleHome[user.role]);
           return;
         }

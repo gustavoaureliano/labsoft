@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { use, useEffect, useState, type FormEvent } from "react";
 import { TeacherShell } from "@/components/teacher/TeacherShell";
-import { apiFetch, type ApiQuestion } from "@/lib/engagementApi";
+import { ApiError, apiFetch, type ApiQuestion } from "@/lib/engagementApi";
 import styles from "./page.module.css";
 
 const tabs = [
@@ -13,13 +13,20 @@ const tabs = [
 
 type QuestionFilter = typeof tabs[number]["id"];
 
-export default function Duvidas() {
+type TeacherDoubtsProps = {
+  searchParams: Promise<{ duvida?: string | string[] }>;
+};
+
+export default function Duvidas({ searchParams }: TeacherDoubtsProps) {
+  const requestedQuestion = use(searchParams).duvida;
+  const highlightedQuestionId = (Array.isArray(requestedQuestion) ? requestedQuestion[0] : requestedQuestion) ?? null;
   const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [query, setQuery] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
+  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(highlightedQuestionId);
   const [errorNotice, setErrorNotice] = useState("");
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -35,7 +42,13 @@ export default function Duvidas() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [revision]);
+
+  // Notification deep links (?duvida=<id>) point to one question of this teacher.
+  useEffect(() => {
+    if (!highlightedQuestionId || !questions.some((item) => item.id === highlightedQuestionId)) return;
+    document.getElementById(`duvida-${highlightedQuestionId}`)?.scrollIntoView({ block: "center" });
+  }, [highlightedQuestionId, questions]);
 
   const visibleQuestions = questions.filter((question) => {
     const matchesFilter = filter === "all"
@@ -69,6 +82,12 @@ export default function Duvidas() {
       setErrorNotice(
         err instanceof Error ? `Erro ao enviar resposta: ${err.message}` : "Erro ao enviar resposta."
       );
+      if (err instanceof ApiError && err.status === 409) {
+        // Already answered elsewhere: reload so the existing answer is shown instead of the form.
+        setReplyingTo(null);
+        setExpandedDiscussion(questionId);
+        setRevision((current) => current + 1);
+      }
     }
   }
 
@@ -108,14 +127,19 @@ export default function Duvidas() {
           </label>
         </div>
 
-        {errorNotice && <p role="status">{errorNotice}</p>}
+        {errorNotice && <p role="alert">{errorNotice}</p>}
 
         <section className={styles.questionList} aria-label="Dúvidas dos alunos" aria-live="polite">
           {visibleQuestions.map((question) => {
             const isAnswered = Boolean(question.answer);
             const initial = question.student_name.slice(0, 1).toUpperCase();
             return (
-              <article className={styles.question} key={question.id}>
+              <article
+                className={`${styles.question} ${question.id === highlightedQuestionId ? styles.highlighted : ""}`}
+                id={`duvida-${question.id}`}
+                key={question.id}
+                aria-current={question.id === highlightedQuestionId ? "true" : undefined}
+              >
                 <span className={styles.studentInitial} aria-hidden="true">{initial}</span>
                 <div className={styles.questionContent}>
                   <div className={styles.studentLine}>
@@ -124,7 +148,7 @@ export default function Duvidas() {
                   </div>
                   <p className={styles.prompt}>“{question.prompt}”</p>
                   <p className={styles.lesson}>{question.course_title} • {question.lesson_title}</p>
-                  {replyingTo === question.id && (
+                  {!isAnswered && replyingTo === question.id && (
                     <form className={styles.replyForm} onSubmit={(event) => submitAnswer(event, question.id)}>
                       <label htmlFor={`answer-${question.id}`}>Sua resposta</label>
                       <textarea autoFocus id={`answer-${question.id}`} name="answer" required rows={3} />

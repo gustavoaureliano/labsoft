@@ -77,23 +77,37 @@ export type ApiMyReportStatus = {
   decision: "mantido" | "ocultado" | "excluído" | null;
 };
 
+export type ApiReportItemType = "lesson" | "course" | "comment";
+
+export type ApiReport = {
+  id: string;
+  reporter_id: string;
+  item_type: ApiReportItemType;
+  item_id: string;
+  reason: string;
+  status: "pending" | "resolved";
+  created_at: string;
+};
+
+export type ApiMetricIndicator = { value: number | null; source: string; description: string };
+
 export type ApiTeacherAnalytics = {
   teacher_id: string;
   period: "30d" | "90d" | "365d";
   course_id: string | null;
-  enrollments: { value: number; source: string; description: string };
-  active_students: { value: number; source: string; description: string };
-  completion_rate: { value: number; source: string; description: string };
-  average_rating: { value: number; source: string; description: string };
-  total_ratings: { value: number; source: string; description: string };
-  question_response_rate: { value: number; source: string; description: string };
+  enrollments: ApiMetricIndicator;
+  active_students: ApiMetricIndicator;
+  completion_rate: ApiMetricIndicator;
+  average_rating: ApiMetricIndicator;
+  total_ratings: ApiMetricIndicator;
+  question_response_rate: ApiMetricIndicator;
   courses: {
     course_id: string;
     course_title: string;
-    enrollments: number;
+    enrollments: number | null;
     active_students: number;
-    completion_rate: number;
-    avg_watch_minutes: number;
+    completion_rate: number | null;
+    avg_watch_minutes: number | null;
     average_rating: number;
     total_ratings: number;
     pending_questions: number;
@@ -185,6 +199,19 @@ export async function apiFetch<T = unknown>(
     if (error instanceof SessionApiError) throw new ApiError(error.status, error.message);
     throw error;
   }
+}
+
+export function sendReport(itemType: ApiReportItemType, itemId: string, reason: string) {
+  return apiFetch<ApiReport>("/api/moderation/reports", {
+    method: "POST",
+    body: JSON.stringify({ item_type: itemType, item_id: itemId, reason }),
+  });
+}
+
+export function fetchMyReportStatus(itemType: ApiReportItemType, itemId: string) {
+  return apiFetch<ApiMyReportStatus>(
+    `/api/moderation/reports/my/${encodeURIComponent(itemType)}/${encodeURIComponent(itemId)}`
+  );
 }
 
 const LIBRARY_SYNC_EVENT = "aprovaai-library-sync";

@@ -46,6 +46,11 @@
 .reviewActions button { background: var(--primary); border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-size: 13px; min-height: 40px; padding: 8px 12px; }
 .reviewActions button:last-child { background: #955252; }
 .reviewActions button:hover { box-shadow: var(--action-shadow); filter: brightness(.94); }
+.reviewActions button:disabled { cursor: not-allowed; opacity: .5; }
+.reviewActions button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.decisionForm { display: grid; gap: 6px; margin-top: 12px; }
+.decisionForm label { font-size: 12px; font-weight: 700; }
+.decisionForm textarea { border: 1px solid var(--border); border-radius: 4px; color: var(--text); font: inherit; font-size: 13px; padding: 8px; resize: vertical; width: 100%; }
 .teacherActions { display: flex; flex-wrap: wrap; gap: 6px; }
 .teacherActions .approveButton:last-child { background: #955252; }
 

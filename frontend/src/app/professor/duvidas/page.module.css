@@ -11,6 +11,7 @@
 .search input { background: transparent; border: 0; color: var(--text); font-size: 13px; min-width: 0; outline: 0; width: 100%; }
 .questionList { display: grid; gap: 10px; }
 .question { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 5px rgb(32 52 60 / 5%); display: grid; gap: 14px; grid-template-columns: 42px minmax(0, 1fr) auto auto; padding: 15px 16px; }
+.question.highlighted { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), 0 2px 5px rgb(32 52 60 / 5%); }
 .studentInitial { align-items: center; background: var(--primary-light); border-radius: 50%; color: var(--primary); display: flex; font-size: 12px; height: 42px; justify-content: center; width: 42px; }
 .questionContent { min-width: 0; }
 .studentLine { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }

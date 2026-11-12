@@ -23,38 +23,126 @@ const courses = [
 
 const maximumRevenue = Math.max(...revenue.map((item) => item.value));
 
-export function TeacherMonetization() {
-  const [analytics, setAnalytics] = useState<ApiTeacherAnalytics | null>(null);
+type Period = ApiTeacherAnalytics["period"];
+type CourseOption = { course_id: string; course_title: string };
+
+const periodLabels: Record<Period, string> = { "30d": "Últimos 30 dias", "90d": "Últimos 90 dias", "365d": "Últimos 365 dias" };
+
+function formatNumber(value: number | null | undefined, digits = 0) {
+  if (value === null || value === undefined) return "—";
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function formatPercent(value: number | null | undefined) {
+  return value === null || value === undefined ? "—" : `${formatNumber(value, 1)}%`;
+}
+
+function TeacherEngagementReport() {
+  const [period, setPeriod] = useState<Period>("30d");
+  const [courseId, setCourseId] = useState("");
+  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
+  const query = new URLSearchParams({ period });
+  if (courseId) query.set("course_id", courseId);
+  const path = `/api/analytics/teacher?${query}`;
+  const [result, setResult] = useState<{ path: string; data?: ApiTeacherAnalytics; error?: string } | null>(null);
 
   useEffect(() => {
-    if (isApiConfigured) return;
     let active = true;
-    apiFetch<ApiTeacherAnalytics>("/api/analytics/teacher?period=30d&course_id=fisica-enem-mecanica")
+    apiFetch<ApiTeacherAnalytics>(path)
       .then((data) => {
-        if (active) setAnalytics(data);
+        if (!active) return;
+        setResult({ path, data });
+        if (data.course_id === null) setCourseOptions(data.courses.map(({ course_id, course_title }) => ({ course_id, course_title })));
       })
-      .catch(() => {
-        if (active) setAnalytics(null);
+      .catch((error) => {
+        if (active) setResult({ path, error: error instanceof Error ? error.message : "Erro desconhecido" });
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [path]);
 
-  const completionValue = analytics
-    ? `${analytics.completion_rate.value.toFixed(1).replace(".", ",")}%`
-    : "78,4%";
-  const avgRatingValue = analytics && analytics.total_ratings.value > 0
-    ? `${analytics.average_rating.value.toFixed(1).replace(".", ",")}/5`
-    : "4,8/5";
-  const avgRatingNote = analytics && analytics.total_ratings.value > 0
-    ? `com ${analytics.total_ratings.value} ${analytics.total_ratings.value === 1 ? "avaliação" : "avaliações"}`
-    : "com 612 avaliações";
+  const current = result?.path === path ? result : null;
+  const analytics = current?.data ?? null;
+  const totalRatings = analytics?.total_ratings.value ?? null;
+  const indicators = [
+    { label: "Taxa de conclusão", value: formatPercent(analytics?.completion_rate.value), indicator: analytics?.completion_rate },
+    { label: "Alunos ativos", value: formatNumber(analytics?.active_students.value), indicator: analytics?.active_students },
+    { label: "Matrículas", value: formatNumber(analytics?.enrollments.value), indicator: analytics?.enrollments },
+    {
+      label: "Avaliação média",
+      value: analytics && totalRatings ? `${formatNumber(analytics.average_rating.value, 1)}/5` : "—",
+      note: totalRatings === null ? undefined : `com ${totalRatings} ${totalRatings === 1 ? "avaliação" : "avaliações"}`,
+      indicator: analytics?.average_rating,
+    },
+    { label: "Dúvidas respondidas", value: formatPercent(analytics?.question_response_rate.value), indicator: analytics?.question_response_rate },
+  ];
 
+  return (
+    <>
+      <section className={styles.card} aria-labelledby="engagement-title">
+        <div className={styles.cardHeader}>
+          <div><span className={styles.eyebrow}>Engajamento</span><h2 id="engagement-title">Atividade dos alunos</h2></div>
+        </div>
+        <div className={styles.filters}>
+          <label>Período
+            <select value={period} onChange={(event) => setPeriod(event.target.value as Period)}>
+              {(Object.keys(periodLabels) as Period[]).map((value) => <option key={value} value={value}>{periodLabels[value]}</option>)}
+            </select>
+          </label>
+          <label>Curso
+            <select value={courseId} onChange={(event) => setCourseId(event.target.value)}>
+              <option value="">Todos os cursos</option>
+              {courseOptions.map((course) => <option key={course.course_id} value={course.course_id}>{course.course_title}</option>)}
+            </select>
+          </label>
+        </div>
+        {!current && <p role="status">Carregando indicadores...</p>}
+        {current?.error && <p role="alert">Não foi possível carregar os indicadores: {current.error}</p>}
+        <dl className={styles.engagement}>
+          {indicators.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+              {item.note && <small>{item.note}</small>}
+              {item.indicator && <small className={styles.source}>{item.indicator.description} · Fonte: {item.indicator.source}</small>}
+            </div>
+          ))}
+        </dl>
+      </section>
+      {analytics && analytics.courses.length > 0 && (
+        <section className={`${styles.card} ${styles.coursesCard}`} aria-labelledby="course-engagement-title">
+          <div className={styles.cardHeader}>
+            <div><span className={styles.eyebrow}>Indicadores por curso</span><h2 id="course-engagement-title">Engajamento por curso</h2></div>
+          </div>
+          <div className={styles.tableWrap}>
+            <table>
+              <thead><tr><th>Curso</th><th>Matrículas</th><th>Alunos ativos</th><th>Conclusão</th><th>Tempo médio</th><th>Avaliação</th><th>Dúvidas pendentes</th></tr></thead>
+              <tbody>{analytics.courses.map((course) => (
+                <tr key={course.course_id}>
+                  <td><strong>{course.course_title}</strong></td>
+                  <td>{formatNumber(course.enrollments)}</td>
+                  <td>{formatNumber(course.active_students)}</td>
+                  <td>{formatPercent(course.completion_rate)}</td>
+                  <td>{course.avg_watch_minutes === null ? "—" : `${course.avg_watch_minutes} min`}</td>
+                  <td>{course.total_ratings ? `${formatNumber(course.average_rating, 1)}/5` : "—"}</td>
+                  <td>{course.pending_questions}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+export function TeacherMonetization() {
   if (isApiConfigured) return <TeacherShell><div className={styles.page}>
     <header className={styles.heading}><div><h1>Monetização e desempenho</h1>
       <p>Relatórios financeiros e repasses docentes ainda não estão disponíveis no modo integrado.</p></div></header>
     <p>O PSP atual é simulado. Heartbeats não comprovam tempo assistido e não são base para repasses.</p>
+    <TeacherEngagementReport />
   </div></TeacherShell>;
 
   return (
@@ -66,7 +154,7 @@ export function TeacherMonetization() {
             <h1>Monetização e desempenho</h1>
             <p>Acompanhe receitas, pagamentos e o engajamento dos seus alunos.</p>
           </div>
-          <span className={styles.period}>Últimos 30 dias</span>
+          <span className={styles.period}>Dados financeiros demonstrativos</span>
         </header>
 
         <section className={styles.metrics} aria-label="Resumo financeiro">
@@ -75,33 +163,23 @@ export function TeacherMonetization() {
           <article><span>Alunos pagantes</span><strong>924</strong><p><b>+68</b> novas matrículas</p></article>
         </section>
 
-        <div className={styles.reportGrid}>
-          <section className={styles.card} aria-labelledby="revenue-title">
-            <div className={styles.cardHeader}>
-              <div><span className={styles.eyebrow}>Relatório financeiro</span><h2 id="revenue-title">Evolução da receita</h2></div>
-              <strong>R$ 44.550</strong>
-            </div>
-            <ol className={styles.chart} aria-label="Receita dos últimos seis meses">
-              {revenue.map((item) => (
-                <li key={item.month}>
-                  <span className={styles.chartValue}>R$ {(item.value / 1000).toFixed(1)}k</span>
-                  <div><i style={{ height: `${(item.value / maximumRevenue) * 100}%` }} /></div>
-                  <span>{item.month}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
+        <section className={styles.card} aria-labelledby="revenue-title">
+          <div className={styles.cardHeader}>
+            <div><span className={styles.eyebrow}>Relatório financeiro</span><h2 id="revenue-title">Evolução da receita</h2></div>
+            <strong>R$ 44.550</strong>
+          </div>
+          <ol className={styles.chart} aria-label="Receita dos últimos seis meses">
+            {revenue.map((item) => (
+              <li key={item.month}>
+                <span className={styles.chartValue}>R$ {(item.value / 1000).toFixed(1)}k</span>
+                <div><i style={{ height: `${(item.value / maximumRevenue) * 100}%` }} /></div>
+                <span>{item.month}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-          <section className={styles.card} aria-labelledby="engagement-title">
-            <div className={styles.cardHeader}><div><span className={styles.eyebrow}>Engajamento</span><h2 id="engagement-title">Atividade dos alunos</h2></div></div>
-            <dl className={styles.engagement}>
-              <div><dt>Taxa de conclusão</dt><dd>{completionValue}</dd><small>+4,2 pontos no mês</small></div>
-              <div><dt>Tempo médio assistido</dt><dd>42 min</dd><small>por aluno na semana</small></div>
-              <div><dt>Avaliação média</dt><dd>{avgRatingValue}</dd><small>{avgRatingNote}</small></div>
-              <div><dt>Alunos ativos</dt><dd>81%</dd><small>nos últimos 7 dias</small></div>
-            </dl>
-          </section>
-        </div>
+        <TeacherEngagementReport />
 
         <section className={`${styles.card} ${styles.coursesCard}`} aria-labelledby="courses-title">
           <div className={styles.cardHeader}>

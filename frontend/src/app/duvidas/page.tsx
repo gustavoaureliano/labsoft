@@ -10,7 +10,7 @@ import { useApi, type Course } from "@/lib/api/learning";
 import styles from "./page.module.css";
 
 type StudentDoubtsProps = {
-  searchParams: Promise<{ curso?: string | string[]; aula?: string | string[] }>;
+  searchParams: Promise<{ curso?: string | string[]; aula?: string | string[]; duvida?: string | string[] }>;
 };
 
 function firstParam(value?: string | string[]) {
@@ -21,6 +21,7 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
   const query = use(searchParams);
   const requestedCourseId = firstParam(query.curso);
   const requestedLessonId = firstParam(query.aula);
+  const highlightedQuestionId = firstParam(query.duvida) ?? null;
   const {data: availableCourses, error: coursesError} = useApi<Course[]>(isApiConfigured ? "/api/learning/courses" : null);
   const [courseId, setCourseId] = useState(isApiConfigured ? requestedCourseId ?? "" : enrolledCourse.id);
   const currentCourseId = courseId || (isApiConfigured ? availableCourses?.[0]?.id ?? "" : enrolledCourse.id);
@@ -50,6 +51,12 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
       active = false;
     };
   }, []);
+
+  // Notification deep links (?duvida=<id>) point to one of the student's questions.
+  useEffect(() => {
+    if (!highlightedQuestionId || !questions.some((item) => item.id === highlightedQuestionId)) return;
+    document.getElementById(`duvida-${highlightedQuestionId}`)?.scrollIntoView({ block: "center" });
+  }, [highlightedQuestionId, questions]);
 
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,7 +127,12 @@ export default function StudentDoubts({ searchParams }: StudentDoubtsProps) {
           <h2 id="discussions-title">Minhas dúvidas recentes</h2>
           <div className={styles.discussionList}>
             {questions.map((discussion) => (
-              <article className={styles.discussion} key={discussion.id}>
+              <article
+                className={`${styles.discussion} ${discussion.id === highlightedQuestionId ? styles.highlighted : ""}`}
+                id={`duvida-${discussion.id}`}
+                key={discussion.id}
+                aria-current={discussion.id === highlightedQuestionId ? "true" : undefined}
+              >
                 <div className={styles.discussionMeta}>
                   <span className={`${styles.status} ${discussion.answer ? styles.answered : styles.pending}`}>
                     {discussion.answer ? "Respondida" : "Pendente"}
