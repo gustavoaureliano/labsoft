@@ -1,0 +1,530 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3120" height="2700" viewBox="0 0 3120 2700"><defs><marker id="e1B7F4A" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1B7F4A"/></marker><marker id="s1B7F4A" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#1B7F4A"/></marker><marker id="e222222" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#222222"/></marker><marker id="s222222" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#222222"/></marker><marker id="e9AA7B4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9AA7B4"/></marker><marker id="s9AA7B4" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#9AA7B4"/></marker><marker id="eB23A3A" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B23A3A"/></marker><marker id="sB23A3A" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#B23A3A"/></marker></defs><rect width="3120" height="2700" fill="#ffffff"/><text x="66.0" y="55.6" font-family="Arial" font-size="32" font-weight="bold" font-style="normal" fill="#163C5B" text-anchor="start">AprovaAí — Modelo arquitetônico da integração</text>
+<text x="66.0" y="89.3" font-family="Arial" font-size="16" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="start">Estilo: microsserviços (Richards &amp; Ford, Fundamentals of Software Architecture, cap. 17). Cada serviço é um contexto delimitado com dados próprios; todos se comunicam por HTTP/REST.</text>
+<text x="66.0" y="135.3" font-family="Arial" font-size="22" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">① Topologia — do navegador ao banco</text>
+<rect x="1265.0" y="155" width="600" height="62" rx="0" fill="#ffffff" stroke="#2B2B2B" stroke-width="1.5"/>
+<rect x="1260.0" y="150" width="600" height="62" rx="0" fill="#B7D7EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1560.0" y="178.4" font-family="Arial" font-size="19" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Navegador</text>
+<text x="1560.0" y="197.8" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">aluno · professor · administrador</text>
+<polyline points="1560.0,217 1560.0,262" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<rect x="65" y="267" width="2994" height="92" rx="0" fill="#ffffff" stroke="#2B2B2B" stroke-width="1.5"/>
+<rect x="60" y="262" width="2994" height="92" rx="0" fill="#B7D7EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1557.0" y="305.1" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">FRONTEND · Next.js (localhost:3000) — interface monolítica única (Fig. 17-5)</text>
+<text x="1557.0" y="325.8" font-family="Arial" font-size="15" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">Páginas do aluno, do professor e do admin. O navegador chama sempre /api/... na própria origem (same-origin); o cookie HttpOnly aprovaai_access segue junto em cada requisição.</text>
+<rect x="66" y="406" width="2994" height="172" rx="0" fill="#ffffff" stroke="#2B2B2B" stroke-width="1.5"/>
+<rect x="60" y="400" width="2994" height="172" rx="0" fill="#FFFFFF" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1557.0" y="423.0" font-family="Arial" font-size="18" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">CAMADA DE API</text>
+<text x="1557.0" y="441.2" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">rewrites do next.config.ts</text>
+<text x="1557.0" y="456.8" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#555555" text-anchor="middle">só encaminha: sem lógica de negócio</text>
+<polyline points="237.5,359 237.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="95.5,466 397.5,466 379.5,554 77.5,554" fill="#8EC1EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="237.5" y="514.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/v1/*</text>
+<polyline points="237.5,554 237.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="614.5,359 614.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="472.5,466 774.5,466 756.5,554 454.5,554" fill="#8FD19E" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="614.5" y="497.7" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/courses · /teacher/courses</text>
+<text x="614.5" y="514.3" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">/landing · /search</text>
+<text x="614.5" y="531.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">/recommendations · /media</text>
+<polyline points="614.5,554 614.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="991.5,359 991.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="849.5,466 1151.5,466 1133.5,554 831.5,554" fill="#86CBE8" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="991.5" y="497.7" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/*</text>
+<text x="991.5" y="514.3" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">(rota padrão: aulas, mídia,</text>
+<text x="991.5" y="531.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">progresso, certificados)</text>
+<polyline points="991.5,554 991.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="1368.5,359 1368.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="1226.5,466 1528.5,466 1510.5,554 1208.5,554" fill="#B9A9E6" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1368.5" y="497.7" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/library · /interactions</text>
+<text x="1368.5" y="514.3" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">/questions · /notifications</text>
+<text x="1368.5" y="531.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">/moderation · /analytics</text>
+<polyline points="1368.5,554 1368.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="1745.5,359 1745.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="1603.5,466 1905.5,466 1887.5,554 1585.5,554" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1745.5" y="514.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/subscriptions/*</text>
+<polyline points="1745.5,554 1745.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2122.5,359 2122.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="1980.5,466 2282.5,466 2264.5,554 1962.5,554" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2122.5" y="514.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/access</text>
+<polyline points="2122.5,554 2122.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2499.5,359 2499.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="2357.5,466 2659.5,466 2641.5,554 2339.5,554" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2499.5" y="514.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/checkout/*</text>
+<polyline points="2499.5,554 2499.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2876.5,359 2876.5,466" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<polygon points="2734.5,466 3036.5,466 3018.5,554 2716.5,554" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2876.5" y="497.7" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#10263A" text-anchor="middle">/api/payments/*</text>
+<text x="2876.5" y="514.3" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">(direto só no modo demo;</text>
+<text x="2876.5" y="531.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#10263A" text-anchor="middle">no fluxo real via Checkout)</text>
+<polyline points="2876.5,554 2876.5,640" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<rect x="67.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#5491C0" stroke-width="1.8"/>
+<rect x="60.0" y="640" width="355" height="500" rx="8" fill="#EAF3FF" stroke="#5491C0" stroke-width="1.8"/>
+<text x="74.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">IDENTIDADE</text>
+<text x="74.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">Renan · identity · :18101</text>
+<rect x="76.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="237.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="92.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="237.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Autenticação (JWT + cookie)</text>
+<rect x="92.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="237.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Sessões e refresh tokens</text>
+<rect x="92.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="237.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Perfis</text>
+<rect x="92.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="237.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Candidatura docente</text>
+<rect x="92.0" y="916" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="237.5" y="937.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Auditoria · e-mails (outbox)</text>
+<polyline points="237.5,966 237.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M152.5,1018 A85.0,12 0 0 1 322.5,1018 L322.5,1090 A85.0,12 0 0 1 152.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="237.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="237.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="237.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">identity</text>
+<text x="237.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_identity_migration / _runtime</text>
+<rect x="444.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#6AA579" stroke-width="1.8"/>
+<rect x="437.0" y="640" width="355" height="500" rx="8" fill="#E9F7ED" stroke="#6AA579" stroke-width="1.8"/>
+<text x="451.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">CATÁLOGO</text>
+<text x="451.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">Lucas · catalog · :18103</text>
+<rect x="453.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="614.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="469.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="614.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Cursos (CRUD, publicação)</text>
+<rect x="469.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="614.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Materiais do curso</text>
+<rect x="469.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="614.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Capa e mídia</text>
+<rect x="469.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="614.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Busca · landing</text>
+<rect x="469.0" y="916" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="614.5" y="937.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Recomendações</text>
+<polyline points="614.5,966 614.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M529.5,1018 A85.0,12 0 0 1 699.5,1018 L699.5,1090 A85.0,12 0 0 1 529.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="614.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="614.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="614.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">catalog</text>
+<text x="614.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_catalog_migration / _runtime</text>
+<rect x="821.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#5A98B8" stroke-width="1.8"/>
+<rect x="814.0" y="640" width="355" height="500" rx="8" fill="#E3F4FC" stroke="#5A98B8" stroke-width="1.8"/>
+<text x="828.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">APRENDIZAGEM</text>
+<text x="828.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">Gustavo · learning · :18102</text>
+<rect x="830.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="991.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="846.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="991.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Aulas e seções</text>
+<rect x="846.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="991.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Vídeo (upload, playback)</text>
+<rect x="846.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="991.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Progresso</text>
+<rect x="846.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="991.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Certificados</text>
+<rect x="846.0" y="916" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="991.5" y="937.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Dashboard do aluno</text>
+<polyline points="991.5,966 991.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M906.5,1018 A85.0,12 0 0 1 1076.5,1018 L1076.5,1090 A85.0,12 0 0 1 906.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="991.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="991.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="991.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">learning</text>
+<text x="991.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_learning_migration / _runtime</text>
+<rect x="1198.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#8F7DBB" stroke-width="1.8"/>
+<rect x="1191.0" y="640" width="355" height="500" rx="8" fill="#F3EEFF" stroke="#8F7DBB" stroke-width="1.8"/>
+<text x="1205.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">ENGAJAMENTO</text>
+<text x="1205.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">Daniel · engagement · :18106</text>
+<rect x="1207.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="1368.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="1223.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1368.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Biblioteca e playlists</text>
+<rect x="1223.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1368.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Interações (notas, avaliações)</text>
+<rect x="1223.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1368.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Dúvidas e notificações</text>
+<rect x="1223.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1368.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Moderação e denúncias</text>
+<rect x="1223.0" y="916" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1368.5" y="937.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Analytics (prof./admin)</text>
+<polyline points="1368.5,966 1368.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M1283.5,1018 A85.0,12 0 0 1 1453.5,1018 L1453.5,1090 A85.0,12 0 0 1 1283.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="1368.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="1368.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="1368.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">engagement</text>
+<text x="1368.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_engagement_migration / _runtime</text>
+<rect x="1575.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#D39E5E" stroke-width="1.8"/>
+<rect x="1568.0" y="640" width="355" height="500" rx="8" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.8"/>
+<text x="1582.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">MATRÍCULA</text>
+<text x="1582.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">João · subscription · :18104</text>
+<rect x="1584.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="1745.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="1600.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1745.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Matrícula por curso</text>
+<rect x="1600.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1745.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Plano completo (mensal)</text>
+<rect x="1600.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1745.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Cobrança recorrente</text>
+<rect x="1600.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="1745.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Eventos de pagamento</text>
+<polyline points="1745.5,966 1745.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M1660.5,1018 A85.0,12 0 0 1 1830.5,1018 L1830.5,1090 A85.0,12 0 0 1 1660.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="1745.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="1745.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="1745.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">subscription</text>
+<text x="1745.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_subscription_migration / _runtime</text>
+<rect x="1952.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#D39E5E" stroke-width="1.8"/>
+<rect x="1945.0" y="640" width="355" height="500" rx="8" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.8"/>
+<text x="1959.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">ACESSO</text>
+<text x="1959.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">João · access · :18105</text>
+<rect x="1961.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="2122.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="1977.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2122.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Decisão de acesso</text>
+<rect x="1977.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2122.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">(usuário × curso)</text>
+<rect x="1982.5" y="1006" width="280" height="96" rx="8" fill="#FFFFFF" stroke="#D39E5E" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text x="2122.5" y="1041.7" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">sem banco próprio</text>
+<text x="2122.5" y="1058.3" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">consulta Identidade + Matrícula</text>
+<text x="2122.5" y="1075.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">a cada requisição</text>
+<rect x="2329.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#D39E5E" stroke-width="1.8"/>
+<rect x="2322.0" y="640" width="355" height="500" rx="8" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.8"/>
+<text x="2336.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">CHECKOUT</text>
+<text x="2336.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">João · checkout · :18107</text>
+<rect x="2338.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="2499.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="2354.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2499.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Cotação de preço</text>
+<rect x="2354.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2499.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Compra idempotente</text>
+<rect x="2354.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2499.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Acompanhamento (polling)</text>
+<polyline points="2499.5,966 2499.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M2414.5,1018 A85.0,12 0 0 1 2584.5,1018 L2584.5,1090 A85.0,12 0 0 1 2414.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="2499.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="2499.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="2499.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">checkout</text>
+<text x="2499.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_checkout_migration / _runtime</text>
+<rect x="2706.0" y="647" width="355" height="500" rx="8" fill="#ffffff" stroke="#D39E5E" stroke-width="1.8"/>
+<rect x="2699.0" y="640" width="355" height="500" rx="8" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.8"/>
+<text x="2713.0" y="670.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">PAGAMENTO</text>
+<text x="2713.0" y="693.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#3A5068" text-anchor="start">João · payment · :18108</text>
+<rect x="2715.0" y="710" width="323" height="256" rx="10" fill="#D6D6D6" stroke="#4A4A4A" stroke-width="1.5"/>
+<text x="2876.5" y="728.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#1E1E1E" text-anchor="middle">Serviço FastAPI</text>
+<rect x="2731.0" y="744" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2876.5" y="765.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Cobranças</text>
+<rect x="2731.0" y="787" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2876.5" y="808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Webhook do PSP</text>
+<rect x="2731.0" y="830" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2876.5" y="851.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Reconciliação (2 s)</text>
+<rect x="2731.0" y="873" width="291" height="34" rx="5" fill="#3EC5EA" stroke="#0B4F6C" stroke-width="1.5"/>
+<text x="2876.5" y="894.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#08283A" text-anchor="middle">Repasses a professores</text>
+<polyline points="2876.5,966 2876.5,1006" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<path d="M2791.5,1018 A85.0,12 0 0 1 2961.5,1018 L2961.5,1090 A85.0,12 0 0 1 2791.5,1090 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="2876.5" cy="1018" rx="85.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="2876.5" y="1055.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">schema</text>
+<text x="2876.5" y="1074.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">payment</text>
+<text x="2876.5" y="1122.0" font-family="Arial" font-size="12" font-weight="normal" font-style="italic" fill="#3A5068" text-anchor="middle">roles aa_payment_migration / _runtime</text>
+<polyline points="237.5,1147 237.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="614.5,1147 614.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="991.5,1147 991.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="1368.5,1147 1368.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="1745.5,1147 1745.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2122.5,1147 2122.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2499.5,1147 2499.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<polyline points="2876.5,1147 2876.5,1196" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<rect x="60" y="1196" width="2994" height="66" rx="0" fill="#6E6E6E" stroke="#3C3C3C" stroke-width="1.5"/>
+<text x="1557.0" y="1226.0" font-family="Arial" font-size="18" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">PLANO DE SERVIÇOS — chamadas HTTP/REST síncronas entre serviços (httpx, timeout de 3 a 5 s)</text>
+<text x="1557.0" y="1245.2" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#FFFFFF" text-anchor="middle">Repassam a credencial do usuário (cookie ou Bearer) · escritas internas exigem token de serviço (X-Service-Token = INTERNAL_SERVICE_TOKEN) · detalhes na matriz ②</text>
+<rect x="60" y="1310" width="1863" height="178" rx="8" fill="#F4F8FC" stroke="#1F6FB2" stroke-width="1.5"/>
+<path d="M84,1352 A60.0,12 0 0 1 204,1352 L204,1444 A60.0,12 0 0 1 84,1444 Z" fill="#1F6FB2" stroke="#0E3F66" stroke-width="1.5"/><ellipse cx="144.0" cy="1352" rx="60.0" ry="12" fill="#4E9AD6" stroke="#0E3F66" stroke-width="1.5"/>
+<text x="144.0" y="1399.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">Postgre</text>
+<text x="144.0" y="1418.6" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#ffffff" text-anchor="middle">SQL 16</text>
+<text x="231.0" y="1345.0" font-family="Arial" font-size="18" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">Uma instância PostgreSQL (banco aprovaai), um schema por serviço</text>
+<text x="231.0" y="1376.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Cada serviço só enxerga o próprio schema (search_path + roles de migração e de runtime; tabelas via Alembic).</text>
+<text x="231.0" y="1394.6" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Nenhuma FK atravessa schemas: as referências REF do modelo ER são resolvidas pela API do serviço dono do dado.</text>
+<rect x="231" y="1426" width="182" height="40" rx="20" fill="#EAF3FF" stroke="#5491C0" stroke-width="1.5"/>
+<text x="322.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">identity</text>
+<rect x="427" y="1426" width="182" height="40" rx="20" fill="#E9F7ED" stroke="#6AA579" stroke-width="1.5"/>
+<text x="518.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">catalog</text>
+<rect x="623" y="1426" width="182" height="40" rx="20" fill="#E3F4FC" stroke="#5A98B8" stroke-width="1.5"/>
+<text x="714.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">learning</text>
+<rect x="819" y="1426" width="182" height="40" rx="20" fill="#F3EEFF" stroke="#8F7DBB" stroke-width="1.5"/>
+<text x="910.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">engagement</text>
+<rect x="1015" y="1426" width="182" height="40" rx="20" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.5"/>
+<text x="1106.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">subscription</text>
+<rect x="1211" y="1426" width="182" height="40" rx="20" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.5"/>
+<text x="1302.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">checkout</text>
+<rect x="1407" y="1426" width="182" height="40" rx="20" fill="#FFF2E2" stroke="#D39E5E" stroke-width="1.5"/>
+<text x="1498.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">payment</text>
+<rect x="1603" y="1426" width="182" height="40" rx="20" fill="#F2F2F2" stroke="#8A8A8A" stroke-width="1.5"/>
+<text x="1694.0" y="1450.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">metering</text>
+<rect x="1945" y="1310" width="1109" height="178" rx="8" fill="#FAFAFA" stroke="#8A8A8A" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text x="1961.0" y="1337.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#444444" text-anchor="start">EXTERNOS E MOCKS (docker-compose / scripts/local.py)</text>
+<polyline points="2499.5,1262 2499.5,1310" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<rect x="1959.0" y="1356" width="351.0" height="112" rx="8" fill="#E6E6E6" stroke="#6A6A6A" stroke-width="1.5"/>
+<text x="2134.5" y="1400.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">PSP (mock) · :18110</text>
+<text x="2134.5" y="1417.6" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">provedor de pagamento:</text>
+<text x="2134.5" y="1434.2" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">cobranças, repasses, webhooks</text>
+<rect x="2324.0" y="1356" width="351.0" height="112" rx="8" fill="#E6E6E6" stroke="#6A6A6A" stroke-width="1.5"/>
+<text x="2499.5" y="1400.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Metering · :18109</text>
+<text x="2499.5" y="1417.6" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">medição de uso</text>
+<text x="2499.5" y="1434.2" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">(heartbeat → repasses)</text>
+<rect x="2689.0" y="1356" width="351.0" height="112" rx="8" fill="#E6E6E6" stroke="#6A6A6A" stroke-width="1.5"/>
+<text x="2864.5" y="1400.4" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Conteúdo (mock)</text>
+<text x="2864.5" y="1417.6" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">donos dos itens</text>
+<text x="2864.5" y="1434.2" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">para o cálculo de repasse</text>
+<text x="66.0" y="1583.3" font-family="Arial" font-size="22" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">② Quem chama quem — dependências HTTP lidas no código</text>
+<text x="66.0" y="1608.7" font-family="Arial" font-size="14" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="start">Linha = quem chama · coluna = quem responde · ★ = escrita interna com token de serviço</text>
+<rect x="60" y="1626" width="196" height="58" rx="0" fill="#FFFFFF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="158.0" y="1651.0" font-family="Arial" font-size="13" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="middle">chamador ↓</text>
+<text x="158.0" y="1667.6" font-family="Arial" font-size="13" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="middle">responde →</text>
+<rect x="256" y="1626" width="160" height="58" rx="0" fill="#8EC1EA" stroke="#5C6B7A" stroke-width="1"/>
+<text x="336.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Identidade</text>
+<rect x="416" y="1626" width="160" height="58" rx="0" fill="#8FD19E" stroke="#5C6B7A" stroke-width="1"/>
+<text x="496.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Catálogo</text>
+<rect x="576" y="1626" width="160" height="58" rx="0" fill="#86CBE8" stroke="#5C6B7A" stroke-width="1"/>
+<text x="656.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Aprendiz.</text>
+<rect x="736" y="1626" width="160" height="58" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="816.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Matrícula</text>
+<rect x="896" y="1626" width="160" height="58" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="976.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Acesso</text>
+<rect x="1056" y="1626" width="160" height="58" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="1136.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Pagamento</text>
+<rect x="1216" y="1626" width="160" height="58" rx="0" fill="#CFCFCF" stroke="#5C6B7A" stroke-width="1"/>
+<text x="1296.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">PSP (mock)</text>
+<rect x="1376" y="1626" width="160" height="58" rx="0" fill="#CFCFCF" stroke="#5C6B7A" stroke-width="1"/>
+<text x="1456.0" y="1659.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Metering / Conteúdo</text>
+<rect x="60" y="1684" width="196" height="52" rx="0" fill="#8FD19E" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1714.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Catálogo</text>
+<rect x="256" y="1684" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1706.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me</text>
+<text x="336.0" y="1721.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">profiles/me</text>
+<rect x="416" y="1684" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="576" y="1684" width="160" height="52" rx="0" fill="#E3F4FC" stroke="#9AA7B4" stroke-width="1"/>
+<text x="656.0" y="1714.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">lesson-summaries</text>
+<rect x="736" y="1684" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="896" y="1684" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="976.0" y="1714.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">GET /access</text>
+<rect x="1056" y="1684" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="1684" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1684" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1736" width="196" height="52" rx="0" fill="#86CBE8" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1766.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Aprendizagem</text>
+<rect x="256" y="1736" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1758.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me</text>
+<text x="336.0" y="1773.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">profiles/me</text>
+<rect x="416" y="1736" width="160" height="52" rx="0" fill="#E9F7ED" stroke="#9AA7B4" stroke-width="1"/>
+<text x="496.0" y="1758.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">courses</text>
+<text x="496.0" y="1773.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">course summary</text>
+<rect x="576" y="1736" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="1736" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="816.0" y="1766.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">subscriptions/me</text>
+<rect x="896" y="1736" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="976.0" y="1766.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">GET /access</text>
+<rect x="1056" y="1736" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="1736" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1736" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1788" width="196" height="52" rx="0" fill="#B9A9E6" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1818.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Engajamento</text>
+<rect x="256" y="1788" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1810.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me · profiles</text>
+<text x="336.0" y="1825.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">POST audit ★</text>
+<rect x="416" y="1788" width="160" height="52" rx="0" fill="#E9F7ED" stroke="#9AA7B4" stroke-width="1"/>
+<text x="496.0" y="1810.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">course summary</text>
+<text x="496.0" y="1825.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">PUT moderation ★</text>
+<rect x="576" y="1788" width="160" height="52" rx="0" fill="#E3F4FC" stroke="#9AA7B4" stroke-width="1"/>
+<text x="656.0" y="1810.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">lesson summary</text>
+<text x="656.0" y="1825.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">PUT moderation ★</text>
+<rect x="736" y="1788" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="896" y="1788" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="976.0" y="1818.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">GET /access</text>
+<rect x="1056" y="1788" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="1788" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1788" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1840" width="196" height="52" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1870.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Matrícula</text>
+<rect x="256" y="1840" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1870.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me</text>
+<rect x="416" y="1840" width="160" height="52" rx="0" fill="#E9F7ED" stroke="#9AA7B4" stroke-width="1"/>
+<text x="496.0" y="1870.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">course summary</text>
+<rect x="576" y="1840" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="1840" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="896" y="1840" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1056" y="1840" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="1136.0" y="1862.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">POST /payments ★</text>
+<text x="1136.0" y="1877.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">(renovação mensal)</text>
+<rect x="1216" y="1840" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1840" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1892" width="196" height="52" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1922.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Acesso</text>
+<rect x="256" y="1892" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1922.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me</text>
+<rect x="416" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="576" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="1892" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="816.0" y="1922.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">subscriptions/me</text>
+<rect x="896" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1056" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1892" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1944" width="196" height="52" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="1974.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Checkout</text>
+<rect x="256" y="1944" width="160" height="52" rx="0" fill="#EAF3FF" stroke="#9AA7B4" stroke-width="1"/>
+<text x="336.0" y="1974.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">auth/me</text>
+<rect x="416" y="1944" width="160" height="52" rx="0" fill="#E9F7ED" stroke="#9AA7B4" stroke-width="1"/>
+<text x="496.0" y="1966.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">course summary</text>
+<text x="496.0" y="1981.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">(preço)</text>
+<rect x="576" y="1944" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="1944" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="816.0" y="1974.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">subscriptions/me</text>
+<rect x="896" y="1944" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1056" y="1944" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="1136.0" y="1966.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">POST · GET</text>
+<text x="1136.0" y="1981.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">/payments ★</text>
+<rect x="1216" y="1944" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="1944" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="1996" width="196" height="52" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="2026.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Pagamento</text>
+<rect x="256" y="1996" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="416" y="1996" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="576" y="1996" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="1996" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="816.0" y="2018.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">POST events/</text>
+<text x="816.0" y="2033.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">payment ★</text>
+<rect x="896" y="1996" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1056" y="1996" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="1996" width="160" height="52" rx="0" fill="#F2F2F2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="1296.0" y="2018.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">charges</text>
+<text x="1296.0" y="2033.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">transfers</text>
+<rect x="1376" y="1996" width="160" height="52" rx="0" fill="#F2F2F2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="1456.0" y="2018.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">usage/summary</text>
+<text x="1456.0" y="2033.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">items/owners</text>
+<rect x="60" y="2048" width="196" height="52" rx="0" fill="#CFCFCF" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="2078.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">PSP (mock)</text>
+<rect x="256" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="416" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="576" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="896" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1056" y="2048" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="1136.0" y="2070.3" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">webhook</text>
+<text x="1136.0" y="2085.7" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">(assíncrono)</text>
+<rect x="1216" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="2048" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="2100" width="196" height="52" rx="0" fill="#CFCFCF" stroke="#5C6B7A" stroke-width="1"/>
+<text x="158.0" y="2130.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Conteúdo (mock)</text>
+<rect x="256" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="416" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="576" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="736" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="896" y="2100" width="160" height="52" rx="0" fill="#FFF2E2" stroke="#9AA7B4" stroke-width="1"/>
+<text x="976.0" y="2130.0" font-family="Arial" font-size="12" font-weight="normal" font-style="normal" fill="#17324D" text-anchor="middle">GET /access</text>
+<rect x="1056" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1216" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="1376" y="2100" width="160" height="52" rx="0" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
+<rect x="60" y="2186" width="1476" height="300" rx="8" fill="#FBFCFD" stroke="#9AA7B4" stroke-width="1"/>
+<text x="80.0" y="2216.0" font-family="Arial" font-size="18" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">Como ler o diagrama</text>
+<polyline points="88,2248 178,2248" fill="none" stroke="#222222" stroke-width="2" marker-end="url(#e222222)"/>
+<text x="198.0" y="2252.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Requisição HTTP síncrona: quem chama espera a resposta.</text>
+<polyline points="88,2286 178,2286" fill="none" stroke="#222222" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#e222222)"/>
+<text x="198.0" y="2290.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Assíncrono ou resposta posterior: webhook do PSP, retorno, polling do navegador.</text>
+<polyline points="88,2324 178,2324" fill="none" stroke="#222222" stroke-width="2" marker-start="url(#s222222)" marker-end="url(#e222222)"/>
+<text x="198.0" y="2328.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Ligação de mão dupla: camada de API ↔ serviço, serviço ↔ seu schema.</text>
+<text x="135.0" y="2368.7" font-family="Arial" font-size="20" font-weight="bold" font-style="normal" fill="#B5651D" text-anchor="middle">★</text>
+<text x="198.0" y="2366.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Escrita entre serviços: além do usuário, exige X-Service-Token igual ao INTERNAL_SERVICE_TOKEN.</text>
+<rect x="82" y="2391" width="14" height="18" rx="0" fill="#8EC1EA" stroke="#5C6B7A" stroke-width="1"/>
+<rect x="99" y="2391" width="14" height="18" rx="0" fill="#8FD19E" stroke="#5C6B7A" stroke-width="1"/>
+<rect x="116" y="2391" width="14" height="18" rx="0" fill="#86CBE8" stroke="#5C6B7A" stroke-width="1"/>
+<rect x="133" y="2391" width="14" height="18" rx="0" fill="#B9A9E6" stroke="#5C6B7A" stroke-width="1"/>
+<rect x="150" y="2391" width="14" height="18" rx="0" fill="#F5C58A" stroke="#5C6B7A" stroke-width="1"/>
+<rect x="167" y="2391" width="14" height="18" rx="0" fill="#CFCFCF" stroke="#5C6B7A" stroke-width="1"/>
+<text x="198.0" y="2404.7" font-family="Arial" font-size="14" font-weight="normal" font-style="normal" fill="#2C4258" text-anchor="start">Cores = contextos/equipes, as mesmas do modelo ER.</text>
+<text x="80.0" y="2459.7" font-family="Arial" font-size="14" font-weight="bold" font-style="normal" fill="#163C5B" text-anchor="start">Regra de ouro: um serviço nunca lê o banco de outro. Dado alheio vem sempre pela API do dono (contexto delimitado, cap. 17).</text>
+<text x="1602.0" y="1583.3" font-family="Arial" font-size="22" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">③ Fluxo: assistir uma aula — coreografia</text>
+<text x="1602.0" y="1608.7" font-family="Arial" font-size="14" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="start">Não há mediador: cada serviço consulta diretamente quem precisa (Fig. 17-7).</text>
+<rect x="1600.0" y="1626" width="172" height="46" rx="6" fill="#B7D7EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1686.0" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Navegador</text>
+<polyline points="1686.0,1672 1686.0,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="1855.6" y="1626" width="172" height="46" rx="6" fill="#86CBE8" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1941.6" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Aprendizagem</text>
+<polyline points="1941.6,1672 1941.6,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2111.2" y="1626" width="172" height="46" rx="6" fill="#8EC1EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2197.2" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Identidade</text>
+<polyline points="2197.2,1672 2197.2,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2366.8" y="1626" width="172" height="46" rx="6" fill="#8FD19E" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2452.8" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Catálogo</text>
+<polyline points="2452.8,1672 2452.8,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2622.4" y="1626" width="172" height="46" rx="6" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2708.4" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Acesso</text>
+<polyline points="2708.4,1672 2708.4,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2878.0" y="1626" width="172" height="46" rx="6" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2964.0" y="1654.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Matrícula</text>
+<polyline points="2964.0,1672 2964.0,2068" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<polyline points="1686.0,1712 1941.6,1712" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1673.0" y="1699" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1686.0" y="1716.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="1816.8" y="1700.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">GET /api/learning/lessons/{id}/playback</text>
+<polyline points="1941.6,1758 2197.2,1758" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1928.6" y="1745" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1941.6" y="1762.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">2</text>
+<text x="2072.4" y="1746.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">auth/me · quem é?</text>
+<polyline points="1941.6,1804 2452.8,1804" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1928.6" y="1791" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1941.6" y="1808.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="2200.2" y="1792.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">o curso existe e está publicado?</text>
+<polyline points="1941.6,1850 2708.4,1850" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1928.6" y="1837" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1941.6" y="1854.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">4</text>
+<text x="2328.0" y="1838.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">GET /access?course_id=…</text>
+<polyline points="2708.4,1896 2197.2,1896" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="2696.4" y="1883" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2709.4" y="1900.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">5</text>
+<text x="2455.8" y="1884.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">auth/me (mesmo cookie)</text>
+<polyline points="2708.4,1942 2964.0,1942" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="2695.4" y="1929" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2708.4" y="1946.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">6</text>
+<text x="2839.2" y="1930.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">subscriptions/me</text>
+<polyline points="2708.4,1988 1941.6,1988" fill="none" stroke="#B23A3A" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#eB23A3A)"/>
+<rect x="2696.4" y="1975" width="26" height="26" rx="13" fill="#B23A3A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2709.4" y="1992.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">7</text>
+<text x="2328.0" y="1976.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">allowed: true | false</text>
+<polyline points="1941.6,2034 1686.0,2034" fill="none" stroke="#B23A3A" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#eB23A3A)"/>
+<rect x="1929.6" y="2021" width="26" height="26" rx="13" fill="#B23A3A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1942.6" y="2038.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">8</text>
+<text x="1816.8" y="2022.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">vídeo assinado ou 403</text>
+<text x="1602.0" y="2131.3" font-family="Arial" font-size="22" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="start">④ Fluxo: comprar um curso — orquestração</text>
+<text x="1602.0" y="2156.7" font-family="Arial" font-size="14" font-weight="normal" font-style="italic" fill="#40566B" text-anchor="start">Checkout é o dono do fluxo (Fig. 17-10); pagamento assíncrono e idempotente, reconciliado a cada 2 s.</text>
+<rect x="1600.0" y="2174" width="172" height="46" rx="6" fill="#B7D7EA" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1686.0" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Navegador</text>
+<polyline points="1686.0,2220 1686.0,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="1855.6" y="2174" width="172" height="46" rx="6" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="1941.6" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Checkout</text>
+<polyline points="1941.6,2220 1941.6,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2111.2" y="2174" width="172" height="46" rx="6" fill="#8FD19E" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2197.2" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Catálogo</text>
+<polyline points="2197.2,2220 2197.2,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2366.8" y="2174" width="172" height="46" rx="6" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2452.8" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Pagamento</text>
+<polyline points="2452.8,2220 2452.8,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2622.4" y="2174" width="172" height="46" rx="6" fill="#CFCFCF" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2708.4" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">PSP (mock)</text>
+<polyline points="2708.4,2220 2708.4,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<rect x="2878.0" y="2174" width="172" height="46" rx="6" fill="#F5C58A" stroke="#2B2B2B" stroke-width="1.5"/>
+<text x="2964.0" y="2202.0" font-family="Arial" font-size="15" font-weight="bold" font-style="normal" fill="#17324D" text-anchor="middle">Matrícula</text>
+<polyline points="2964.0,2220 2964.0,2616" fill="none" stroke="#9AA7B4" stroke-width="1.2" stroke-dasharray="9 6"/>
+<polyline points="1686.0,2260 1941.6,2260" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1673.0" y="2247" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1686.0" y="2264.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="1816.8" y="2248.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">POST /api/checkout (Idempotency-Key)</text>
+<polyline points="1941.6,2306 2197.2,2306" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1928.6" y="2293" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1941.6" y="2310.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">2</text>
+<text x="2072.4" y="2294.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">course summary → preço</text>
+<polyline points="1941.6,2352 2452.8,2352" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="1928.6" y="2339" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1941.6" y="2356.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="2200.2" y="2340.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">POST /payments ★</text>
+<polyline points="2452.8,2398 2708.4,2398" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="2439.8" y="2385" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2452.8" y="2402.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">4</text>
+<text x="2583.6" y="2386.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">POST /v1/charges → pending</text>
+<polyline points="1941.6,2444 1686.0,2444" fill="none" stroke="#B23A3A" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#eB23A3A)"/>
+<rect x="1929.6" y="2431" width="26" height="26" rx="13" fill="#B23A3A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1942.6" y="2448.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">5</text>
+<text x="1816.8" y="2432.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">status: processing</text>
+<polyline points="2708.4,2490 2452.8,2490" fill="none" stroke="#B23A3A" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#eB23A3A)"/>
+<rect x="2696.4" y="2477" width="26" height="26" rx="13" fill="#B23A3A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2709.4" y="2494.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">6</text>
+<text x="2583.6" y="2478.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">webhook charge.succeeded</text>
+<polyline points="2452.8,2536 2964.0,2536" fill="none" stroke="#1B7F4A" stroke-width="2" marker-end="url(#e1B7F4A)"/>
+<rect x="2439.8" y="2523" width="26" height="26" rx="13" fill="#1B7F4A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="2452.8" y="2540.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">7</text>
+<text x="2711.4" y="2524.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">events/payment ★ → matrícula ativa</text>
+<polyline points="1686.0,2582 1941.6,2582" fill="none" stroke="#B23A3A" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#eB23A3A)"/>
+<rect x="1673.0" y="2569" width="26" height="26" rx="13" fill="#B23A3A" stroke="#FFFFFF" stroke-width="1"/>
+<text x="1686.0" y="2586.3" font-family="Arial" font-size="13" font-weight="bold" font-style="normal" fill="#FFFFFF" text-anchor="middle">8</text>
+<text x="1816.8" y="2570.0" font-family="Arial" font-size="13" font-weight="normal" font-style="normal" fill="#1E2E3E" text-anchor="middle">polling GET /checkout/{id} → ok</text></svg>
