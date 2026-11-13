@@ -5,6 +5,12 @@ databases:
     databaseName: aprovaai
     user: aprovaai
 
+  - name: aprovaai-identity-renan
+    plan: free
+    region: oregon
+    databaseName: autenticacao_yvft
+    user: autenticacao_yvft_user
+
 services:
   - type: web
     name: aprovaai-backend-lucas
@@ -30,6 +36,35 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://aprovaai-frontend-lucas.onrender.com
+
+  - type: web
+    name: aprovaai-identity-renan
+    runtime: python
+    plan: free
+    region: oregon
+    branch: branch_renan
+    rootDir: backend/services/identity
+    buildCommand: uv sync --locked --no-dev
+    startCommand: uv run --no-dev python -m app.check_database --expected-database autenticacao_yvft --require-remote && uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: Banco de dados para autenticacao
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: AA_JWT_PRIVATE_KEY_B64
+        sync: false
+      - key: AA_FRONTEND_ORIGIN
+        value: https://labsoft-lilac.vercel.app
+      - key: AA_PUBLIC_APP_URL
+        value: https://labsoft-lilac.vercel.app
+      - key: AA_PASSWORD_RESET_URL
+        value: https://labsoft-lilac.vercel.app/recuperar-acesso
+      - key: AA_COOKIE_SECURE
+        value: "true"
 
   - type: web
     name: aprovaai-frontend-lucas
