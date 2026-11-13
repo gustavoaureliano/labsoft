@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net" version="31.7.0" type="device">
   <diagram id="aprovaai-modelo-integrado" name="Modelo ER integrado">
-    <mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="3200" pageHeight="1660" background="#ffffff">
+    <mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="3200" pageHeight="1720" background="#ffffff">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -18,7 +18,7 @@
           <mxGeometry x="2090" y="120" width="1060" height="590" as="geometry" />
         </mxCell>
         <mxCell id="engagement" value="ENGAJAMENTO · Daniel / engagement" style="rounded=1;arcSize=4;whiteSpace=wrap;html=0;fillColor=#F3EEFF;strokeColor=#8F7DBB;strokeWidth=1.5;align=left;verticalAlign=top;spacingLeft=20;spacingTop=16;fontSize=21;fontStyle=1;fontColor=#17324D;container=1;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="50" y="840" width="1430" height="760" as="geometry" />
+          <mxGeometry x="50" y="840" width="1430" height="830" as="geometry" />
         </mxCell>
         <mxCell id="subscription" value="MATRÍCULA E ASSINATURA · João / subscription" style="rounded=1;arcSize=4;whiteSpace=wrap;html=0;fillColor=#FFF2E2;strokeColor=#D39E5E;strokeWidth=1.5;align=left;verticalAlign=top;spacingLeft=20;spacingTop=16;fontSize=21;fontStyle=1;fontColor=#17324D;container=1;collapsible=0;" vertex="1" parent="1">
           <mxGeometry x="1520" y="840" width="720" height="460" as="geometry" />
@@ -152,7 +152,7 @@
         <mxCell id="comments" value="lesson_comments" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
           <mxGeometry x="965" y="260" width="440" height="154" as="geometry" />
         </mxCell>
-        <mxCell id="comments-fields" value="PK id / REF lesson_id → learning.lessons&#10;REF author_id → identity.aa_users&#10;FK? parent_id → mesma tabela&#10;moderation_status" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="comments">
+        <mxCell id="comments-fields" value="PK id / REF lesson_id → learning.lessons&#10;REF author_id → identity.aa_users&#10;FK? parent_id → mesma tabela (respostas)&#10;author_name (snapshot) / moderation_status / created_at" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="comments">
           <mxGeometry x="0" y="38" width="440" height="116" as="geometry" />
         </mxCell>
         <mxCell id="ratings" value="content_ratings" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
@@ -162,16 +162,16 @@
           <mxGeometry x="0" y="38" width="410" height="91" as="geometry" />
         </mxCell>
         <mxCell id="questions" value="questions" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
-          <mxGeometry x="505" y="435" width="410" height="129" as="geometry" />
+          <mxGeometry x="505" y="435" width="410" height="154" as="geometry" />
         </mxCell>
-        <mxCell id="questions-fields" value="PK id / REF student_id, teacher_id → identity.aa_users&#10;REF course_id → catalog / REF? lesson_id → learning&#10;prompt / answer / status" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="questions">
-          <mxGeometry x="0" y="38" width="410" height="91" as="geometry" />
+        <mxCell id="questions-fields" value="PK id / REF student_id, teacher_id → identity.aa_users&#10;REF course_id → catalog / REF? lesson_id → learning&#10;prompt / answer / status / answered_at&#10;student_name (snapshot)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="questions">
+          <mxGeometry x="0" y="38" width="410" height="116" as="geometry" />
         </mxCell>
         <mxCell id="notices" value="notifications" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
-          <mxGeometry x="965" y="460" width="440" height="104" as="geometry" />
+          <mxGeometry x="965" y="490" width="440" height="129" as="geometry" />
         </mxCell>
-        <mxCell id="notices-fields" value="PK id / REF user_id → identity.aa_users&#10;title / kind / is_read" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="notices">
-          <mxGeometry x="0" y="38" width="440" height="66" as="geometry" />
+        <mxCell id="notices-fields" value="PK id / REF user_id → identity.aa_users&#10;title / kind / is_read / created_at&#10;destination_url → aula, dúvida ou decisão" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="notices">
+          <mxGeometry x="0" y="38" width="440" height="91" as="geometry" />
         </mxCell>
         <mxCell id="reports" value="content_reports" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
           <mxGeometry x="25" y="610" width="410" height="129" as="geometry" />
@@ -180,10 +180,10 @@
           <mxGeometry x="0" y="38" width="410" height="91" as="geometry" />
         </mxCell>
         <mxCell id="moderation" value="moderation_queue" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="engagement">
-          <mxGeometry x="505" y="610" width="410" height="129" as="geometry" />
+          <mxGeometry x="505" y="610" width="410" height="179" as="geometry" />
         </mxCell>
-        <mxCell id="moderation-fields" value="PK id / REF? admin_id → identity.aa_users&#10;item_type / item_id: aula OU curso OU comentário&#10;decision / status / operation_id / UK(item_type, item_id)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="moderation">
-          <mxGeometry x="0" y="38" width="410" height="91" as="geometry" />
+        <mxCell id="moderation-fields" value="PK id / REF? admin_id → identity.aa_users&#10;item_type / item_id: aula OU curso OU comentário&#10;decision / status / justification / decided_at&#10;REF operation_id → identity.aa_audit_events&#10;UK(item_type, item_id)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="moderation">
+          <mxGeometry x="0" y="38" width="410" height="141" as="geometry" />
         </mxCell>
         <mxCell id="grant" value="subscription" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="subscription">
           <mxGeometry x="25" y="85" width="320" height="129" as="geometry" />
@@ -435,7 +435,30 @@
         <mxCell id="payment-processed-b" value="0..1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1">
           <mxGeometry x="1915.0" y="1250" width="36" height="23" as="geometry" />
         </mxCell>
-      </root>
+      <mxCell id="eng-identity" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#75629A;dashed=1;dashPattern=7 5;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=0.04895;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="u" target="engagement"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="40" y="480.9" /><mxPoint x="40" y="800" /><mxPoint x="120" y="800" /></Array></mxGeometry></mxCell>
+<mxCell id="eng-identity-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="44" y="455" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-identity-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="125" y="812" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-identity-note" value="REF student_id / author_id / user_id / reporter_id / admin_id → identity.aa_users" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontStyle=2;fontColor=#75629A;" vertex="1" parent="1"><mxGeometry x="135" y="776" width="560" height="22" as="geometry" /></mxCell>
+<mxCell id="eng-learning" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#75629A;dashed=1;dashPattern=7 5;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.95804;entryY=0;entryDx=0;entryDy=0;jumpStyle=arc;jumpSize=10;" edge="1" parent="1" source="lesson" target="engagement"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2167.25" y="775" /><mxPoint x="1420" y="775" /></Array></mxGeometry></mxCell>
+<mxCell id="eng-learning-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="2171" y="412" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-learning-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="1424" y="812" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-learning-note" value="REF lesson_id / target_id → learning.lessons" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontStyle=2;fontColor=#75629A;" vertex="1" parent="1"><mxGeometry x="1560" y="781" width="420" height="20" as="geometry" /></mxCell>
+<mxCell id="eng-catalog" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#75629A;dashed=1;dashPattern=7 5;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.80507;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="course" target="engagement"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
+<mxCell id="eng-catalog-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="1205" y="412" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-catalog-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="1205" y="812" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-catalog-note" value="REF course_id / target_id&#10;→ catalog.courses" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontStyle=2;fontColor=#75629A;" vertex="1" parent="1"><mxGeometry x="960" y="784" width="235" height="40" as="geometry" /></mxCell>
+<mxCell id="comment-replies" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0.85;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="comments" target="comments"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1389" y="1282" /><mxPoint x="1191" y="1282" /></Array></mxGeometry></mxCell>
+<mxCell id="comment-replies-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="1393" y="1258" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="comment-replies-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="1151" y="1258" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="comment-replies-note" value="respostas (parent_id)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontStyle=2;fontColor=#52748A;" vertex="1" parent="1"><mxGeometry x="1215" y="1285" width="150" height="20" as="geometry" /></mxCell>
+<mxCell id="report-queue" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=1;dashPattern=2 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3603;entryDx=0;entryDy=0;" edge="1" parent="1" source="reports" target="moderation"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
+<mxCell id="report-queue-a" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="487" y="1488" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="report-queue-b" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="517" y="1518" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="queue-comment" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=1;dashPattern=2 4;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.7792;entryDx=0;entryDy=0;" edge="1" parent="1" source="moderation" target="comments"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="990" y="1503.7" /><mxPoint x="990" y="1220" /></Array></mxGeometry></mxCell>
+<mxCell id="queue-comment-a" value="0..1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="966" y="1507" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="queue-comment-b" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1"><mxGeometry x="979" y="1195" width="36" height="23" as="geometry" /></mxCell>
+<mxCell id="eng-legend" value="Contínua: FK no próprio schema.&#10;Tracejada: outro serviço (sem FK; dado obtido pela API).&#10;Pontilhada: par item_type + item_id (alvo polimórfico).&#10;(snapshot): nome copiado no momento do registro." style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontStyle=2;fontColor=#34465B;" vertex="1" parent="engagement"><mxGeometry x="975" y="650" width="430" height="110" as="geometry" /></mxCell>
+</root>
     </mxGraphModel>
   </diagram>
 </mxfile>
