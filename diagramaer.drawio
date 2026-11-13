@@ -80,38 +80,20 @@
         <mxCell id="course" value="courses" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
           <mxGeometry x="30" y="85" width="285" height="204" as="geometry" />
         </mxCell>
-        <mxCell id="course-fields" value="PK id · UUID&#10;REF teacher_id → identity.aa_users&#10;title / subject / audience&#10;access_type / price&#10;status / moderation_status&#10;cover_url / FK opcional cover_media_id" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="course">
+        <mxCell id="course-fields" value="PK id · UUID&#10;REF teacher_id → identity.aa_users&#10;title / subject / audience&#10;access_type / price&#10;status / moderation_status&#10;cover_url / FK? cover_media_id" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="course">
           <mxGeometry x="0" y="38" width="285" height="166" as="geometry" />
         </mxCell>
         <mxCell id="material" value="course_materials" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
           <mxGeometry x="380" y="85" width="305" height="154" as="geometry" />
         </mxCell>
-        <mxCell id="material-fields" value="PK id · UUID / FK course_id&#10;REF lesson_id → learning.lessons&#10;FK opcional media_id&#10;external_url / access_level" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="material">
+        <mxCell id="material-fields" value="PK id · UUID / FK course_id&#10;REF? lesson_id → learning.lessons&#10;FK? media_id&#10;external_url / access_level" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="material">
           <mxGeometry x="0" y="38" width="305" height="116" as="geometry" />
         </mxCell>
         <mxCell id="catalogmedia" value="media" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
           <mxGeometry x="380" y="355" width="305" height="129" as="geometry" />
         </mxCell>
-        <mxCell id="catalogmedia-fields" value="PK id · UUID&#10;UK storage_key&#10;content_type / status / size_bytes" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="catalogmedia">
+        <mxCell id="catalogmedia-fields" value="PK id · UUID&#10;UK storage_key / content_type&#10;status / size_bytes" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="catalogmedia">
           <mxGeometry x="0" y="38" width="305" height="91" as="geometry" />
-        </mxCell>
-        <mxCell id="cataloglesson" value="course_lessons" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
-          <mxGeometry x="30" y="355" width="285" height="179" as="geometry" />
-        </mxCell>
-        <mxCell id="cataloglesson-fields" value="PK id · UUID / FK course_id&#10;title / summary / duration_minutes&#10;position / UK(course_id, position)&#10;FK opcional video_media_id&#10;preview_available" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#253746;spacingLeft=12;spacingRight=9;spacingTop=9;verticalAlign=top;lineHeight=1.45;" vertex="1" parent="cataloglesson">
-          <mxGeometry x="0" y="38" width="285" height="141" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogenrollment" value="enrollments" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
-          <mxGeometry x="710" y="85" width="210" height="154" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogenrollment-fields" value="PK id · UUID / FK course_id&#10;REF student_id → identity.aa_users&#10;status / last_accessed_at&#10;UK(course_id, student_id)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontColor=#253746;spacingLeft=10;spacingRight=7;spacingTop=8;verticalAlign=top;lineHeight=1.35;" vertex="1" parent="catalogenrollment">
-          <mxGeometry x="0" y="38" width="210" height="116" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogreview" value="course_reviews" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="catalog">
-          <mxGeometry x="710" y="355" width="210" height="154" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogreview-fields" value="PK id · UUID / FK course_id&#10;REF student_id → identity.aa_users&#10;rating / comment&#10;UK(course_id, student_id)" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=13;fontColor=#253746;spacingLeft=10;spacingRight=7;spacingTop=8;verticalAlign=top;lineHeight=1.35;" vertex="1" parent="catalogreview">
-          <mxGeometry x="0" y="38" width="210" height="116" as="geometry" />
         </mxCell>
         <mxCell id="lesson" value="lessons" style="swimlane;startSize=38;horizontal=1;rounded=0;html=0;fillColor=#F8FAFC;swimlaneFillColor=#FFFFFF;strokeColor=#8091A3;strokeWidth=1.2;align=left;spacingLeft=12;fontFamily=Arial;fontSize=18;fontStyle=1;fontColor=#172D42;collapsible=0;" vertex="1" parent="learning">
           <mxGeometry x="30" y="85" width="315" height="204" as="geometry" />
@@ -327,67 +309,6 @@
         </mxCell>
         <mxCell id="media-material-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Arial;align=center;fontSize=14;fontStyle=1;fillColor=#FFFFFF;fontColor=#34465B;" vertex="1" parent="1">
           <mxGeometry x="1637.5" y="365" width="36" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-cataloglesson" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="course" target="cataloglesson">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="course-cataloglesson-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1252" y="415" width="36" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-cataloglesson-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1252" y="447" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-catalogenrollment" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0.8;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="course" target="catalogenrollment">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1358" y="180" />
-              <mxPoint x="1915" y="180" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="course-catalogenrollment-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1338" y="180" width="36" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-catalogenrollment-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1894" y="180" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-catalogreview" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0.8;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="course" target="catalogreview">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1358" y="680" />
-              <mxPoint x="1915" y="680" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="course-catalogreview-a" value="1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1338" y="415" width="36" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="course-catalogreview-b" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1894" y="640" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogmedia-coursecover" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="catalogmedia" target="course">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1632" y="440" />
-              <mxPoint x="1450" y="440" />
-              <mxPoint x="1450" y="307" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="catalogmedia-coursecover-a" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1611" y="445" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogmedia-coursecover-b" value="0..1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1418" y="295" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogmedia-cataloglesson" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0;exitY=0.55;exitDx=0;exitDy=0;entryX=1;entryY=0.45;entryDx=0;entryDy=0;" edge="1" parent="1" source="catalogmedia" target="cataloglesson">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogmedia-cataloglesson-a" value="0..N" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1435" y="525" width="42" height="23" as="geometry" />
-        </mxCell>
-        <mxCell id="catalogmedia-cataloglesson-b" value="0..1" style="text;html=0;whiteSpace=wrap;strokeColor=none;fillColor=#FFFFFF;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#34465B;" vertex="1" parent="1">
-          <mxGeometry x="1397" y="545" width="42" height="23" as="geometry" />
         </mxCell>
         <mxCell id="lesson-video" value="" style="edgeStyle=none;rounded=0;html=0;startArrow=none;endArrow=none;strokeWidth=1.8;strokeColor=#52748A;dashed=0;dashPattern=7 5;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;" edge="1" parent="1" source="learningmedia" target="lesson">
           <mxGeometry relative="1" as="geometry">
